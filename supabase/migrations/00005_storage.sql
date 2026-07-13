@@ -1,0 +1,88 @@
+-- =============================================================
+-- AscensoCIM Peru - Migracion 00005: Storage
+-- =============================================================
+-- Estado actual: El sistema NO utiliza Supabase Storage.
+-- Ningun componente del frontend realiza llamadas a
+-- supabase.storage, por lo que no existen buckets ni policies
+-- que configurar en este momento.
+--
+-- Este archivo se mantiene como placeholder para que la
+-- secuencia de migraciones (00001-00007) se ejecute completa
+-- sin errores y sin saltos en la numeracion.
+-- =============================================================
+
+
+-- =============================================================
+-- GUIA PARA AGREGAR BUCKETS EN EL FUTURO
+-- =============================================================
+--
+-- Cuando el proyecto necesite almacenamiento de archivos,
+-- seguir estos pasos:
+--
+-- PASO 1: Crear los buckets desde el Dashboard de Supabase
+--         (Storage > New Bucket) o via SQL usando:
+--
+--   select storage.create_bucket('nombre_bucket', 'false', array['tipo/mime']);
+--
+-- PASO 2: Descomentar y ejecutar las policies de abajo.
+--
+-- PASO 3: Probar que el frontend puede subir, leer y eliminar archivos.
+--
+-- Buckets recomendados si se necesitan en el futuro:
+--
+--   avatars
+--     Publico: No
+--     Limite: 2MB
+--     MIME: image/jpeg, image/png, image/webp
+--
+--   documents
+--     Publico: No
+--     Limite: 5MB
+--     MIME: application/pdf, image/jpeg, image/png
+--
+--   modules
+--     Publico: Si
+--     Limite: 10MB
+--     MIME: image/*, application/pdf, audio/*
+--
+--   activity-exports
+--     Publico: No
+--     Limite: 50MB
+--     MIME: text/csv, application/pdf
+-- =============================================================
+
+
+-- =============================================================
+-- POLICIES DE STORAGE (descomentar cuando se creen buckets)
+-- =============================================================
+-- Estas policies asumen que el bucket "avatars" ya existe.
+-- Adaptar bucket_id para otros buckets segun sea necesario.
+
+-- Subir avatar: solo el propio usuario en su carpeta
+-- create policy "Users can upload own avatar"
+--   on storage.objects for insert
+--   with check (
+--     bucket_id = 'avatars'
+--     and auth.role() = 'authenticated'
+--     and (storage.foldername(name))[1] = auth.uid()::text
+--   );
+
+-- Leer avatares: cualquier usuario autenticado
+-- create policy "Authenticated users can view avatars"
+--   on storage.objects for select
+--   using (
+--     bucket_id = 'avatars'
+--     and auth.role() = 'authenticated'
+--   );
+
+-- Eliminar avatar: solo el propio usuario
+-- create policy "Users can delete own avatar"
+--   on storage.objects for delete
+--   using (
+--     bucket_id = 'avatars'
+--     and (storage.foldername(name))[1] = auth.uid()::text
+--   );
+
+-- =============================================================
+-- FIN DE MIGRACION 00005
+-- =============================================================
