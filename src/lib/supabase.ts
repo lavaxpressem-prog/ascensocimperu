@@ -276,49 +276,68 @@ export interface Question {
   text: string
   options: { id: string; text: string }[]
   correctOption: string
-  explanation?: string
   ubicacion?: string
 }
 
 interface QuestionRow {
   id: number
-  topic: string
-  text: string
-  option_a: string
-  option_b: string
-  option_c: string | null
-  option_d: string | null
-  option_e: string | null
-  option_f: string | null
-  correct_option: string
-  explanation: string | null
+  numero: number
+  materia_id: number
+  pregunta: string
+  opciones: { id: string; text: string }[] | string
+  respuesta_correcta: string
+  indice_correcto: number
   ubicacion: string | null
+  codigo: string | null
+  created_at: string
 }
 
+const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+
 function rowToQuestion(row: QuestionRow): Question {
-  const options = [
-    { id: 'a', text: row.option_a },
-    { id: 'b', text: row.option_b },
-  ]
-  if (row.option_c) options.push({ id: 'c', text: row.option_c })
-  if (row.option_d) options.push({ id: 'd', text: row.option_d })
-  if (row.option_e) options.push({ id: 'e', text: row.option_e })
-  if (row.option_f) options.push({ id: 'f', text: row.option_f })
+  let options: { id: string; text: string }[]
+
+  if (Array.isArray(row.opciones)) {
+    options = row.opciones.map((opt, i) => ({
+      id: opt.id || LETTERS[i] || String(i),
+      text: opt.text || String(opt),
+    }))
+  } else if (typeof row.opciones === 'string') {
+    try {
+      const parsed = JSON.parse(row.opciones)
+      if (Array.isArray(parsed)) {
+        options = parsed.map((opt: any, i: number) => ({
+          id: opt.id || LETTERS[i] || String(i),
+          text: opt.text || String(opt),
+        }))
+      } else {
+        options = []
+      }
+    } catch {
+      options = []
+    }
+  } else {
+    options = []
+  }
+
+  const correctOption = LETTERS[row.indice_correcto] ?? String(row.indice_correcto)
+
   return {
     id: row.id,
-    topic: row.topic,
-    text: row.text,
+    topic: String(row.materia_id),
+    text: row.pregunta,
     options,
-    correctOption: row.correct_option,
-    explanation: row.explanation ?? undefined,
+    correctOption,
     ubicacion: row.ubicacion ?? undefined,
   }
 }
 
+const PREGUNTAS_COLUMNS = 'id, numero, materia_id, pregunta, opciones, respuesta_correcta, indice_correcto, ubicacion, codigo, created_at'
+
 export async function getQuestionsBatch(offset: number, limit: number): Promise<Question[]> {
   const { data, error } = await supabase
-    .from('questions')
-    .select('id, topic, text, option_a, option_b, option_c, option_d, option_e, option_f, correct_option, explanation, ubicacion')
+    .from('preguntas')
+    .select(PREGUNTAS_COLUMNS)
     .order('id', { ascending: true })
     .range(offset, offset + limit - 1)
   if (error || !data) return []
@@ -327,17 +346,17 @@ export async function getQuestionsBatch(offset: number, limit: number): Promise<
 
 export async function getQuestionsCount(): Promise<number> {
   const { count, error } = await supabase
-    .from('questions')
+    .from('preguntas')
     .select('id', { count: 'exact', head: true })
   if (error || count === null) return 0
   return count
 }
 
-export async function getQuestionsByTopic(topic: string): Promise<Question[]> {
+export async function getQuestionsByMateria(materiaId: number): Promise<Question[]> {
   const { data, error } = await supabase
-    .from('questions')
-    .select('id, topic, text, option_a, option_b, option_c, option_d, option_e, option_f, correct_option, explanation, ubicacion')
-    .eq('topic', topic)
+    .from('preguntas')
+    .select(PREGUNTAS_COLUMNS)
+    .eq('materia_id', materiaId)
     .order('id', { ascending: true })
   if (error || !data) return []
   return (data as QuestionRow[]).map(rowToQuestion)
@@ -345,8 +364,8 @@ export async function getQuestionsByTopic(topic: string): Promise<Question[]> {
 
 export async function getRandomQuestions(count: number): Promise<Question[]> {
   const { data, error } = await supabase
-    .from('questions')
-    .select('id, topic, text, option_a, option_b, option_c, option_d, option_e, option_f, correct_option, explanation, ubicacion')
+    .from('preguntas')
+    .select(PREGUNTAS_COLUMNS)
   if (error || !data) return []
   const shuffled = (data as QuestionRow[]).sort(() => Math.random() - 0.5)
   return shuffled.slice(0, count).map(rowToQuestion)

@@ -84,9 +84,6 @@ export function AudioPage() {
       if (correctOpt) {
         parts.push(`La respuesta correcta es ${correctOpt.id.toUpperCase()}.`)
       }
-      if (currentQuestion.explanation) {
-        parts.push(`Explicación: ${currentQuestion.explanation}`)
-      }
       if (currentQuestion.ubicacion) {
         parts.push(`Ubicación: ${currentQuestion.ubicacion}`)
       }
@@ -343,9 +340,6 @@ export function AudioPage() {
               }`}>
                 <p className="font-semibold mb-2">
                   {isCorrect ? '✓ ¡Correcto!' : '✗ Respuesta incorrecta'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  <strong>Explicación:</strong> {currentQuestion.explanation}
                 </p>
               </div>
             )}
