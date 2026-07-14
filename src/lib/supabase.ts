@@ -165,6 +165,193 @@ export async function logActivity(action: string, details?: Record<string, unkno
   })
 }
 
+// ── Dashboard stats helpers ──
+
+export interface DashboardStats {
+  dias_estudiados: number
+  horas_estudio: number
+  ultimo_estudio: string | null
+  promedio_aprendizaje: number
+  total_examenes: number
+  preguntas_respondidas: number
+  examenes_aprobados: number
+  simuladores_realizados: number
+  preguntas_correctas: number
+}
+
+export interface RankingEntry {
+  user_id: string
+  full_name: string
+  grade: string
+  average_score: number
+  total_exams: number
+  total_questions: number
+  correct_answers: number
+}
+
+export interface TopPerformer {
+  user_id: string
+  full_name: string
+  grade: string
+  average_score: number
+  total_score: number
+  exam_count: number
+}
+
+export async function getUserDashboardStats(userId: string): Promise<DashboardStats | null> {
+  const { data, error } = await supabase
+    .rpc('get_user_dashboard_stats', { p_user_id: userId })
+    .single()
+  if (error) return null
+  return data as DashboardStats
+}
+
+export async function getUserRankingByGrade(): Promise<RankingEntry[]> {
+  const { data, error } = await supabase
+    .rpc('get_user_ranking_by_grade')
+  if (error) return []
+  return (data || []) as RankingEntry[]
+}
+
+export async function getTopPerformerOfWeek(): Promise<TopPerformer | null> {
+  const { data, error } = await supabase
+    .rpc('get_top_performer_of_week')
+    .single()
+  if (error) return null
+  return data as TopPerformer
+}
+
+export async function recordStudySession(session: {
+  activity_type: string
+  started_at?: string
+  ended_at?: string
+  duration_seconds?: number
+  questions_attempted?: number
+  questions_correct?: number
+}) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { error } = await supabase.from('user_study_sessions').insert({
+    user_id: user.id,
+    ...session,
+  })
+  if (error) throw error
+}
+
+export async function recordExamResult(result: {
+  exam_type: string
+  total_questions: number
+  correct_answers: number
+  score_percentage: number
+  time_spent_seconds?: number
+}) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { error } = await supabase.from('user_exam_results').insert({
+    user_id: user.id,
+    ...result,
+  })
+  if (error) throw error
+}
+
+export async function recordQuestionResponse(response: {
+  question_identifier?: string
+  selected_option: string
+  is_correct: boolean
+}) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const { error } = await supabase.from('user_question_responses').insert({
+    user_id: user.id,
+    ...response,
+  })
+  if (error) throw error
+}
+
+// ── Questions helpers ──
+
+export interface Question {
+  id: number
+  topic: string
+  text: string
+  options: { id: string; text: string }[]
+  correctOption: string
+  explanation?: string
+  ubicacion?: string
+}
+
+interface QuestionRow {
+  id: number
+  topic: string
+  text: string
+  option_a: string
+  option_b: string
+  option_c: string | null
+  option_d: string | null
+  option_e: string | null
+  option_f: string | null
+  correct_option: string
+  explanation: string | null
+  ubicacion: string | null
+}
+
+function rowToQuestion(row: QuestionRow): Question {
+  const options = [
+    { id: 'a', text: row.option_a },
+    { id: 'b', text: row.option_b },
+  ]
+  if (row.option_c) options.push({ id: 'c', text: row.option_c })
+  if (row.option_d) options.push({ id: 'd', text: row.option_d })
+  if (row.option_e) options.push({ id: 'e', text: row.option_e })
+  if (row.option_f) options.push({ id: 'f', text: row.option_f })
+  return {
+    id: row.id,
+    topic: row.topic,
+    text: row.text,
+    options,
+    correctOption: row.correct_option,
+    explanation: row.explanation ?? undefined,
+    ubicacion: row.ubicacion ?? undefined,
+  }
+}
+
+export async function getQuestionsBatch(offset: number, limit: number): Promise<Question[]> {
+  const { data, error } = await supabase
+    .from('questions')
+    .select('id, topic, text, option_a, option_b, option_c, option_d, option_e, option_f, correct_option, explanation, ubicacion')
+    .order('id', { ascending: true })
+    .range(offset, offset + limit - 1)
+  if (error || !data) return []
+  return (data as QuestionRow[]).map(rowToQuestion)
+}
+
+export async function getQuestionsCount(): Promise<number> {
+  const { count, error } = await supabase
+    .from('questions')
+    .select('id', { count: 'exact', head: true })
+  if (error || count === null) return 0
+  return count
+}
+
+export async function getQuestionsByTopic(topic: string): Promise<Question[]> {
+  const { data, error } = await supabase
+    .from('questions')
+    .select('id, topic, text, option_a, option_b, option_c, option_d, option_e, option_f, correct_option, explanation, ubicacion')
+    .eq('topic', topic)
+    .order('id', { ascending: true })
+  if (error || !data) return []
+  return (data as QuestionRow[]).map(rowToQuestion)
+}
+
+export async function getRandomQuestions(count: number): Promise<Question[]> {
+  const { data, error } = await supabase
+    .from('questions')
+    .select('id, topic, text, option_a, option_b, option_c, option_d, option_e, option_f, correct_option, explanation, ubicacion')
+  if (error || !data) return []
+  const shuffled = (data as QuestionRow[]).sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, count).map(rowToQuestion)
+}
+
 // ── Session helpers ──
 
 export function getCurrentSession() {

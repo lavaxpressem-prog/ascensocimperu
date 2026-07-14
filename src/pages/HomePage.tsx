@@ -28,79 +28,26 @@ import {
   GraduationCap
 } from 'lucide-react'
 import { useAuth } from '../lib/AuthProvider'
+import { useDashboardStats } from '../lib/hooks/useDashboardStats'
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return 'Sin datos'
+  const d = new Date(dateStr)
+  const months = ['ENE','FEB','MAR','ABR','MAY','JUN','JUL','AGO','SET','OCT','NOV','DIC']
+  return `${String(d.getDate()).padStart(2,'0')}${months[d.getMonth()]}${d.getFullYear()}`
+}
 
 export function HomePage() {
   const { user, profile } = useAuth()
+  const { stats, ranking, topPerformer, loading } = useDashboardStats()
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Datos de usuarios registrados del sistema
-  const allUsers = [
-    { 
-      id: '1', 
-      name: 'SO1 Juan Perez', 
-      grade: 'SO1', 
-      score: 98, 
-      position: 1,
-      daysStudied: 15,
-      studyHours: 52.5,
-      lastStudy: '02JUN2026',
-      averageScore: 92,
-      profilePicture: '👮'
-    },
-    { 
-      id: '2', 
-      name: 'SO2 Maria Garcia', 
-      grade: 'SO2', 
-      score: 95, 
-      position: 2,
-      daysStudied: 18,
-      studyHours: 64.3,
-      lastStudy: '02JUN2026',
-      averageScore: 88,
-      profilePicture: '👩‍💼'
-    },
-    { 
-      id: '3', 
-      name: 'SO3 Carlos Ruiz', 
-      grade: 'SO3', 
-      score: 92, 
-      position: 3,
-      daysStudied: 12,
-      studyHours: 45.7,
-      lastStudy: '01JUN2026',
-      averageScore: 85,
-      profilePicture: '👮‍♂️'
-    },
-    { 
-      id: '4', 
-      name: 'SO1 Ana Lopez', 
-      grade: 'SO1', 
-      score: 90, 
-      position: 4,
-      daysStudied: 20,
-      studyHours: 72.0,
-      lastStudy: '02JUN2026',
-      averageScore: 87,
-      profilePicture: '👩‍🔬'
-    },
-    { 
-      id: '5', 
-      name: 'SO2 Roberto Diaz', 
-      grade: 'SO2', 
-      score: 88, 
-      position: 5,
-      daysStudied: 14,
-      studyHours: 51.2,
-      lastStudy: '31MAY2026',
-      averageScore: 84,
-      profilePicture: '👨‍⚖️'
-    }
-  ]
+  const userName = profile?.name || user?.email?.split('@')[0] || 'Oficial'
 
-  // Obtener datos del usuario actual o datos por defecto
-  const currentUserData = allUsers.find(u => u.name.includes('Juan')) || allUsers[0]
-  
-  const mockRanking = allUsers
+  const rankingWithPosition = ranking.map((r, i) => ({
+    ...r,
+    position: i + 1,
+  }))
 
   const columns = [
     { 
@@ -120,26 +67,31 @@ export function HomePage() {
       )
     },
     { 
-      accessorKey: 'name', 
+      accessorKey: 'full_name', 
       header: 'Suboficial',
-      cell: ({ row }: any) => <Persona name={row.original.name} subtitle={row.original.grade} />
+      cell: ({ row }: any) => <Persona name={row.original.full_name || 'Sin nombre'} subtitle={row.original.grade} />
     },
     { 
-      accessorKey: 'score', 
+      accessorKey: 'average_score', 
       header: 'Puntaje',
       cell: ({ row }: any) => (
-        <Badge variant={row.original.score >= 90 ? 'default' : 'secondary'}>
-          {row.original.score}%
+        <Badge variant={row.original.average_score >= 90 ? 'default' : 'secondary'}>
+          {row.original.average_score}%
         </Badge>
       )
     }
   ]
 
+  const filteredRanking = rankingWithPosition.filter(item => 
+    (item.full_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (item.grade || '').toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   return (
     <Page>
       <PageHeader>
         <div className="flex flex-col gap-1">
-          <PageTitle className="font-serif text-3xl">Bienvenido, {profile?.name || user?.email?.split('@')[0] || 'Oficial'}</PageTitle>
+          <PageTitle className="font-serif text-3xl">Bienvenido, {userName}</PageTitle>
           <PageDescription>Panel de control y estadísticas de aprendizaje</PageDescription>
         </div>
       </PageHeader>
@@ -149,27 +101,27 @@ export function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Stat 
             label="Días Estudiados" 
-            value={currentUserData.daysStudied.toString()} 
+            value={loading ? '...' : String(stats?.dias_estudiados ?? 0)} 
             icon={<Calendar className="text-primary" />} 
             description="Total acumulado"
           />
           <Stat 
             label="Horas de Estudio" 
-            value={currentUserData.studyHours.toString()} 
+            value={loading ? '...' : String(stats?.horas_estudio ?? 0)} 
             icon={<Clock className="text-primary" />} 
             description="Horas registradas"
           />
           <Stat 
             label="Último Estudio" 
-            value={currentUserData.lastStudy} 
+            value={loading ? '...' : formatDate(stats?.ultimo_estudio ?? null)} 
             icon={<Target className="text-primary" />} 
             description="Fecha del último acceso"
           />
           <Stat 
             label="Promedio Aprendizaje" 
-            value={currentUserData.averageScore + '%'} 
-            trend={12} 
-            trendLabel="vs semana pasada"
+            value={loading ? '...' : `${stats?.promedio_aprendizaje ?? 0}%`} 
+            trend={stats?.promedio_aprendizaje ? Number(stats.promedio_aprendizaje) : undefined} 
+            trendLabel="promedio general"
             icon={<TrendingUp className="text-accent" />} 
           />
         </div>
@@ -184,20 +136,31 @@ export function HomePage() {
                     <Trophy size={14} className="text-accent" />
                     NOTICIAS DE ASCENSO
                   </div>
-                  <h3 className="text-2xl font-bold">¡Felicidades al SO1 Juan Perez!</h3>
-                  <p className="text-white/80 max-w-md">
-                    Ha logrado el mayor puntaje de aprendizaje esta semana con un impresionante 98% en el simulador integral.
-                  </p>
-                  <div className="flex items-center gap-4 pt-2">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-white/60 uppercase">Grado</span>
-                      <span className="font-bold">SO1</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs text-white/60 uppercase">Especialidad</span>
-                      <span className="font-bold">Prevención</span>
-                    </div>
-                  </div>
+                  {topPerformer ? (
+                    <>
+                      <h3 className="text-2xl font-bold">¡Felicidades al {topPerformer.full_name}!</h3>
+                      <p className="text-white/80 max-w-md">
+                        Ha logrado el mayor puntaje de aprendizaje esta semana con un impresionante {topPerformer.average_score}% en {topPerformer.exam_count} {topPerformer.exam_count === 1 ? 'actividad' : 'actividades'}.
+                      </p>
+                      <div className="flex items-center gap-4 pt-2">
+                        <div className="flex flex-col">
+                          <span className="text-xs text-white/60 uppercase">Grado</span>
+                          <span className="font-bold">{topPerformer.grade}</span>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-xs text-white/60 uppercase">Puntaje</span>
+                          <span className="font-bold">{topPerformer.average_score}%</span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-2xl font-bold">¡Bienvenido, {userName}!</h3>
+                      <p className="text-white/80 max-w-md">
+                        Completa exámenes y simuladores para aparecer en el ranking de la semana.
+                      </p>
+                    </>
+                  )}
                 </div>
                 <div className="hidden md:block">
                   <img 
@@ -224,10 +187,7 @@ export function HomePage() {
               </div>
               <DataTable 
                 columns={columns} 
-                data={mockRanking.filter(item => 
-                  item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  item.grade.toLowerCase().includes(searchQuery.toLowerCase())
-                )} 
+                data={filteredRanking} 
                 searchable={false}
               />
             </div>
@@ -268,26 +228,35 @@ export function HomePage() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <TrendingUp size={20} className="text-accent" />
-                  Progreso de {currentUserData.name}
+                  Progreso de {userName}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Temarios Completados</span>
-                    <span className="font-bold">{currentUserData.score}%</span>
+                    <span className="font-bold">{stats?.preguntas_respondidas ?? 0}</span>
                   </div>
                   <div className="h-2 w-full bg-accent/20 rounded-full overflow-hidden">
-                    <div className="h-full bg-accent" style={{ width: `${currentUserData.score}%` }} />
+                    <div className="h-full bg-accent" style={{ width: `${Math.min((stats?.preguntas_respondidas ?? 0), 100)}%` }} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Simulacros Realizados</span>
-                    <span className="font-bold">{Math.floor(currentUserData.studyHours * 2)}/100</span>
+                    <span className="font-bold">{stats?.simuladores_realizados ?? 0}</span>
                   </div>
                   <div className="h-2 w-full bg-accent/20 rounded-full overflow-hidden">
-                    <div className="h-full bg-accent" style={{ width: `${Math.floor(currentUserData.studyHours * 2)}%` }} />
+                    <div className="h-full bg-accent" style={{ width: `${Math.min((stats?.simuladores_realizados ?? 0) * 10, 100)}%` }} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Exámenes Aprobados</span>
+                    <span className="font-bold">{stats?.examenes_aprobados ?? 0}</span>
+                  </div>
+                  <div className="h-2 w-full bg-accent/20 rounded-full overflow-hidden">
+                    <div className="h-full bg-accent" style={{ width: `${Math.min((stats?.examenes_aprobados ?? 0) * 10, 100)}%` }} />
                   </div>
                 </div>
               </CardContent>
@@ -296,25 +265,5 @@ export function HomePage() {
         </div>
       </PageBody>
     </Page>
-  )
-}
-
-// Icono personalizado de GraduationCap mejorado
-function GraduationCapIcon({ size = 120, className = '' }: { size?: number, className?: string }) {
-  return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-      <path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5" />
-    </svg>
   )
 }

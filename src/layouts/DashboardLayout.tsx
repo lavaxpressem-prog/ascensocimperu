@@ -37,7 +37,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       <AppShellSidebar className="shrink-0">
         <div className="flex flex-col h-full w-[260px] bg-sidebar border-r border-sidebar-border overflow-hidden">
           <div className="shrink-0 border-b border-sidebar-border px-6 py-4 flex items-center gap-3">
-            <img src="/logo-portada.png" alt="AscensoCim Perú" className="h-6 w-6 object-contain" />
+            <img src="/logo-ascensocim.png" alt="AscensoCim Perú" className="h-6 w-6 object-contain" />
             <span className="font-bold text-lg text-sidebar-foreground">AscensoCim Perú</span>
           </div>
           
@@ -159,7 +159,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-3">
             <MobileSidebarTrigger />
             <div className="flex items-center gap-2">
-              <img src="/logo-portada.png" alt="AscensoCim Perú" className="h-5 w-5 object-contain" />
+              <img src="/logo-ascensocim.png" alt="AscensoCim Perú" className="h-5 w-5 object-contain" />
               <span className="font-bold">AscensoCim Perú</span>
             </div>
           </div>

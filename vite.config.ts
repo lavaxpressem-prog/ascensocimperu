@@ -14,5 +14,26 @@ export default defineConfig({
     strictPort: false,
     host: true,
     allowedHosts: true,
-  }
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/@blinkdotnew/ui')) {
+            return 'vendor-ui';
+          }
+          if (id.includes('node_modules/react-dom') || (id.includes('node_modules/react') && !id.includes('react-'))) {
+            return 'vendor-react';
+          }
+          if (id.includes('node_modules/@tanstack/react-router')) {
+            return 'vendor-router';
+          }
+          if (id.includes('node_modules/@supabase')) {
+            return 'vendor-supabase';
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
 });
