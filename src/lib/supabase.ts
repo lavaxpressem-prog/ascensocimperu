@@ -293,6 +293,7 @@ interface QuestionRow {
 }
 
 const LETTERS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+const PAGE_SIZE = 1000
 
 function rowToQuestion(row: QuestionRow): Question {
   let options: { id: string; text: string }[]
@@ -334,40 +335,65 @@ function rowToQuestion(row: QuestionRow): Question {
 
 const PREGUNTAS_COLUMNS = 'id, numero, materia_id, pregunta, opciones, respuesta_correcta, indice_correcto, ubicacion, codigo, created_at'
 
-export async function getQuestionsBatch(offset: number, limit: number): Promise<Question[]> {
-  const { data, error } = await supabase
-    .from('preguntas')
-    .select(PREGUNTAS_COLUMNS)
-    .order('id', { ascending: true })
-    .range(offset, offset + limit - 1)
-  if (error || !data) return []
-  return (data as QuestionRow[]).map(rowToQuestion)
+async function fetchAllPreguntas(opts?: { materia_id?: number }): Promise<QuestionRow[]> {
+  const allRows: QuestionRow[] = []
+  let offset = 0
+  const filters = opts?.materia_id
+
+  while (true) {
+    let query = supabase
+      .from('preguntas')
+      .select(PREGUNTAS_COLUMNS)
+      .order('id', { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1)
+
+    if (filters !== undefined) {
+      query = query.eq('materia_id', filters)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('[fetchAllPreguntas] Supabase error:', error.message, error.code, error.details)
+      break
+    }
+    if (!data || data.length === 0) break
+
+    allRows.push(...(data as QuestionRow[]))
+
+    if (data.length < PAGE_SIZE) break
+    offset += PAGE_SIZE
+  }
+
+  console.log('[fetchAllPreguntas] total rows:', allRows.length)
+  return allRows
+}
+
+export async function getQuestionsBatch(): Promise<Question[]> {
+  const rows = await fetchAllPreguntas()
+  return rows.map(rowToQuestion)
 }
 
 export async function getQuestionsCount(): Promise<number> {
   const { count, error } = await supabase
     .from('preguntas')
     .select('id', { count: 'exact', head: true })
-  if (error || count === null) return 0
-  return count
+  if (error) {
+    console.error('[getQuestionsCount] Supabase error:', error.message, error.code)
+    return 0
+  }
+  console.log('[getQuestionsCount] count:', count)
+  return count ?? 0
 }
 
 export async function getQuestionsByMateria(materiaId: number): Promise<Question[]> {
-  const { data, error } = await supabase
-    .from('preguntas')
-    .select(PREGUNTAS_COLUMNS)
-    .eq('materia_id', materiaId)
-    .order('id', { ascending: true })
-  if (error || !data) return []
-  return (data as QuestionRow[]).map(rowToQuestion)
+  const rows = await fetchAllPreguntas({ materia_id: materiaId })
+  return rows.map(rowToQuestion)
 }
 
 export async function getRandomQuestions(count: number): Promise<Question[]> {
-  const { data, error } = await supabase
-    .from('preguntas')
-    .select(PREGUNTAS_COLUMNS)
-  if (error || !data) return []
-  const shuffled = (data as QuestionRow[]).sort(() => Math.random() - 0.5)
+  const rows = await fetchAllPreguntas()
+  const shuffled = rows.sort(() => Math.random() - 0.5)
   return shuffled.slice(0, count).map(rowToQuestion)
 }
 

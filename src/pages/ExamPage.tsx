@@ -36,7 +36,9 @@ export function ExamPage() {
   const [isFinished, setIsFinished] = useState(false)
 
   useEffect(() => {
-    getQuestionsBatch(0, 3000).then(qs => {
+    console.log('[ExamPage] Loading questions from Supabase...')
+    getQuestionsBatch().then(qs => {
+      console.log('[ExamPage] Questions loaded:', qs.length)
       setMockQuestions(qs)
       setLoading(false)
     })

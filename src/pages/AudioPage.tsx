@@ -31,37 +31,51 @@ export function AudioPage() {
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   useEffect(() => {
-    getQuestionsBatch(0, 3000).then(qs => {
+    console.log('[AudioPage] Loading questions from Supabase...')
+    getQuestionsBatch().then(qs => {
+      console.log('[AudioPage] Questions loaded:', qs.length)
       setQuestions(qs)
       setLoading(false)
     })
   }, [])
 
-  if (loading || questions.length === 0) {
-    return (
-      <Page>
-        <PageHeader>
-          <PageTitle className="font-serif">Audio Preguntas</PageTitle>
-          <PageDescription>Escucha y aprende automáticamente</PageDescription>
-        </PageHeader>
-        <PageBody className="max-w-3xl mx-auto space-y-8 py-8">
-          <Card>
-            <CardContent className="p-8 flex items-center justify-center">
-              <p className="text-muted-foreground">
-                {loading ? 'Cargando preguntas...' : 'No hay preguntas disponibles'}
-              </p>
-            </CardContent>
-          </Card>
-        </PageBody>
-      </Page>
-    )
+  const currentQuestion = questions[currentIndex]
+  const isCorrect = selectedOption === currentQuestion?.correctOption && selectedOption !== ''
+
+  const handleStop = () => {
+    if (!synth) return
+    synth.cancel()
+    setIsPlaying(false)
+    setIsPaused(false)
   }
 
-  const currentQuestion = questions[currentIndex]
-  const isCorrect = selectedOption === currentQuestion.correctOption && selectedOption !== ''
+  const handleNext = () => {
+    setSelectedOption('')
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(currentIndex + 1)
+    } else if (loopMode) {
+      setCurrentIndex(0)
+    }
+    handleStop()
+  }
+
+  const handlePrevious = () => {
+    setSelectedOption('')
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1)
+    }
+    handleStop()
+  }
+
+  const handleResume = () => {
+    if (!synth) return
+    synth.resume()
+    setIsPlaying(true)
+    setIsPaused(false)
+  }
 
   const speakQuestion = () => {
-    if (!synth) return
+    if (!synth || !currentQuestion) return
 
     if (isPlaying) {
       synth.cancel()
@@ -120,47 +134,8 @@ export function AudioPage() {
     synth.speak(utterance)
   }
 
-  const handlePause = () => {
-    if (!synth) return
-    synth.pause()
-    setIsPlaying(false)
-    setIsPaused(true)
-  }
-
-  const handleResume = () => {
-    if (!synth) return
-    synth.resume()
-    setIsPlaying(true)
-    setIsPaused(false)
-  }
-
-  const handleStop = () => {
-    if (!synth) return
-    synth.cancel()
-    setIsPlaying(false)
-    setIsPaused(false)
-  }
-
-  const handleNext = () => {
-    setSelectedOption('')
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-    } else if (loopMode) {
-      setCurrentIndex(0)
-    }
-    handleStop()
-  }
-
-  const handlePrevious = () => {
-    setSelectedOption('')
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-    }
-    handleStop()
-  }
-
   useEffect(() => {
-    if (autoPlay && !isPlaying && !isPaused) {
+    if (autoPlay && !isPlaying && !isPaused && questions.length > 0) {
       const timer = setTimeout(() => {
         speakQuestion()
       }, 500)
@@ -173,6 +148,26 @@ export function AudioPage() {
       if (synth) synth.cancel()
     }
   }, [])
+
+  if (loading || questions.length === 0) {
+    return (
+      <Page>
+        <PageHeader>
+          <PageTitle className="font-serif">Audio Preguntas</PageTitle>
+          <PageDescription>Escucha y aprende automáticamente</PageDescription>
+        </PageHeader>
+        <PageBody className="max-w-3xl mx-auto space-y-8 py-8">
+          <Card>
+            <CardContent className="p-8 flex items-center justify-center">
+              <p className="text-muted-foreground">
+                {loading ? 'Cargando preguntas...' : 'No hay preguntas disponibles'}
+              </p>
+            </CardContent>
+          </Card>
+        </PageBody>
+      </Page>
+    )
+  }
 
   return (
     <Page>
