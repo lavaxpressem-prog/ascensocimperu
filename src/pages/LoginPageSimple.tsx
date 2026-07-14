@@ -79,7 +79,7 @@ export function LoginPageSimple() {
               <div className="text-center mb-8">
                 <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center shadow-lg">
                   <img
-                    src="/logo-ascensocim.png.jpeg"
+                    src="/logo-portada.jpeg"
                     alt="Logo"
                     className="w-20 h-20 rounded-full object-cover"
                     onError={(e) => { e.currentTarget.style.display = 'none' }}
@@ -154,7 +154,7 @@ export function LoginPageSimple() {
             <div className="text-center mb-8">
               <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center shadow-lg">
                 <img
-                  src="/logo-ascensocim.png.jpeg"
+                  src="/logo-portada.jpeg"
                   alt="Logo"
                   className="w-20 h-20 rounded-full object-cover"
                   onError={(e) => {

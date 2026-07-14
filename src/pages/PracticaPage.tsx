@@ -19,33 +19,43 @@ import {
   CheckCircle2,
   XCircle
 } from 'lucide-react'
-import { mockQuestions } from '../data/questions'
+import { getTopicsWithCount, getQuestionsByMateria, type TopicWithCount, type Question } from '../lib/supabase'
 
 export function PracticaPage() {
+  const [topics, setTopics] = useState<TopicWithCount[]>([])
+  const [loadingTopics, setLoadingTopics] = useState(true)
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null)
+  const [selectedMateriaId, setSelectedMateriaId] = useState<number | null>(null)
+  const [topicQuestions, setTopicQuestions] = useState<Question[]>([])
+  const [loadingQuestions, setLoadingQuestions] = useState(false)
   const [isPracticing, setIsPracticing] = useState(false)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
+  const [selectedOptions, setSelectedOptions] = useState<Record<number, string>>({})
   const [isFinished, setIsFinished] = useState(false)
   const [score, setScore] = useState(0)
 
-  // Extraer temas únicos del banco de preguntas
-  const topics = Array.from(new Set(mockQuestions.map(q => q.topic))).sort()
-  
-  // Obtener preguntas del tema seleccionado
-  const topicQuestions = selectedTopic 
-    ? mockQuestions.filter(q => q.topic === selectedTopic)
-    : []
+  useEffect(() => {
+    getTopicsWithCount().then(t => {
+      setTopics(t)
+      setLoadingTopics(false)
+    })
+  }, [])
 
   const currentQuestion = topicQuestions[currentQuestionIndex]
 
-  const handleSelectTopic = (topic: string) => {
-    setSelectedTopic(topic)
+  const handleSelectTopic = (topic: TopicWithCount) => {
+    setSelectedTopic(topic.nombre)
+    setSelectedMateriaId(topic.id)
     setIsPracticing(true)
     setCurrentQuestionIndex(0)
     setSelectedOptions({})
     setIsFinished(false)
     setScore(0)
+    setLoadingQuestions(true)
+    getQuestionsByMateria(topic.id).then(qs => {
+      setTopicQuestions(qs)
+      setLoadingQuestions(false)
+    })
   }
 
   const handleSelectOption = (optionId: string) => {
@@ -86,19 +96,20 @@ export function PracticaPage() {
 
   const handleBackToTopics = () => {
     setSelectedTopic(null)
+    setSelectedMateriaId(null)
+    setTopicQuestions([])
     setIsPracticing(false)
     setCurrentQuestionIndex(0)
     setSelectedOptions({})
     setIsFinished(false)
   }
 
+  const totalQuestions = topics.reduce((sum, t) => sum + t.count, 0)
+
   // Mostrar resultados
   if (isPracticing && isFinished && selectedTopic) {
-    const correct = Object.entries(selectedOptions).filter(
-      ([qId, selected]) => {
-        const question = topicQuestions.find(q => q.id === qId)
-        return question && selected === question.correctOption
-      }
+    const correct = topicQuestions.filter(
+      q => selectedOptions[q.id] === q.correctOption
     ).length
 
     return (
@@ -152,11 +163,6 @@ export function PracticaPage() {
                             <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
                           )}
                         </div>
-                        {q.explanation && (
-                          <p className="text-xs text-gray-600 bg-white p-2 rounded">
-                            <span className="font-semibold">Explicación:</span> {q.explanation}
-                          </p>
-                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -174,6 +180,24 @@ export function PracticaPage() {
   }
 
   // Mostrar práctica
+  if (isPracticing && loadingQuestions) {
+    return (
+      <Page>
+        <PageHeader>
+          <PageTitle>{selectedTopic}</PageTitle>
+          <PageDescription>Cargando preguntas...</PageDescription>
+        </PageHeader>
+        <PageBody>
+          <Card>
+            <CardContent className="p-8 flex items-center justify-center">
+              <p className="text-muted-foreground">Cargando preguntas del tema...</p>
+            </CardContent>
+          </Card>
+        </PageBody>
+      </Page>
+    )
+  }
+
   if (isPracticing && currentQuestion && selectedTopic) {
     return (
       <Page>
@@ -248,16 +272,35 @@ export function PracticaPage() {
       <PageHeader>
         <PageTitle>📚 Práctica por Temas</PageTitle>
         <PageDescription>
-          Selecciona un tema para practicar preguntas específicas. Total: {mockQuestions.length} preguntas
+          {loadingTopics
+            ? 'Cargando temas...'
+            : `Selecciona un tema para practicar preguntas específicas. Total: ${totalQuestions} preguntas`
+          }
         </PageDescription>
       </PageHeader>
       <PageBody>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {topics.map(topic => {
-            const count = mockQuestions.filter(q => q.topic === topic).length
-            return (
+        {loadingTopics ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map(i => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="w-8 h-8 bg-gray-200 rounded" />
+                      <div className="w-20 h-5 bg-gray-200 rounded" />
+                    </div>
+                    <div className="w-3/4 h-5 bg-gray-200 rounded" />
+                    <div className="w-full h-9 bg-gray-200 rounded" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {topics.map(topic => (
               <Card 
-                key={topic} 
+                key={topic.id} 
                 className="hover:shadow-lg transition cursor-pointer"
                 onClick={() => handleSelectTopic(topic)}
               >
@@ -265,9 +308,9 @@ export function PracticaPage() {
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
                       <BookOpen className="w-8 h-8 text-indigo-600" />
-                      <Badge variant="secondary">{count} preguntas</Badge>
+                      <Badge variant="secondary">{topic.count} preguntas</Badge>
                     </div>
-                    <h3 className="font-semibold text-lg line-clamp-2">{topic}</h3>
+                    <h3 className="font-semibold text-lg line-clamp-2">{topic.nombre}</h3>
                     <Button 
                       onClick={() => handleSelectTopic(topic)}
                       className="w-full gap-2"
@@ -278,11 +321,11 @@ export function PracticaPage() {
                   </div>
                 </CardContent>
               </Card>
-            )
-          })}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {topics.length === 0 && (
+        {!loadingTopics && topics.length === 0 && (
           <div className="text-center py-12">
             <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-lg">No hay temas disponibles</p>

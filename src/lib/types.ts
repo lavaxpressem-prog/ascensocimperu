@@ -13,6 +13,7 @@ export interface Profile {
   login_attempts: number
   locked_until: string | null
   last_login: string | null
+  grade: string | null
   created_at: string
   updated_at: string
 }

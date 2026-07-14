@@ -29,15 +29,17 @@ export function AdminUsersPage() {
   const [pendingUsers, setPendingUsers] = useState<Profile[]>([])
   const [allUsers, setAllUsers] = useState<Profile[]>([])
   const [loadingUsers, setLoadingUsers] = useState(true)
+  const [fetchUsersError, setFetchUsersError] = useState<string | null>(null)
 
   const fetchUsers = async () => {
     setLoadingUsers(true)
+    setFetchUsersError(null)
     try {
       const [pending, all] = await Promise.all([getPendingUsers(), getAllUsers()])
       setPendingUsers(pending)
       setAllUsers(all)
-    } catch (err) {
-      console.error('Error fetching users:', err)
+    } catch (err: any) {
+      setFetchUsersError(err?.message || 'Error al cargar usuarios')
     } finally {
       setLoadingUsers(false)
     }
@@ -153,6 +155,26 @@ export function AdminUsersPage() {
         <PageDescription>Administrar cuentas de usuario del sistema.</PageDescription>
       </PageHeader>
       <PageBody className="py-12 space-y-8">
+        {/* Error al cargar usuarios */}
+        {fetchUsersError && (
+          <Card className="max-w-4xl w-full p-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="text-destructive">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+              </div>
+              <h3 className="text-lg font-semibold text-destructive">Error al cargar usuarios</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">{fetchUsersError}</p>
+            <Button
+              type="button"
+              className="bg-primary hover:bg-primary/90 text-white text-sm px-4 py-2"
+              onClick={fetchUsers}
+            >
+              Reintentar
+            </Button>
+          </Card>
+        )}
+
         {/* Sección: Usuarios Pendientes */}
         {!loadingUsers && pendingUsers.length > 0 && (
           <Card className="max-w-4xl w-full p-8">

@@ -99,7 +99,7 @@ export function AppSidebarShell() {
           {!collapsed && (
             <>
               <div className="flex items-center justify-center h-7 w-7 rounded-md overflow-hidden shrink-0">
-                <img src="/logo-portada.png" alt="AscensoCim Perú" className="h-full w-full object-cover" />
+                <img src="/logo-portada.jpeg" alt="AscensoCim Perú" className="h-full w-full object-cover" />
               </div>
               <span className="flex-1 font-semibold text-sm truncate">AscensoCim Perú</span>
             </>

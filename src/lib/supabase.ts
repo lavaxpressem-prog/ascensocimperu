@@ -353,10 +353,7 @@ async function fetchAllPreguntas(opts?: { materia_id?: number }): Promise<Questi
 
     const { data, error } = await query
 
-    if (error) {
-      console.error('[fetchAllPreguntas] Supabase error:', error.message, error.code, error.details)
-      break
-    }
+    if (error) break
     if (!data || data.length === 0) break
 
     allRows.push(...(data as QuestionRow[]))
@@ -365,7 +362,6 @@ async function fetchAllPreguntas(opts?: { materia_id?: number }): Promise<Questi
     offset += PAGE_SIZE
   }
 
-  console.log('[fetchAllPreguntas] total rows:', allRows.length)
   return allRows
 }
 
@@ -378,11 +374,7 @@ export async function getQuestionsCount(): Promise<number> {
   const { count, error } = await supabase
     .from('preguntas')
     .select('id', { count: 'exact', head: true })
-  if (error) {
-    console.error('[getQuestionsCount] Supabase error:', error.message, error.code)
-    return 0
-  }
-  console.log('[getQuestionsCount] count:', count)
+  if (error) return 0
   return count ?? 0
 }
 
@@ -395,6 +387,30 @@ export async function getRandomQuestions(count: number): Promise<Question[]> {
   const rows = await fetchAllPreguntas()
   const shuffled = rows.sort(() => Math.random() - 0.5)
   return shuffled.slice(0, count).map(rowToQuestion)
+}
+
+// ── Topics helpers ──
+
+export interface TopicWithCount {
+  id: number
+  nombre: string
+  count: number
+}
+
+export async function getTopicsWithCount(): Promise<TopicWithCount[]> {
+  const { data, error } = await supabase
+    .from('materias')
+    .select('id, nombre, preguntas(count)')
+  if (error) return []
+  const topics = (data ?? [])
+    .map((m: any) => ({
+      id: m.id,
+      nombre: m.nombre,
+      count: m.preguntas?.[0]?.count ?? 0,
+    }))
+    .filter((t: TopicWithCount) => t.count > 0)
+    .sort((a: TopicWithCount, b: TopicWithCount) => a.nombre.localeCompare(b.nombre))
+  return topics
 }
 
 // ── Session helpers ──
