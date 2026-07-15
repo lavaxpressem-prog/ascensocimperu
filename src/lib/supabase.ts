@@ -383,7 +383,29 @@ export async function getQuestionsCount(): Promise<number> {
 
 export async function getQuestionsByMateria(materiaId: number): Promise<Question[]> {
   const rows = await fetchAllPreguntas()
-  return rows.map(rowToQuestion)
+  const questions = rows.map(rowToQuestion)
+
+  const topicMap = new Map<string, number>()
+  let idx = 0
+  const rowTopics: string[] = []
+
+  for (const row of rows) {
+    const ubicacion = row.ubicacion ?? ''
+    const match = ubicacion.match(/\[TITULO\s+([^\]]+)\]/i)
+    const topic = match ? `TITULO ${match[1]}` : 'Sin tema'
+    rowTopics.push(topic)
+    if (!topicMap.has(topic)) {
+      topicMap.set(topic, idx)
+      idx++
+    }
+  }
+
+  const topicEntries = Array.from(topicMap.entries())
+  const entry = topicEntries.find(([, id]) => id === materiaId)
+  if (!entry) return questions
+
+  const topicName = entry[0]
+  return questions.filter((q, i) => rowTopics[i] === topicName)
 }
 
 export async function getRandomQuestions(count: number): Promise<Question[]> {
@@ -401,18 +423,25 @@ export interface TopicWithCount {
 }
 
 export async function getTopicsWithCount(): Promise<TopicWithCount[]> {
-  const { data, error } = await supabase
-    .from('materias')
-    .select('id, nombre, preguntas(count)')
-  if (error) return []
-  const topics = (data ?? [])
-    .map((m: any) => ({
-      id: m.id,
-      nombre: m.nombre,
-      count: m.preguntas?.[0]?.count ?? 0,
-    }))
-    .filter((t: TopicWithCount) => t.count > 0)
-    .sort((a: TopicWithCount, b: TopicWithCount) => a.nombre.localeCompare(b.nombre))
+  const rows = await fetchAllPreguntas()
+  console.log('[PracticaPage] Total preguntas cargadas:', rows.length)
+
+  const topicCounts = new Map<string, number>()
+
+  for (const row of rows) {
+    const ubicacion = row.ubicacion ?? ''
+    const match = ubicacion.match(/\[TITULO\s+([^\]]+)\]/i)
+    const topic = match ? `TITULO ${match[1]}` : 'Sin tema'
+    topicCounts.set(topic, (topicCounts.get(topic) ?? 0) + 1)
+  }
+
+  const topics: TopicWithCount[] = Array.from(topicCounts.entries())
+    .map(([nombre, count], id) => ({ id, nombre, count }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre))
+
+  console.log('[PracticaPage] Temas encontrados:', topics.length)
+  topics.forEach(t => console.log(`  - ${t.nombre}: ${t.count} preguntas`))
+
   return topics
 }
 
