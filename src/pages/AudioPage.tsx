@@ -89,6 +89,10 @@ export function AudioPage() {
     const parts: string[] = []
     parts.push(currentQuestion.text)
 
+    currentQuestion.options.forEach((opt) => {
+      parts.push(`Alternativa ${opt.id.toUpperCase()}: ${opt.text}`)
+    })
+
     if (readAnswers) {
       const letters = ['A', 'B', 'C', 'D', 'E']
       const letter = letters[currentQuestion.indiceCorrecto] ?? String(currentQuestion.indiceCorrecto)
