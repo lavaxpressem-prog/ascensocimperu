@@ -383,17 +383,11 @@ export async function getQuestionsCount(): Promise<number> {
 
 export async function getQuestionsByMateria(materiaId: number): Promise<Question[]> {
   const rows = await fetchAllPreguntas()
-  const questions = rows.map(rowToQuestion)
 
   const topicMap = new Map<string, number>()
   let idx = 0
-  const rowTopics: string[] = []
-
   for (const row of rows) {
-    const ubicacion = row.ubicacion ?? ''
-    const match = ubicacion.match(/\[TITULO\s+([^\]]+)\]/i)
-    const topic = match ? `TITULO ${match[1]}` : 'Sin tema'
-    rowTopics.push(topic)
+    const topic = classifyQuestion(row)
     if (!topicMap.has(topic)) {
       topicMap.set(topic, idx)
       idx++
@@ -402,16 +396,56 @@ export async function getQuestionsByMateria(materiaId: number): Promise<Question
 
   const topicEntries = Array.from(topicMap.entries())
   const entry = topicEntries.find(([, id]) => id === materiaId)
-  if (!entry) return questions
+  if (!entry) return rows.map(rowToQuestion)
 
   const topicName = entry[0]
-  return questions.filter((q, i) => rowTopics[i] === topicName)
+  return rows
+    .filter(row => classifyQuestion(row) === topicName)
+    .map(rowToQuestion)
 }
 
 export async function getRandomQuestions(count: number): Promise<Question[]> {
   const rows = await fetchAllPreguntas()
   const shuffled = rows.sort(() => Math.random() - 0.5)
   return shuffled.slice(0, count).map(rowToQuestion)
+}
+
+// ── Question classifier ──
+
+function classifyQuestion(row: QuestionRow): string {
+  const t = `${row.pregunta} ${row.respuesta_correcta ?? ''} ${row.ubicacion ?? ''}`.toUpperCase()
+
+  if (t.includes('CÓDIGO PENAL') && !t.includes('PROCESAL') && !t.includes('TRÁFICO') && !t.includes('EXTORSIÓN') && !t.includes('LAVADO') && !t.includes('DROGAS') && !t.includes('VIOLENCIA') && !t.includes('CRIMEN ORGANIZADO') && !t.includes('MUJER')) return 'Código Penal'
+  if (t.includes('CÓDIGO PROCESAL PENAL') || t.includes('INVESTIGACIÓN PREPARATORIA') || t.includes('PRISIÓN PREVENTIVA') || t.includes('MEDIDA CAUTELAR') || t.includes('PROCESO PENAL') || t.includes('INVESTIGACIÓN DEL DELITO') || t.includes('ÁMBITO DE ACTUACIÓN JURISDICCIONAL')) return 'Código Procesal Penal'
+  if (t.includes('TRÁFICO ILÍCITO DE DROGAS') || t.includes('ESTUPEFACIENTES')) return 'Tráfico Ilícito de Drogas'
+  if (t.includes('LAVADO DE ACTIVOS') || t.includes('CONVIERTE O TRANSFIERE DINERO') || t.includes('MINERÍA ILEGAL')) return 'Lavado de Activos'
+  if (t.includes('EXTORSIÓN') || t.includes('DELITOS CONEXOS') || t.includes('ÁMBITO DE APLICACIÓN TERRITORIAL DEL DECRETO LEGISLATIVO 1611')) return 'Extorsión y Delitos Conexos'
+  if (t.includes('VIOLENCIA CONTRA LA MUJER') || t.includes('VIOLENCIA FAMILIAR')) return 'Violencia contra la Mujer'
+  if (t.includes('CRIMEN ORGANIZADO') || t.includes('ORGANIZACIÓN CRIMINAL')) return 'Crimen Organizado'
+  if (t.includes('PROTOCOLO DE ACTUACIÓN') || t.includes('PROCESO INMEDIATO')) return 'Proceso Inmediato y Protocolos de Actuación'
+  if (t.includes('USO DE LA FUERZA') || t.includes('FUERZA POLICIAL')) return 'Uso de la Fuerza por la PNP'
+  if (t.includes('DESAPARICIÓN DE PERSONAS')) return 'Desaparición Forzada de Personas'
+  if (t.includes('DDHH') || t.includes('DERECHOS HUMANOS POLICIALES') || t.includes('RESOLUCIÓN MINISTERIAL 487') || (t.includes('NIVEL DE FUERZA') && t.includes('EMPLEAR'))) return 'DDHH Aplicados a la Función Policial'
+
+  if (t.includes('RÉGIMEN DISCIPLINARIO') || t.includes('INFRACCIÓN DISCIPLINARIA') || t.includes('PROCEDIMIENTO ADMINISTRATIVO-DISCIPLINARIO') || t.includes('TRIBUNAL DE DISCIPLINA') || t.includes('SANCIÓN DISCIPLINARIA') || t.includes('IMPUTACIÓN') && t.includes('INFRACCIÓN') || t.includes('DESCARGO POR ESCRITO')) return 'Régimen Disciplinario de la PNP (Ley 30714)'
+
+  if (t.includes('PRUEBA DE INTEGRIDAD') || t.includes('PRUEBA DE CONTROL Y CONFIANZA') || t.includes('DECLARACIÓN JURADA') || t.includes('INTEGRIDAD INSTITUCIONAL') || t.includes('DIRCOCOR') || t.includes('OFICINA DE CONTROL, CUMPLIMIENTO Y CONFIANZA') || t.includes('OFICINA GENERAL DE INTEGRIDAD') || t.includes('PRUEBA DE DESCARTE') || t.includes('LUCHA CONTRA LA CORRUPCIÓN') || t.includes('DECRETO LEGISLATIVO 1291') || t.includes('D.L. 1291')) return 'Ley de Lucha contra la Corrupción (DL 1291)'
+
+  if (t.includes('CARRERA POLICIAL') || t.includes('INICIO DE LA CARRERA') || t.includes('SITUACIÓN DEL PERSONAL') || t.includes('ASIMILACIÓN') || (t.includes('EFECTIVIDAD') && t.includes('GRADO')) || t.includes('CALIFICACIÓN ANUAL') || t.includes('ASIGNACIÓN DE CARGOS') || t.includes('REASIGNACIÓN') || (t.includes('RETIRO') && t.includes('PERSONAL')) || (t.includes('EMPLEO') && t.includes('CATEGORÍA')) || t.includes('EVALUACIÓN DEL DESEMPEÑO') || t.includes('DERECHOS DE CARRERA') || t.includes('PERÍODO DE ASIMILACIÓN') || t.includes('SITUACIÓN DE ACTIVIDAD EN CUADROS') || t.includes('NOTA DE EVALUACIÓN') || t.includes('LISTA ANUAL DE RENDIMIENTO')) return 'Carrera y Situación del Personal PNP (DL 1149)'
+
+  if (t.includes('VALOR INSTITUCIONAL') || t.includes('PRINCIPIO INSTITUCIONAL') || t.includes('FINALIDAD FUNDAMENTAL') || t.includes('DIRECCIÓN NACIONAL') || t.includes('COMANDANCIA GENERAL') || t.includes('ESTADO MAYOR') || t.includes('INSPECTORÍA GENERAL') || t.includes('FORMACIÓN PROFESIONAL POLICIAL') || t.includes('ÓRGANOS CONSULTIVOS') || t.includes('SITUACIÓN DE ACTIVIDAD') && t.includes('PNP') || t.includes('SITUACIÓN DE DISPONIBILIDAD') || t.includes('ÓRGANOS DE INVESTIGACIÓN') && t.includes('PNP') || t.includes('DIRECCIÓN DE ORDEN') || (t.includes('SEGURIDAD CIUDADANA') && t.includes('COMITÉ')) || (t.includes('BIENESTAR') && t.includes('PERSONAL')) || (t.includes('VOCACIÓN') && t.includes('POLICIAL')) || (t.includes('CORTESÍA') && t.includes('CIUDADANO')) || (t.includes('DISCIPLINA') && t.includes('VALOR')) || t.includes('PERTENENCIA INSTITUCIONAL') || (t.includes('SERVICIO') && t.includes('VALOR') && t.includes('POLICIAL')) || t.includes('SISTEMA DISCIPLINARIO POLICIAL') || t.includes('PERSONAL DE ARMAS') && t.includes('UNIFORME') || t.includes('ESPECIALIDAD FUNCIONAL')) return 'Ley de la PNP (DL 1267)'
+
+  if (t.includes('PROCEDIMIENTO ADMINISTRATIVO') && !t.includes('DISCIPLINARIO') || t.includes('ACTO ADMINISTRATIVO') || t.includes('NULIDAD') && t.includes('ACTO') || t.includes('RECURSO ADMINISTRATIVO') || t.includes('VÍA ADMINISTRATIVA') || t.includes('NOTIFICACIÓN') && t.includes('ADMINISTRATIVO') || t.includes('LEY 27444') || t.includes('DERECHO ADMINISTRATIVO')) return 'Procedimiento Administrativo General (Ley 27444)'
+
+  if (t.includes('TRANSPARENCIA') || t.includes('ACCESO A LA INFORMACIÓN PÚBLICA') || t.includes('SOLICITUD DE ACCESO') || t.includes('INFORMACIÓN RESERVADA') || t.includes('LEY 27806') || (t.includes('PLAZO DE RESPUESTA') && t.includes('INFORMACIÓN'))) return 'Transparencia y Acceso a la Información (Ley 27806)'
+
+  if (t.includes('ASCENSO') || t.includes('PROCESO DE ASCENSO') || t.includes('CONSEJO DE ASCENSOS') || t.includes('EVALUACIÓN DE MERITOS') || t.includes('TIEMPO MÍNIMO DE SERVICIOS')) return 'Procesos de Ascenso del Personal PNP'
+
+  if (t.includes('DECLARACIÓN UNIVERSAL') || (t.includes('DERECHOS HUMANOS') && !t.includes('POLICIALES') && !t.includes('PNP')) || t.includes('DUDH') || t.includes('TODA PERSONA TIENE DEBERES RESPECTO')) return 'Declaración Universal de los Derechos Humanos'
+
+  if (t.includes('CONSTITUCIÓN') || t.includes('DERECHO FUNDAMENTAL') || (t.includes('CIUDADANÍA')) || (t.includes('PRESIDENTE DE LA REPÚBLICA') && !t.includes('PNP')) || t.includes('CONGRESO') && t.includes('REPÚBLICA') || t.includes('PODER EJECUTIVO') || t.includes('PODER LEGISLATIVO') || t.includes('PODER JUDICIAL') || t.includes('TRIBUNAL CONSTITUCIONAL') || t.includes('INCONSTITUCIONALIDAD') || t.includes('REFERÉNDUM') || t.includes('ACCIÓN POPULAR') || t.includes('HABEAS CORPUS') || t.includes('AMPARO') || t.includes('SECRETO BANCARIO') || t.includes('EXTRADICIÓN') || t.includes('INVIOLABILIDAD') || (t.includes('COMUNICACIONES') && t.includes('JUEZ')) || (t.includes('CIUDADANOS') && t.includes('DERECHO')) || t.includes('SINDICACIÓN Y HUELGA') || t.includes('SIMBOLOS DE LA PATRIA')) return 'Constitución Política del Perú'
+
+  return 'Otros'
 }
 
 // ── Topics helpers ──
@@ -429,15 +463,13 @@ export async function getTopicsWithCount(): Promise<TopicWithCount[]> {
   const topicCounts = new Map<string, number>()
 
   for (const row of rows) {
-    const ubicacion = row.ubicacion ?? ''
-    const match = ubicacion.match(/\[TITULO\s+([^\]]+)\]/i)
-    const topic = match ? `TITULO ${match[1]}` : 'Sin tema'
+    const topic = classifyQuestion(row)
     topicCounts.set(topic, (topicCounts.get(topic) ?? 0) + 1)
   }
 
   const topics: TopicWithCount[] = Array.from(topicCounts.entries())
     .map(([nombre, count], id) => ({ id, nombre, count }))
-    .sort((a, b) => a.nombre.localeCompare(b.nombre))
+    .sort((a, b) => b.count - a.count)
 
   console.log('[PracticaPage] Temas encontrados:', topics.length)
   topics.forEach(t => console.log(`  - ${t.nombre}: ${t.count} preguntas`))

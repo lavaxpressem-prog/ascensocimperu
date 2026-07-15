@@ -1,0 +1,189 @@
+{
+  "description": "Classification mapping for banco de preguntas PNP - Oficiales Subalternos 2026",
+  "total_materias": 22,
+  "materias": {
+    "1": {
+      "nombre": "Constitución Política del Perú",
+      "keywords": ["CONSTITUCIÓN", "ESTADO DEMOCRÁTICO", "DISTRITO ELECTORAL", "PLEBISCITO", "REFERÉNDUM"],
+      "patterns": ["TITULO I", "TITULO II", "TITULO III", "TITULO IV", "TITULO V", "TITULO VI", "CAPITULO"],
+      "codigo_range": "181000-181299"
+    },
+    "2": {
+      "nombre": "DDHH / DUDH",
+      "keywords": ["TODA PERSONA", "DERECHOS", "LIBERTAD", "DIGNIDAD", "DINERO DE LA NACIÓN", "PERSONA HUMANA"],
+      "patterns": ["ART", "DIGNIDAD", "INTEGRIDAD FÍSICA"],
+      "codigo_range": "179000-179999"
+    },
+    "3": {
+      "nombre": "Ley Orgánica PNP / D.L. 1267",
+      "keywords": ["ÓRGANOS", "FUNCIONES", "DIRECCIÓN", "SUBDIRECCIÓN", "PLANES ESTRATÉGICOS", "ORGANIZACIÓN POLICIAL", "CADENA DE MANDO", "SERVICIOS POLICIALES"],
+      "patterns": ["ART", "SECCIÓN", "CAPITULO"],
+      "codigo_range": "181100-181199"
+    },
+    "4": {
+      "nombre": "D.L. 1149 - Carrera y Situación del Personal",
+      "keywords": ["ASCENSO", "SITUACIÓN POLICIAL", "CUADRO DE ASIGNACIÓN", "ANTIGÜEDAD", "PERSONAL", "SUBOFICIALES", "OFICIALES"],
+      "patterns": ["ART", "SECCIÓN", "CAPITULO"],
+      "codigo_range": "181300-181399"
+    },
+    "5": {
+      "nombre": "D.L. 1291 - Lucha contra la Corrupción",
+      "keywords": ["CORRUPCIÓN", "DECLARACIÓN JURADA", "INTEGRIDAD", "CONFLICTO DE INTERESES", "PATRIMONIO"],
+      "patterns": ["ART", "SECCIÓN"],
+      "codigo_range": "181600-181699, 177000-177999"
+    },
+    "6": {
+      "nombre": "Ley 30714 - Régimen Disciplinario PNP",
+      "keywords": ["DISCIPLINARIO", "INFRACCIÓN", "FALTA", "SANCIONES", "PROCESO DISCIPLINARIO", "FALTAS LEVES", "FALTAS GRAVES"],
+      "patterns": ["ART", "SECCIÓN", "CAPITULO"],
+      "codigo_range": "177000-177999"
+    },
+    "7": {
+      "nombre": "D.L. 1318 - Formación Profesional",
+      "keywords": ["DIREDDOC", "EDUCACIÓN", "DOCTRINA", "INSTRUCCIÓN", "CAPACITACIÓN"],
+      "patterns": ["ART", "CAPITULO"],
+      "codigo_range": "181500-181599"
+    },
+    "8": {
+      "nombre": "TUO Ley 27806 - Transparencia",
+      "keywords": ["TRANSPARENCIA", "ACCESO A LA INFORMACIÓN", "INFORMACIÓN PÚBLICA", "SECRETOf"],
+      "patterns": ["ART", "CAPITULO"],
+      "codigo_range": "181700-181799"
+    },
+    "9": {
+      "nombre": "Ley de Ascensos PNP",
+      "keywords": ["ASCENSO", "ETAPA", "CONVOCATORIA", "JUNTA DE EVALUACIÓN", "PUNTAJE", "ORDEN DE MERITO"],
+      "patterns": ["ART", "CAPITULO"],
+      "codigo_range": "186700-186799"
+    },
+    "10": {
+      "nombre": "Ley 27444 - Procedimiento Administrativo",
+      "keywords": ["ACTO ADMINISTRATIVO", "PROCEDIMIENTO", "RECURSO", "NOTIFICACIÓN", "SANCIÓN ADMINISTRATIVA"],
+      "patterns": ["ART", "CAPITULO"],
+      "codigo_range": "181900-181999"
+    },
+    "11": {
+      "nombre": "Código Procesal Penal / D.L. 957",
+      "keywords": ["IMPUTADO", "VÍCTIMA", "MEDIDA CAUTELAR", "PRISIÓN PREVENTIVA", "DESAFORO", "HABEAS CORPUS", "POLICÍA NACIONAL"],
+      "patterns": ["ART", "CAPITULO", "SECCIÓN"],
+      "codigo_range": "184300-184399, 186100-186199"
+    },
+    "12": {
+      "nombre": "Código Penal / D.L. 635",
+      "keywords": ["DELITO", "PENA", "TIPO PENAL", "AGRAVANTE", "ATENUANTE", "AUTOR", "COAUTOR", "INSTIGADOR", "COOPERADOR NECESARIO"],
+      "patterns": ["ART", "CAPITULO", "SECCIÓN"],
+      "codigo_range": "184000-184099, 197000-197999"
+    },
+    "13": {
+      "nombre": "D.L. 1186 - Uso de la Fuerza",
+      "keywords": ["FUERZA", "PROPORCIONALIDAD", "NECESIDAD", "USO DE LA FUERZA FÍSICA", "COMISO", "REVISIÓN CORPORAL"],
+      "patterns": ["ART", "CAPITULO"],
+      "codigo_range": "184700-184799, 199000-199999"
+    },
+    "14": {
+      "nombre": "D.L. 1241 - Tráfico Ilícito de Drogas",
+      "keywords": ["DROGAS", "TRÁFICO ILÍCITO", "NARCOTRÁFICO", "ESTUPEFACIENTES", "MINISTERIO PÚBLICO", "LIBRE COMERCIALIZACIÓN"],
+      "patterns": ["ART", "CAPITULO", "SECCIÓN"],
+      "codigo_range": "195000-195999"
+    },
+    "15": {
+      "nombre": "D.L. 1106 - Lavado de Activos",
+      "keywords": ["LAVADO DE ACTIVOS", "COMISIÓN PREPARATORIA", "ACTOS DE PREPARACIÓN", "PROCESO PENAL"],
+      "patterns": ["ART"],
+      "codigo_range": "185000-185099"
+    },
+    "16": {
+      "nombre": "Ley 30364 - Violencia contra la Mujer y Familiar",
+      "keywords": ["VIOLENCIA", "MEDIDAS DE PROTECCIÓN", "MUJER", "INTEGRANTE DEL GRUPO FAMILIAR", "AUXILIAR", "VIOLENCIA FAMILIAR"],
+      "patterns": ["ART", "CAPITULO"],
+      "codigo_range": "185200-185299"
+    },
+    "17": {
+      "nombre": "Ley 30077 - Crimen Organizado",
+      "keywords": ["ORGANIZACIÓN CRIMINAL", "DELITO", "CRIMEN ORGANIZADO"],
+      "patterns": ["ART"],
+      "codigo_range": "185300-185399"
+    },
+    "18": {
+      "nombre": "D.S. 009-2018-JUS - Proceso Inmediato",
+      "keywords": ["PROCESO INMEDIATO", "FLAGRANCIA", "DENUNCIA"],
+      "patterns": ["ART"],
+      "codigo_range": "185500-185699"
+    },
+    "19": {
+      "nombre": "Ley 32130 - Procesos Penales Especiales",
+      "keywords": ["PROCESOS PENALES", "CELSO CÉSAR", "PRESUNCIÓN DE INOCENCIA", "CONFESIÓN"],
+      "patterns": ["ART"],
+      "codigo_range": "184800-184899"
+    },
+    "20": {
+      "nombre": "D.L. 1611 - Extorsión y Retiro Ilegal de Menores",
+      "keywords": ["EXTORSIÓN", "SECUESTRO", "RETIRO DE MENORES"],
+      "patterns": ["ART"],
+      "codigo_range": "200000-202999"
+    },
+    "21": {
+      "nombre": "Ley 30364 / D.L. 1288 - Desaparición Forzada",
+      "keywords": ["DESAPARICIÓN", "PERSONA", "FORZADA"],
+      "patterns": ["ART"],
+      "codigo_range": "203000-203999"
+    },
+    "22": {
+      "nombre": "DDHH en la Función Policial",
+      "keywords": ["INTERVENCIÓN", "MEDIO HÁBIL", "DEBIDO PROCESO", "INFRAGANTI", "PERSONA", "DERECHOS"],
+      "patterns": ["ART"],
+      "codigo_range": "204000-206999"
+    }
+  },
+  "mergeable_groups": {
+    "group_1_constitucion_ddhh": {
+      "materias": [1, 2],
+      "reason": "Ambas materias comparten vocabulario de derechos fundamentales. Materia 2 se enfoca en DUDH/dignidad, materia 1 en estructura constitucional.",
+      "overlap_keywords": ["DERECHOS", "LIBERTAD", "PERSONA"]
+    },
+    "group_2_carrera_disciplina": {
+      "materias": [4, 6],
+      "reason": "Ambas tratan sobre situación policial y sanciones. Materia 4 = carrera/ascenso, materia 6 = régimen disciplinario.",
+      "overlap_keywords": ["SITUACIÓN POLICIAL", "PERSONAL"]
+    },
+    "group_3_penal_procesal": {
+      "materias": [11, 12],
+      "reason": "Código Penal y Procesal Penal comparten terminología (delito, imputado, pena, proceso).",
+      "overlap_keywords": ["DELITO", "IMPUTADO", "PENA", "PROCESO PENAL"]
+    },
+    "group_4_violencia_ddhh": {
+      "materias": [16, 21, 22],
+      "reason": "Todas tratan violencia/derechos humanos. Materia 16 = violencia mujer/familiar, 21 = desaparición forzada, 22 = DDHH función policial.",
+      "overlap_keywords": ["VIOLENCIA", "PERSONA", "DERECHOS"]
+    },
+    "group_5_narcotrafico_lavado": {
+      "materias": [14, 15],
+      "reason": "Tráfico de drogas y lavado de activos frecuentemente se asocian en casos reales.",
+      "overlap_keywords": ["DELITO", "NARCOTRÁFICO"]
+    }
+  },
+  "conflict_identification": {
+    "conflict_1": {
+      "materias": [3, 4, 6, 7, 9],
+      "description": "Materias internas PNP (organización, carrera, disciplina, formación, ascensos) comparten términos como 'ORGANIZACIÓN', 'POLICÍA NACIONAL', 'PERSONAL'. Se requiere contexto adicional o código numérico para distinguir.",
+      "resolution": "Usar 'codigo' numérico como factor desempate: 1811xx (materia 3), 1813xx (materia 4), 177xxx (materia 5), 1815xx (materia 7), 1867xx (materia 9)"
+    },
+    "conflict_2": {
+      "materias": [11, 12],
+      "description": "Código Penal y Procesal Penal comparten muchos términos: 'DELITO', 'PENA', 'IMPUTADO', 'AUTOR', 'PRISIÓN'.",
+      "resolution": "Materia 12 se enfoca en definiciones/tipos penales, materia 11 en procedimientos/prision preventiva/habeas corpus. Usar 'UBICACIÓN' (ref. artículo) como desempate."
+    },
+    "conflict_3": {
+      "materias": [5, 6],
+      "description": "Ambas comparten códigos 177xxx y términos como 'INFRACCIÓN', 'SANCIONES', 'PERSONAL'.",
+      "resolution": "Materia 5 anticorrupción (declaración jurada, integridad), materia 6 régimen disciplinario (faltas leves/graves, proceso disciplinario)."
+    }
+  },
+  "classification_algorithm": {
+    "step_1": "Check 'codigo' column first (most reliable for numeric codes)",
+    "step_2": "Check 'ubicacion' for article references (e.g., 'ART: 22' → materia 1)",
+    "step_3": "Keyword matching against unique keywords per materia",
+    "step_4": "Pattern matching on question text",
+    "step_5": "Conflict resolution via priority order or context"
+  }
+}
