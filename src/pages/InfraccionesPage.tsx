@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Page, 
   PageHeader, 
@@ -14,10 +14,45 @@ import {
   Input
 } from '@blinkdotnew/ui'
 import { AlertTriangle, Info, Search } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+
+interface InfraccionDisciplinaria {
+  id: number
+  codigo: string
+  gravedad: string
+  infraccion: string
+  medida_preventiva: string
+  sancion: string
+}
 
 export function InfraccionesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchQueryDisciplina, setSearchQueryDisciplina] = useState('')
+
+  const [disciplinarias, setDisciplinarias] = useState<InfraccionDisciplinaria[]>([])
+  const [loadingDisciplina, setLoadingDisciplina] = useState(true)
+  const [errorDisciplina, setErrorDisciplina] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchDisciplinarias() {
+      try {
+        setLoadingDisciplina(true)
+        setErrorDisciplina(null)
+        const { data, error } = await supabase
+          .from('infracciones_pnp')
+          .select('*')
+          .order('created_at', { ascending: true })
+
+        if (error) throw error
+        setDisciplinarias(data ?? [])
+      } catch (err: any) {
+        setErrorDisciplina(err.message ?? 'Error al cargar infracciones disciplinarias')
+      } finally {
+        setLoadingDisciplina(false)
+      }
+    }
+    fetchDisciplinarias()
+  }, [])
 
   const mockInfracciones = [
     { id: '1', code: 'G01', severity: 'Grave', description: 'No respetar la luz roja del semáforo.', fine: 396.00, points: 20 },
@@ -25,42 +60,34 @@ export function InfraccionesPage() {
     { id: '3', code: 'L01', severity: 'Leve', description: 'Estacionar en lugar prohibido.', fine: 198.00, points: 5 },
   ]
 
-  const infraccionesDisciplinarias = [
-    { id: '1', code: 'D001', severity: 'Muy Grave', description: 'Faltas grave a los deberes de la función policial sin causa justificada', fine: 'Amonestación escrita', sancion: 'Hasta 30 días de suspensión' },
-    { id: '2', code: 'D002', severity: 'Grave', description: 'Negligencia en el cumplimiento de funciones que cause daño al servicio', fine: 'Descuento salarial', sancion: 'Suspensión de 8 a 15 días' },
-    { id: '3', code: 'D003', severity: 'Leve', description: 'Falta de puntualidad reiterada a las actividades programadas', fine: 'Amonestación verbal', sancion: 'Suspensión de 1 a 7 días' },
-    { id: '4', code: 'D004', severity: 'Muy Grave', description: 'Incumplimiento de deberes que afecte el honor y dignidad de la institución', fine: 'Pérdida de beneficios', sancion: 'Destitución' },
-    { id: '5', code: 'D005', severity: 'Grave', description: 'Abuso de autoridad en el ejercicio de funciones policiales', fine: 'Descuento salarial', sancion: 'Suspensión de 15 a 30 días' },
-  ]
-
   const columnsDisciplina = [
     { 
-      accessorKey: 'code', 
+      accessorKey: 'codigo', 
       header: 'Código',
-      cell: ({ row }: any) => <span className="font-bold">{row.original.code}</span>
+      cell: ({ row }: any) => <span className="font-bold">{row.original.codigo}</span>
     },
     { 
-      accessorKey: 'severity', 
+      accessorKey: 'gravedad', 
       header: 'Gravedad',
       cell: ({ row }: any) => (
         <Badge variant={
-          row.original.severity === 'Muy Grave' ? 'destructive' :
-          row.original.severity === 'Grave' ? 'default' :
+          row.original.gravedad === 'Muy Grave' ? 'destructive' :
+          row.original.gravedad === 'Grave' ? 'default' :
           'secondary'
         }>
-          {row.original.severity}
+          {row.original.gravedad}
         </Badge>
       )
     },
     { 
-      accessorKey: 'description', 
+      accessorKey: 'infraccion', 
       header: 'Descripción',
-      cell: ({ row }: any) => <span className="text-sm">{row.original.description}</span>
+      cell: ({ row }: any) => <span className="text-sm">{row.original.infraccion}</span>
     },
     { 
-      accessorKey: 'fine', 
+      accessorKey: 'medida_preventiva', 
       header: 'Medida Preventiva',
-      cell: ({ row }: any) => <span className="text-sm">{row.original.fine}</span>
+      cell: ({ row }: any) => <span className="text-sm">{row.original.medida_preventiva}</span>
     },
     { 
       accessorKey: 'sancion', 
@@ -74,9 +101,9 @@ export function InfraccionesPage() {
     item.description.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const filteredDisciplina = infraccionesDisciplinarias.filter(item =>
-    item.code.toLowerCase().includes(searchQueryDisciplina.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQueryDisciplina.toLowerCase())
+  const filteredDisciplina = disciplinarias.filter(item =>
+    item.codigo.toLowerCase().includes(searchQueryDisciplina.toLowerCase()) ||
+    item.infraccion.toLowerCase().includes(searchQueryDisciplina.toLowerCase())
   )
 
   const columns = [
@@ -176,11 +203,21 @@ export function InfraccionesPage() {
               </div>
             </div>
             
-            <DataTable 
-              columns={columnsDisciplina} 
-              data={filteredDisciplina} 
-              searchable={false}
-            />
+            {loadingDisciplina ? (
+              <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+                Cargando infracciones...
+              </div>
+            ) : errorDisciplina ? (
+              <div className="flex items-center justify-center py-12 text-destructive text-sm">
+                {errorDisciplina}
+              </div>
+            ) : (
+              <DataTable 
+                columns={columnsDisciplina} 
+                data={filteredDisciplina} 
+                searchable={false}
+              />
+            )}
           </TabsContent>
         </Tabs>
       </PageBody>
