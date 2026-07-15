@@ -21,6 +21,8 @@ function cleanTextForSpeech(text: string): string {
   cleaned = cleaned.replace(/\[(?:TITULO\s+I+|CAPITULO\s+I+|CAP\.\s*\d+|ART\.\s*\d+|NUM\.\s*\d+)[^\]]*\]/gi, '')
   cleaned = cleaned.replace(/\[([^\]]+)\]/g, '$1')
   cleaned = cleaned.replace(/\bART\.?\s*/gi, 'Artículo ')
+  cleaned = cleaned.replace(/[\u00AD\u200B\u200C\u200D\u200E\u200F\uFEFF]/g, '')
+  cleaned = cleaned.replace(/\u00A0/g, ' ')
   cleaned = cleaned.replace(/\s{2,}/g, ' ').trim()
   return cleaned
 }
