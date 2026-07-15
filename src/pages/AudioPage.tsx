@@ -87,19 +87,13 @@ export function AudioPage() {
     synth.cancel()
 
     const parts: string[] = []
-    parts.push(`Pregunta ${currentIndex + 1}. ${currentQuestion.topic}. ${currentQuestion.text}`)
-    parts.push('Las alternativas son:')
-    currentQuestion.options.forEach((opt) => {
-      parts.push(`${opt.id.toUpperCase()}. ${opt.text}`)
-    })
+    parts.push(currentQuestion.text)
 
     if (readAnswers) {
       const correctOpt = currentQuestion.options.find((o) => o.id === currentQuestion.correctOption)
       if (correctOpt) {
-        parts.push(`La respuesta correcta es ${correctOpt.id.toUpperCase()}.`)
-      }
-      if (currentQuestion.ubicacion) {
-        parts.push(`Ubicación: ${currentQuestion.ubicacion}`)
+        parts.push(`La respuesta correcta es la alternativa ${correctOpt.id.toUpperCase()}.`)
+        parts.push(correctOpt.text)
       }
     }
 

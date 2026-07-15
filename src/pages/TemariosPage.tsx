@@ -167,8 +167,8 @@ export function TemariosPage() {
                 </div>
               </div>
               <div className="hidden lg:flex items-center justify-center w-48 h-48">
-                <div className="w-40 h-40 rounded-full border-4 border-yellow-500/50 bg-gradient-to-br from-yellow-600/20 to-yellow-400/10 flex items-center justify-center">
-                  <img src="/logo-noticias.jpeg" alt="PNP" className="w-32 h-32 object-contain" />
+                <div className="w-40 h-40 rounded-full border-4 border-yellow-500/50 bg-gradient-to-br from-yellow-600/20 to-yellow-400/10 flex items-center justify-center overflow-hidden">
+                  <img src="/logo-noticias.png" alt="PNP" className="w-full h-full object-cover" />
                 </div>
               </div>
             </div>
