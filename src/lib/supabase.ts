@@ -284,7 +284,6 @@ export interface Question {
 interface QuestionRow {
   id: number
   numero: number
-  materia_id: number
   pregunta: string
   opciones: { id: string; text: string }[] | string
   respuesta_correcta: string
@@ -327,7 +326,7 @@ function rowToQuestion(row: QuestionRow): Question {
 
   return {
     id: row.id,
-    topic: String(row.materia_id),
+    topic: String(row.numero),
     text: row.pregunta,
     options,
     correctOption,
@@ -337,12 +336,11 @@ function rowToQuestion(row: QuestionRow): Question {
   }
 }
 
-const PREGUNTAS_COLUMNS = 'id, numero, materia_id, pregunta, opciones, respuesta_correcta, indice_correcto, ubicacion, codigo, created_at'
+const PREGUNTAS_COLUMNS = 'id, numero, pregunta, opciones, respuesta_correcta, indice_correcto, ubicacion, codigo, created_at'
 
-async function fetchAllPreguntas(opts?: { materia_id?: number }): Promise<QuestionRow[]> {
+async function fetchAllPreguntas(): Promise<QuestionRow[]> {
   const allRows: QuestionRow[] = []
   let offset = 0
-  const filters = opts?.materia_id
 
   while (true) {
     let query = supabase
@@ -351,13 +349,14 @@ async function fetchAllPreguntas(opts?: { materia_id?: number }): Promise<Questi
       .order('id', { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1)
 
-    if (filters !== undefined) {
-      query = query.eq('materia_id', filters)
+    const { data, error, status, statusText } = await query
+
+    console.log('[fetchAllPreguntas] status:', status, statusText)
+    console.log('[fetchAllPreguntas] data:', data)
+    if (error) {
+      console.error('[fetchAllPreguntas] error:', JSON.stringify(error, null, 2))
+      break
     }
-
-    const { data, error } = await query
-
-    if (error) break
     if (!data || data.length === 0) break
 
     allRows.push(...(data as QuestionRow[]))
@@ -383,7 +382,7 @@ export async function getQuestionsCount(): Promise<number> {
 }
 
 export async function getQuestionsByMateria(materiaId: number): Promise<Question[]> {
-  const rows = await fetchAllPreguntas({ materia_id: materiaId })
+  const rows = await fetchAllPreguntas()
   return rows.map(rowToQuestion)
 }
 
