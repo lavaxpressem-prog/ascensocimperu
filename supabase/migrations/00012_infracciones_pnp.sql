@@ -13,7 +13,6 @@ CREATE TABLE public.infracciones_pnp (
   codigo              TEXT NOT NULL,
   gravedad            TEXT NOT NULL,
   infraccion          TEXT NOT NULL,
-  medida_preventiva   TEXT NOT NULL,
   sancion             TEXT NOT NULL,
   created_at          TIMESTAMPTZ DEFAULT NOW()
 );
