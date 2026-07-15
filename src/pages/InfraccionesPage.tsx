@@ -85,11 +85,6 @@ export function InfraccionesPage() {
       cell: ({ row }: any) => <span className="text-sm">{row.original.infraccion}</span>
     },
     { 
-      accessorKey: 'medida_preventiva', 
-      header: 'Medida Preventiva',
-      cell: ({ row }: any) => <span className="text-sm">{row.original.medida_preventiva}</span>
-    },
-    { 
       accessorKey: 'sancion', 
       header: 'Sanción',
       cell: ({ row }: any) => <span className="font-semibold text-sm">{row.original.sancion}</span>
