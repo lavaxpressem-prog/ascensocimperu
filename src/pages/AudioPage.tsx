@@ -15,6 +15,16 @@ import {
 } from 'lucide-react'
 import { getQuestionsBatch, type Question } from '../lib/supabase'
 
+function cleanTextForSpeech(text: string): string {
+  let cleaned = text
+  cleaned = cleaned.replace(/\*\*|[*_#~`]/g, '')
+  cleaned = cleaned.replace(/\[(?:TITULO\s+I+|CAPITULO\s+I+|CAP\.\s*\d+|ART\.\s*\d+|NUM\.\s*\d+)[^\]]*\]/gi, '')
+  cleaned = cleaned.replace(/\[([^\]]+)\]/g, '$1')
+  cleaned = cleaned.replace(/\bART\.?\s*/gi, 'Artículo ')
+  cleaned = cleaned.replace(/\s{2,}/g, ' ').trim()
+  return cleaned
+}
+
 export function AudioPage() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
@@ -100,7 +110,7 @@ export function AudioPage() {
       parts.push(currentQuestion.respuestaCorrecta)
     }
 
-    const fullText = parts.join(' ')
+    const fullText = cleanTextForSpeech(parts.join(' '))
     const utterance = new SpeechSynthesisUtterance(fullText)
     utterance.lang = 'es-ES'
     utterance.rate = speed
