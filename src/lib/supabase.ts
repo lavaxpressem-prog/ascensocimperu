@@ -276,6 +276,8 @@ export interface Question {
   text: string
   options: { id: string; text: string }[]
   correctOption: string
+  respuestaCorrecta: string
+  indiceCorrecto: number
   ubicacion?: string
 }
 
@@ -329,6 +331,8 @@ function rowToQuestion(row: QuestionRow): Question {
     text: row.pregunta,
     options,
     correctOption,
+    respuestaCorrecta: row.respuesta_correcta,
+    indiceCorrecto: row.indice_correcto,
     ubicacion: row.ubicacion ?? undefined,
   }
 }

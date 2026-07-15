@@ -90,11 +90,10 @@ export function AudioPage() {
     parts.push(currentQuestion.text)
 
     if (readAnswers) {
-      const correctOpt = currentQuestion.options.find((o) => o.id === currentQuestion.correctOption)
-      if (correctOpt) {
-        parts.push(`La respuesta correcta es la alternativa ${correctOpt.id.toUpperCase()}.`)
-        parts.push(correctOpt.text)
-      }
+      const letters = ['A', 'B', 'C', 'D', 'E']
+      const letter = letters[currentQuestion.indiceCorrecto] ?? String(currentQuestion.indiceCorrecto)
+      parts.push(`La respuesta correcta es la alternativa ${letter}.`)
+      parts.push(currentQuestion.respuestaCorrecta)
     }
 
     const fullText = parts.join(' ')
