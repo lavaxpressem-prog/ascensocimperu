@@ -149,7 +149,17 @@ export function AudioPage() {
     }
 
     utteranceRef.current = utterance
+    console.group('[AudioPage] DIAGNOSTIC — speak()')
+    console.log('utterance.text:', utterance.text)
+    console.log('utterance.voice:', utterance.voice ? `${utterance.voice.name} (${utterance.voice.lang})` : 'null (default system voice)')
+    console.log('utterance.lang:', utterance.lang)
+    console.log('utterance.rate:', utterance.rate)
+    console.log('utterance.pitch:', utterance.pitch)
+    console.log('utterance.volume:', utterance.volume)
+    console.log('charCodes of first 60 chars:', utterance.text.substring(0, 60).split('').map(c => `${c}[${c.charCodeAt(0)}]`).join(' '))
     synth.speak(utterance)
+    console.log('synth.getVoices():', synth.getVoices().map(v => `${v.name} (${v.lang})${v.default ? ' [DEFAULT]' : ''}`).join(' | '))
+    console.groupEnd()
   }
 
   const speakQuestion = () => {
@@ -178,8 +188,14 @@ export function AudioPage() {
       parts.push(currentQuestion.respuestaCorrecta)
     }
 
-    const fullText = cleanTextForSpeech(parts.join(' '))
-    console.log('[AudioPage] speechSynthesis text:', fullText)
+    const rawText = parts.join(' ')
+    const fullText = cleanTextForSpeech(rawText)
+    console.group('[AudioPage] CLEANING DIAGNOSTIC')
+    console.log('RAW text (before cleanTextForSpeech):', rawText)
+    console.log('CLEANED text (after cleanTextForSpeech):', fullText)
+    console.log('RAW first 80 chars:', rawText.substring(0, 80).split('').map(c => `${c}[${c.charCodeAt(0)}]`).join(' '))
+    console.log('CLEAN first 80 chars:', fullText.substring(0, 80).split('').map(c => `${c}[${c.charCodeAt(0)}]`).join(' '))
+    console.groupEnd()
 
     const warmUp = new SpeechSynthesisUtterance('.')
     warmUp.lang = 'es-ES'
