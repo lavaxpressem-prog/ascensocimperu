@@ -1,62 +1,54 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Search, Bell, Calendar, Download, GitCompare, BookOpen, Share2, Bookmark,
   ChevronDown, Clock, Send, TrendingUp, RefreshCw, ChevronLeft, ChevronRight,
   Newspaper, ArrowRight, Eye, FileText
 } from 'lucide-react'
+import { supabase } from '../lib/supabase'
+
+interface Noticia {
+  id: string
+  titulo: string
+  descripcion: string
+  categoria: string
+  fuente: string
+  estado: string | null
+  fecha_publicacion: string
+  pdf_url: string | null
+}
 
 const CATEGORIAS = ['Todas', 'Leyes', 'Resoluciones', 'Decretos', 'Directivas', 'Comunicados', 'Ascensos', 'MININTER', 'PNP']
 
-const noticias = [
-  {
-    id: 1,
-    titulo: 'Ley N° 30714 - Ley de la Policía Nacional del Perú',
-    descripcion: 'Se modifica la Ley N° 30714 para fortalecer la estructura y funciones de la PNP.',
-    fecha: '02 Jun 2026',
-    estado: 'Vigente',
-    estadoColor: 'bg-emerald-500',
-    categoria: 'Ley',
-    categoriaColor: 'bg-blue-500',
-    fuente: 'Diario Oficial El Peruano',
-    imagen: 'ley',
-  },
-  {
-    id: 2,
-    titulo: 'Resolución Ministerial N° 456-2026-IN',
-    descripcion: 'Aprueban el nuevo protocolo para intervenciones policiales en la vía pública.',
-    fecha: '01 Jun 2026',
-    estado: 'Nueva',
-    estadoColor: 'bg-blue-500',
-    categoria: 'Resolución',
-    categoriaColor: 'bg-emerald-500',
-    fuente: 'MININTER',
-    imagen: 'resolucion',
-  },
-  {
-    id: 3,
-    titulo: 'Decreto Supremo N° 003-2026-IN',
-    descripcion: 'Reglamento del uso de la fuerza por parte de la Policía Nacional del Perú.',
-    fecha: '31 May 2026',
-    estado: 'Modificada',
-    estadoColor: 'bg-orange-500',
-    categoria: 'Decreto',
-    categoriaColor: 'bg-orange-500',
-    fuente: 'MININTER',
-    imagen: 'decreto',
-  },
-  {
-    id: 4,
-    titulo: 'Directiva N° 010-2026-CG PNP/EMG',
-    descripcion: 'Lineamientos para la evaluación de desempeño del personal policial.',
-    fecha: '30 May 2026',
-    estado: 'Vigente',
-    estadoColor: 'bg-emerald-500',
-    categoria: 'Directiva',
-    categoriaColor: 'bg-purple-500',
-    fuente: 'Comandancia General PNP',
-    imagen: 'directiva',
-  },
-]
+const categoriaColorMap: Record<string, string> = {
+  'Ley': 'bg-blue-500',
+  'Resolución': 'bg-emerald-500',
+  'Decreto': 'bg-orange-500',
+  'Directiva': 'bg-purple-500',
+  'Comunicado': 'bg-cyan-500',
+  'Ascenso': 'bg-yellow-500',
+}
+
+const estadoColorMap: Record<string, string> = {
+  'Vigente': 'bg-emerald-500',
+  'Nueva': 'bg-blue-500',
+  'Modificada': 'bg-orange-500',
+}
+
+const categoriaToImagenMap: Record<string, string> = {
+  'Ley': 'ley',
+  'Resolución': 'resolucion',
+  'Decreto': 'decreto',
+  'Directiva': 'directiva',
+}
+
+const categoriaFilterMap: Record<string, string> = {
+  'Leyes': 'Ley',
+  'Resoluciones': 'Resolución',
+  'Decretos': 'Decreto',
+  'Directivas': 'Directiva',
+  'Comunicados': 'Comunicado',
+  'Ascensos': 'Ascenso',
+}
 
 const historial = [
   { nombre: 'Ley N° 30714', desc: 'Modificación de artículos 12, 18 y 45', fecha: '02 Jun 2026', color: 'bg-blue-500' },
@@ -84,14 +76,6 @@ const notificaciones = [
   { texto: 'Directiva actualizada', tiempo: 'Hace 1 día', color: 'bg-blue-500' },
 ]
 
-const calendarioDias = [
-  [0, 1, 2, 3, 0, 0, 0],
-  [0, 0, 0, 0, 10, 0, 0],
-  [15, 0, 0, 0, 20, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0],
-  [0, 0, 0, 0, 0, 0, 0],
-]
-
 function NoticiaImagen({ tipo }: { tipo: string }) {
   const configs: Record<string, { bg: string; icon: React.ReactNode; label: string }> = {
     ley: { bg: 'from-blue-900/80 to-blue-800/60', icon: <BookOpen size={40} />, label: 'LEY DE LA POLICÍA NACIONAL DEL PERÚ' },
@@ -108,10 +92,40 @@ function NoticiaImagen({ tipo }: { tipo: string }) {
   )
 }
 
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
 export function TemariosPage() {
   const [categoriaActiva, setCategoriaActiva] = useState('Todas')
   const [busqueda, setBusqueda] = useState('')
   const [iaInput, setIaInput] = useState('')
+  const [noticias, setNoticias] = useState<Noticia[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from('noticias')
+      .select('*')
+      .order('fecha_publicacion', { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) setNoticias(data)
+        setLoading(false)
+      })
+  }, [])
+
+  const filteredNoticias = noticias.filter((n) => {
+    const matchCat =
+      categoriaActiva === 'Todas' ||
+      n.categoria === (categoriaFilterMap[categoriaActiva] ?? categoriaActiva) ||
+      n.fuente === categoriaActiva
+    const matchSearch =
+      !busqueda ||
+      n.titulo.toLowerCase().includes(busqueda.toLowerCase()) ||
+      n.descripcion.toLowerCase().includes(busqueda.toLowerCase())
+    return matchCat && matchSearch
+  })
 
   return (
     <div className="min-h-screen bg-[#0A0E14] text-white">
@@ -211,46 +225,93 @@ export function TemariosPage() {
 
           {/* Grid de Noticias */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {noticias.map((noticia) => (
-              <div key={noticia.id} className="bg-[#12161F] border border-gray-700/30 rounded-xl overflow-hidden hover:border-gray-600/50 transition-all hover:shadow-xl hover:shadow-black/20">
-                <div className="relative">
-                  <NoticiaImagen tipo={noticia.imagen} />
-                  <span className={`absolute top-3 left-3 ${noticia.categoriaColor} text-white text-[11px] font-bold px-2.5 py-1 rounded-md`}>
-                    {noticia.categoria}
-                  </span>
-                </div>
-                <div className="p-5 space-y-3">
-                  <h3 className="font-bold text-white text-[15px] leading-snug line-clamp-2">{noticia.titulo}</h3>
-                  <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">{noticia.descripcion}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Calendar size={13} />
-                      {noticia.fecha}
-                    </div>
-                    <span className={`${noticia.estadoColor} text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full`}>
-                      {noticia.estado}
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-500">Fuente: {noticia.fuente}</p>
-                  <div className="flex items-center gap-4 pt-2 border-t border-gray-700/30">
-                    <button className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-yellow-400 transition-colors">
-                      <BookOpen size={14} />
-                      Leer
-                    </button>
-                    <button className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-yellow-400 transition-colors">
-                      <Download size={14} />
-                      PDF
-                    </button>
-                    <button className="text-gray-400 hover:text-yellow-400 transition-colors ml-auto">
-                      <Share2 size={14} />
-                    </button>
-                    <button className="text-gray-400 hover:text-yellow-400 transition-colors">
-                      <Bookmark size={14} />
-                    </button>
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-[#12161F] border border-gray-700/30 rounded-xl overflow-hidden animate-pulse">
+                  <div className="h-44 bg-gray-700/30" />
+                  <div className="p-5 space-y-3">
+                    <div className="h-4 bg-gray-700/30 rounded w-3/4" />
+                    <div className="h-3 bg-gray-700/20 rounded w-full" />
+                    <div className="h-3 bg-gray-700/20 rounded w-1/2" />
                   </div>
                 </div>
+              ))
+            ) : filteredNoticias.length === 0 ? (
+              <div className="col-span-2 text-center py-12 text-gray-500 text-sm">
+                No se encontraron noticias
               </div>
-            ))}
+            ) : (
+              filteredNoticias.map((noticia) => {
+                const imagenTipo = categoriaToImagenMap[noticia.categoria] || 'ley'
+                const catColor = categoriaColorMap[noticia.categoria] || 'bg-gray-500'
+                const estColor = noticia.estado ? (estadoColorMap[noticia.estado] || 'bg-gray-500') : null
+                return (
+                  <div key={noticia.id} className="bg-[#12161F] border border-gray-700/30 rounded-xl overflow-hidden hover:border-gray-600/50 transition-all hover:shadow-xl hover:shadow-black/20">
+                    <div className="relative">
+                      <NoticiaImagen tipo={imagenTipo} />
+                      <span className={`absolute top-3 left-3 ${catColor} text-white text-[11px] font-bold px-2.5 py-1 rounded-md`}>
+                        {noticia.categoria}
+                      </span>
+                    </div>
+                    <div className="p-5 space-y-3">
+                      <h3 className="font-bold text-white text-[15px] leading-snug line-clamp-2">{noticia.titulo}</h3>
+                      <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">{noticia.descripcion}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                          <Calendar size={13} />
+                          {formatDate(noticia.fecha_publicacion)}
+                        </div>
+                        {estColor && (
+                          <span className={`${estColor} text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full`}>
+                            {noticia.estado}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500">Fuente: {noticia.fuente}</p>
+                      <div className="flex items-center gap-4 pt-2 border-t border-gray-700/30">
+                        {noticia.pdf_url ? (
+                          <a
+                            href={noticia.pdf_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-yellow-400 transition-colors"
+                          >
+                            <BookOpen size={14} />
+                            Leer
+                          </a>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-xs text-gray-600 cursor-not-allowed">
+                            <BookOpen size={14} />
+                            Leer
+                          </span>
+                        )}
+                        {noticia.pdf_url ? (
+                          <a
+                            href={noticia.pdf_url}
+                            download
+                            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-yellow-400 transition-colors"
+                          >
+                            <Download size={14} />
+                            PDF
+                          </a>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-xs text-gray-600 cursor-not-allowed">
+                            <Download size={14} />
+                            PDF
+                          </span>
+                        )}
+                        <button className="text-gray-400 hover:text-yellow-400 transition-colors ml-auto">
+                          <Share2 size={14} />
+                        </button>
+                        <button className="text-gray-400 hover:text-yellow-400 transition-colors">
+                          <Bookmark size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })
+            )}
           </div>
 
           {/* Ver más noticias */}
