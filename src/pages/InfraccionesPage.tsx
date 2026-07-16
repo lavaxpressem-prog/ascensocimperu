@@ -25,13 +25,48 @@ interface InfraccionDisciplinaria {
   sancion: string
 }
 
+interface InfraccionTransito {
+  id: string
+  codigo: string
+  tipo: string
+  categoria: string
+  infraccion: string
+  calificacion: string
+  created_at: string
+}
+
 export function InfraccionesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchQueryDisciplina, setSearchQueryDisciplina] = useState('')
 
+  const [transito, setTransito] = useState<InfraccionTransito[]>([])
+  const [loadingTransito, setLoadingTransito] = useState(true)
+  const [errorTransito, setErrorTransito] = useState<string | null>(null)
+
   const [disciplinarias, setDisciplinarias] = useState<InfraccionDisciplinaria[]>([])
   const [loadingDisciplina, setLoadingDisciplina] = useState(true)
   const [errorDisciplina, setErrorDisciplina] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchTransito() {
+      try {
+        setLoadingTransito(true)
+        setErrorTransito(null)
+        const { data, error } = await supabase
+          .from('reglamento_transito')
+          .select('*')
+          .order('created_at', { ascending: true })
+
+        if (error) throw error
+        setTransito(data ?? [])
+      } catch (err: unknown) {
+        setErrorTransito(err instanceof Error ? err.message : 'Error al cargar reglamento de tránsito')
+      } finally {
+        setLoadingTransito(false)
+      }
+    }
+    fetchTransito()
+  }, [])
 
   useEffect(() => {
     async function fetchDisciplinarias() {
@@ -45,20 +80,14 @@ export function InfraccionesPage() {
 
         if (error) throw error
         setDisciplinarias(data ?? [])
-      } catch (err: any) {
-        setErrorDisciplina(err.message ?? 'Error al cargar infracciones disciplinarias')
+      } catch (err: unknown) {
+        setErrorDisciplina(err instanceof Error ? err.message : 'Error al cargar infracciones disciplinarias')
       } finally {
         setLoadingDisciplina(false)
       }
     }
     fetchDisciplinarias()
   }, [])
-
-  const mockInfracciones = [
-    { id: '1', code: 'G01', severity: 'Grave', description: 'No respetar la luz roja del semáforo.', fine: 396.00, points: 20 },
-    { id: '2', code: 'M01', severity: 'Muy Grave', description: 'Conducir con presencia de alcohol en la sangre.', fine: 2475.00, points: 100 },
-    { id: '3', code: 'L01', severity: 'Leve', description: 'Estacionar en lugar prohibido.', fine: 198.00, points: 5 },
-  ]
 
   const columnsDisciplina = [
     { 
@@ -91,9 +120,9 @@ export function InfraccionesPage() {
     }
   ]
 
-  const filteredInfracciones = mockInfracciones.filter(item =>
-    item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredTransito = transito.filter(item =>
+    item.codigo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.infraccion.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   const filteredDisciplina = disciplinarias.filter(item =>
@@ -101,39 +130,29 @@ export function InfraccionesPage() {
     item.infraccion.toLowerCase().includes(searchQueryDisciplina.toLowerCase())
   )
 
-  const columns = [
+  const columnsTransito = [
     { 
-      accessorKey: 'code', 
+      accessorKey: 'codigo', 
       header: 'Código',
-      cell: ({ row }: any) => <span className="font-bold">{row.original.code}</span>
+      cell: ({ row }: any) => <span className="font-bold">{row.original.codigo}</span>
     },
     { 
-      accessorKey: 'severity', 
+      accessorKey: 'calificacion', 
       header: 'Gravedad',
       cell: ({ row }: any) => (
         <Badge variant={
-          row.original.severity === 'Muy Grave' ? 'destructive' :
-          row.original.severity === 'Grave' ? 'default' :
+          row.original.calificacion === 'Muy Grave' ? 'destructive' :
+          row.original.calificacion === 'Grave' ? 'default' :
           'secondary'
         }>
-          {row.original.severity}
+          {row.original.calificacion}
         </Badge>
       )
     },
     { 
-      accessorKey: 'description', 
+      accessorKey: 'infraccion', 
       header: 'Descripción',
-      cell: ({ row }: any) => <span className="text-sm">{row.original.description}</span>
-    },
-    { 
-      accessorKey: 'fine', 
-      header: 'Multa (S/)',
-      cell: ({ row }: any) => <span className="font-mono">S/ {row.original.fine.toFixed(2)}</span>
-    },
-    { 
-      accessorKey: 'points', 
-      header: 'Puntos',
-      cell: ({ row }: any) => <span className="font-bold text-center">{row.original.points}</span>
+      cell: ({ row }: any) => <span className="text-sm">{row.original.infraccion}</span>
     }
   ]
 
@@ -174,11 +193,21 @@ export function InfraccionesPage() {
               </div>
             </div>
             
-            <DataTable 
-              columns={columns} 
-              data={filteredInfracciones} 
-              searchable={false}
-            />
+            {loadingTransito ? (
+              <div className="flex items-center justify-center py-12 text-muted-foreground text-sm">
+                Cargando infracciones...
+              </div>
+            ) : errorTransito ? (
+              <div className="flex items-center justify-center py-12 text-destructive text-sm">
+                {errorTransito}
+              </div>
+            ) : (
+              <DataTable 
+                columns={columnsTransito} 
+                data={filteredTransito} 
+                searchable={false}
+              />
+            )}
           </TabsContent>
           
           <TabsContent value="disciplina" className="space-y-4 pt-4">
