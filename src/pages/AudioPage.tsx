@@ -23,6 +23,9 @@ function cleanTextForSpeech(text: string): string {
   cleaned = cleaned.replace(/\bART\.?\s*/gi, 'Artículo ')
   cleaned = cleaned.replace(/[\u00AD\u200B\u200C\u200D\u200E\u200F\uFEFF]/g, '')
   cleaned = cleaned.replace(/\u00A0/g, ' ')
+  cleaned = cleaned.replace(/\b[A-ZÁÉÍÓÚÑ]{3,}\b/g, (word) => {
+    return word.charAt(0) + word.slice(1).toLowerCase()
+  })
   cleaned = cleaned.replace(/\s{2,}/g, ' ').trim()
   return cleaned
 }
@@ -113,6 +116,8 @@ export function AudioPage() {
     }
 
     const fullText = cleanTextForSpeech(parts.join(' '))
+    console.log('[AudioPage] speechSynthesis text:', fullText)
+    console.log('[AudioPage] charCodes:', fullText.split('').map(c => `${c}(${c.charCodeAt(0)})`).join(' '))
     const utterance = new SpeechSynthesisUtterance(fullText)
     utterance.lang = 'es-ES'
     utterance.rate = speed
