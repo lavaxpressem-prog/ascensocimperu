@@ -477,6 +477,316 @@ export async function getTopicsWithCount(): Promise<TopicWithCount[]> {
   return topics
 }
 
+// ── Admin Panel helpers ──
+
+export interface AdminStats {
+  total_users: number
+  active_users: number
+  pending_users: number
+  locked_users: number
+  total_questions: number
+  total_noticias: number
+  published_noticias: number
+  total_files: number
+  total_logins: number
+  recent_activity: number
+}
+
+export async function getAdminStats(): Promise<AdminStats | null> {
+  const { data, error } = await supabase
+    .rpc('get_admin_stats')
+    .single()
+  if (error) return null
+  return data as AdminStats
+}
+
+export interface AuditLogEntry {
+  id: string
+  user_email: string
+  user_name: string
+  action: string
+  details: Record<string, unknown> | null
+  created_at: string
+}
+
+export async function getAuditLogs(limit = 50): Promise<AuditLogEntry[]> {
+  const { data, error } = await supabase
+    .rpc('get_recent_activity', { p_limit: limit })
+  if (error) return []
+  return (data || []) as AuditLogEntry[]
+}
+
+export async function logAdminAction(
+  action: string,
+  targetType?: string,
+  targetId?: string,
+  details?: Record<string, unknown>
+) {
+  const { error } = await supabase
+    .rpc('log_admin_action', {
+      p_action: action,
+      p_target_type: targetType ?? null,
+      p_target_id: targetId ?? null,
+      p_details: details ?? null,
+    })
+  if (error) console.error('Failed to log admin action:', error)
+}
+
+export async function toggleUserLock(userId: string, lock: boolean) {
+  const { error } = await supabase
+    .rpc('toggle_user_lock', { p_user_id: userId, p_lock: lock })
+  if (error) throw error
+}
+
+export async function setUserRole(userId: string, role: string) {
+  const { error } = await supabase
+    .rpc('set_user_role', { p_user_id: userId, p_role: role })
+  if (error) throw error
+}
+
+// ── System Config helpers ──
+
+export interface SystemConfig {
+  id: string
+  config_key: string
+  config_value: string | null
+  category: string
+  description: string | null
+  updated_at: string
+}
+
+export async function getSystemConfig(): Promise<SystemConfig[]> {
+  const { data, error } = await supabase
+    .from('system_config')
+    .select('*')
+    .order('category', { ascending: true })
+  if (error) return []
+  return data as SystemConfig[]
+}
+
+export async function updateSystemConfig(key: string, value: string) {
+  const { error } = await supabase
+    .from('system_config')
+    .update({ config_value: value, updated_at: new Date().toISOString() })
+    .eq('config_key', key)
+  if (error) throw error
+}
+
+// ── Questions CRUD helpers ──
+
+export interface QuestionRowAdmin {
+  id: number
+  numero: number
+  pregunta: string
+  opciones: { id: string; text: string }[] | string
+  respuesta_correcta: string
+  indice_correcto: number
+  ubicacion: string | null
+  codigo: string | null
+  activa: boolean
+  created_at: string
+}
+
+export async function getQuestionsForAdmin(page = 0, pageSize = 100): Promise<QuestionRowAdmin[]> {
+  const { data, error } = await supabase
+    .from('preguntas')
+    .select('*')
+    .order('id', { ascending: true })
+    .range(page * pageSize, (page + 1) * pageSize - 1)
+  if (error) return []
+  return data as QuestionRowAdmin[]
+}
+
+export async function getQuestionsCountAdmin(): Promise<number> {
+  const { count, error } = await supabase
+    .from('preguntas')
+    .select('id', { count: 'exact', head: true })
+  if (error) return 0
+  return count ?? 0
+}
+
+export async function createQuestion(question: {
+  numero: number
+  pregunta: string
+  opciones: { id: string; text: string }[]
+  respuesta_correcta: string
+  indice_correcto: number
+  ubicacion?: string
+  codigo?: string
+}) {
+  const { error } = await supabase
+    .from('preguntas')
+    .insert(question)
+  if (error) throw error
+}
+
+export async function updateQuestion(id: number, updates: Record<string, unknown>) {
+  const { error } = await supabase
+    .from('preguntas')
+    .update(updates)
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteQuestion(id: number) {
+  const { error } = await supabase
+    .from('preguntas')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
+// ── Noticias CRUD helpers ──
+
+export interface Noticia {
+  id: string
+  titulo: string
+  descripcion: string
+  categoria: string
+  fuente: string
+  estado: string | null
+  fecha_publicacion: string
+  pdf_url: string | null
+  imagen_url: string | null
+  is_published: boolean
+  autor: string | null
+  created_at: string
+}
+
+export async function getNoticias(): Promise<Noticia[]> {
+  const { data, error } = await supabase
+    .from('noticias')
+    .select('*')
+    .order('fecha_publicacion', { ascending: false })
+  if (error) return []
+  return data as Noticia[]
+}
+
+export async function createNoticia(noticia: {
+  titulo: string
+  descripcion: string
+  categoria: string
+  fuente: string
+  estado?: string
+  fecha_publicacion?: string
+  pdf_url?: string
+  imagen_url?: string
+  is_published?: boolean
+  autor?: string
+}) {
+  const { error } = await supabase
+    .from('noticias')
+    .insert(noticia)
+  if (error) throw error
+}
+
+export async function updateNoticia(id: string, updates: Record<string, unknown>) {
+  const { error } = await supabase
+    .from('noticias')
+    .update(updates)
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function deleteNoticia(id: string) {
+  const { error } = await supabase
+    .from('noticias')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
+// ── Modules helpers ──
+
+export interface ModuleAdmin {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  is_active: boolean
+  created_at: string
+}
+
+export async function getModulesForAdmin(): Promise<ModuleAdmin[]> {
+  const { data, error } = await supabase
+    .from('modules')
+    .select('*')
+    .order('name', { ascending: true })
+  if (error) return []
+  return data as ModuleAdmin[]
+}
+
+export async function toggleModuleActive(moduleId: string, isActive: boolean) {
+  const { error } = await supabase
+    .from('modules')
+    .update({ is_active: isActive })
+    .eq('id', moduleId)
+  if (error) throw error
+}
+
+// ── Uploaded Files helpers ──
+
+export interface UploadedFile {
+  id: string
+  file_name: string
+  file_path: string
+  file_type: string
+  file_size: number | null
+  folder: string
+  uploaded_by: string | null
+  is_public: boolean
+  created_at: string
+}
+
+export async function getUploadedFiles(): Promise<UploadedFile[]> {
+  const { data, error } = await supabase
+    .from('uploaded_files')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) return []
+  return data as UploadedFile[]
+}
+
+export async function createUploadedFile(file: {
+  file_name: string
+  file_path: string
+  file_type: string
+  file_size?: number
+  folder?: string
+  is_public?: boolean
+}) {
+  const { data: { user } } = await supabase.auth.getUser()
+  const { error } = await supabase
+    .from('uploaded_files')
+    .insert({ ...file, uploaded_by: user?.id ?? null })
+  if (error) throw error
+}
+
+export async function deleteUploadedFile(id: string) {
+  const { error } = await supabase
+    .from('uploaded_files')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
+
+// ── Bulk questions import ──
+
+export async function importQuestions(questions: Array<{
+  numero: number
+  pregunta: string
+  opciones: { id: string; text: string }[]
+  respuesta_correcta: string
+  indice_correcto: number
+  ubicacion?: string
+  codigo?: string
+}>) {
+  const { error } = await supabase
+    .from('preguntas')
+    .insert(questions)
+  if (error) throw error
+}
+
 // ── Session helpers ──
 
 export function getCurrentSession() {

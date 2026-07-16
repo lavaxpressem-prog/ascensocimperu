@@ -15,7 +15,8 @@ import {
   Volume2,
   Moon,
   Sun,
-  Search
+  Search,
+  Shield
 } from 'lucide-react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { useTheme } from '../lib/hooks/useTheme'
@@ -25,7 +26,8 @@ import { Footer } from '../components/Footer'
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   const { isDark, toggleTheme } = useTheme()
-  const { logout } = useAuth()
+  const { logout, authUser } = useAuth()
+  const isAdmin = authUser?.role === 'admin'
 
   const handleLogout = async () => {
     await logout()
@@ -117,12 +119,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               href="/papeletas-atu" 
               active={location.pathname === '/papeletas-atu'} 
             />
-            <SidebarItem 
-              icon={<Settings size={20} />} 
-              label="Usuarios" 
-              href="/admin-users" 
-              active={location.pathname === '/admin-users'} 
-            />
+            {isAdmin && (
+              <SidebarItem 
+                icon={<Shield size={20} />} 
+                label="Panel Admin" 
+                href="/admin" 
+                active={location.pathname.startsWith('/admin')} 
+              />
+            )}
           </div>
           
           <div className="shrink-0 border-t border-sidebar-border p-4 space-y-2">

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { createRouter, createRoute, createRootRoute, RouterProvider, Outlet } from '@tanstack/react-router'
 import { DashboardLayout } from './layouts/DashboardLayout'
+import { AdminLayout } from './layouts/AdminLayout'
 import { LoginPageSimple } from './pages/LoginPageSimple'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { useAuth } from './lib/AuthProvider'
@@ -16,8 +17,17 @@ const AudioPage = lazy(() => import('./pages/AudioPage').then(m => ({ default: m
 const MapaPage = lazy(() => import('./pages/MapaPage').then(m => ({ default: m.MapaPage })))
 const AyudaPage = lazy(() => import('./pages/AyudaPage').then(m => ({ default: m.AyudaPage })))
 const PracticaPage = lazy(() => import('./pages/PracticaPage').then(m => ({ default: m.PracticaPage })))
-const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })))
 const PapeletasAtuPage = lazy(() => import('./pages/PapeletasAtuPage').then(m => ({ default: m.PapeletasAtuPage })))
+
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })))
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })))
+const AdminQuestionsPage = lazy(() => import('./pages/admin/AdminQuestionsPage').then(m => ({ default: m.AdminQuestionsPage })))
+const AdminNewsPage = lazy(() => import('./pages/admin/AdminNewsPage').then(m => ({ default: m.AdminNewsPage })))
+const AdminModulesPage = lazy(() => import('./pages/admin/AdminModulesPage').then(m => ({ default: m.AdminModulesPage })))
+const AdminFilesPage = lazy(() => import('./pages/admin/AdminFilesPage').then(m => ({ default: m.AdminFilesPage })))
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage })))
+const AdminSecurityPage = lazy(() => import('./pages/admin/AdminSecurityPage').then(m => ({ default: m.AdminSecurityPage })))
+const AdminStatsPage = lazy(() => import('./pages/admin/AdminStatsPage').then(m => ({ default: m.AdminStatsPage })))
 
 function PageLoader() {
   return (
@@ -34,6 +44,7 @@ const rootRoute = createRootRoute({
   component: () => {
     const { user, loading } = useAuth()
     const isResetting = window.location.pathname === '/reset-password'
+    const isAdminRoute = window.location.pathname.startsWith('/admin')
 
     if (loading) {
       return <PageLoader />
@@ -45,6 +56,18 @@ const rootRoute = createRootRoute({
 
     if (!user) {
       return <LoginPageSimple />
+    }
+
+    if (isAdminRoute) {
+      return (
+        <AdminRoute>
+          <AdminLayout>
+            <Suspense fallback={<PageLoader />}>
+              <Outlet />
+            </Suspense>
+          </AdminLayout>
+        </AdminRoute>
+      )
     }
 
     return (
@@ -117,16 +140,10 @@ const practicaRoute = createRoute({
   component: () => <Suspense fallback={<PageLoader />}><PracticaPage /></Suspense>
 })
 
-const adminUsersRoute = createRoute({
+const papeletasAtuRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/admin-users',
-  component: () => (
-    <AdminRoute>
-      <Suspense fallback={<PageLoader />}>
-        <AdminUsersPage />
-      </Suspense>
-    </AdminRoute>
-  )
+  path: '/papeletas-atu',
+  component: () => <Suspense fallback={<PageLoader />}><PapeletasAtuPage /></Suspense>
 })
 
 const resetPasswordRoute = createRoute({
@@ -135,10 +152,60 @@ const resetPasswordRoute = createRoute({
   component: ResetPasswordPage
 })
 
-const papeletasAtuRoute = createRoute({
+// ── Admin Routes ──
+
+const adminIndexRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/papeletas-atu',
-  component: () => <Suspense fallback={<PageLoader />}><PapeletasAtuPage /></Suspense>
+  path: '/admin',
+  component: () => <Suspense fallback={<PageLoader />}><AdminDashboardPage /></Suspense>
+})
+
+const adminUsersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/users',
+  component: () => <Suspense fallback={<PageLoader />}><AdminUsersPage /></Suspense>
+})
+
+const adminQuestionsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/questions',
+  component: () => <Suspense fallback={<PageLoader />}><AdminQuestionsPage /></Suspense>
+})
+
+const adminNewsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/news',
+  component: () => <Suspense fallback={<PageLoader />}><AdminNewsPage /></Suspense>
+})
+
+const adminModulesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/modules',
+  component: () => <Suspense fallback={<PageLoader />}><AdminModulesPage /></Suspense>
+})
+
+const adminFilesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/files',
+  component: () => <Suspense fallback={<PageLoader />}><AdminFilesPage /></Suspense>
+})
+
+const adminSettingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/settings',
+  component: () => <Suspense fallback={<PageLoader />}><AdminSettingsPage /></Suspense>
+})
+
+const adminSecurityRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/security',
+  component: () => <Suspense fallback={<PageLoader />}><AdminSecurityPage /></Suspense>
+})
+
+const adminStatsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/stats',
+  component: () => <Suspense fallback={<PageLoader />}><AdminStatsPage /></Suspense>
 })
 
 const routeTree = rootRoute.addChildren([
@@ -152,9 +219,17 @@ const routeTree = rootRoute.addChildren([
   mapaRoute,
   ayudaRoute,
   practicaRoute,
-  adminUsersRoute,
+  papeletasAtuRoute,
   resetPasswordRoute,
-  papeletasAtuRoute
+  adminIndexRoute,
+  adminUsersRoute,
+  adminQuestionsRoute,
+  adminNewsRoute,
+  adminModulesRoute,
+  adminFilesRoute,
+  adminSettingsRoute,
+  adminSecurityRoute,
+  adminStatsRoute,
 ])
 const router = createRouter({ routeTree })
 
