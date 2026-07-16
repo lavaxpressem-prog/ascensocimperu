@@ -15,17 +15,44 @@ import {
 } from 'lucide-react'
 import { getQuestionsBatch, type Question } from '../lib/supabase'
 
+const ABBREVIATION_MAP: Record<string, string> = {
+  'ART': 'Artículo',
+  'INC': 'Inciso',
+  'NUM': 'Numeral',
+  'PAR': 'Párrafo',
+  'LIT': 'Literal',
+  'PUN': 'Punto',
+  'RES': 'Resolución',
+  'REF': 'Referencia',
+  'VGR': 'Vigente',
+}
+
 function cleanTextForSpeech(text: string): string {
   let cleaned = text
-  cleaned = cleaned.replace(/\*\*|[*_#~`]/g, '')
-  cleaned = cleaned.replace(/\[(?:TITULO\s+I+|CAPITULO\s+I+|CAP\.\s*\d+|ART\.\s*\d+|NUM\.\s*\d+)[^\]]*\]/gi, '')
-  cleaned = cleaned.replace(/\[([^\]]+)\]/g, '$1')
-  cleaned = cleaned.replace(/\bART\.?\s*/gi, 'Artículo ')
+
   cleaned = cleaned.replace(/[\u00AD\u200B\u200C\u200D\u200E\u200F\uFEFF]/g, '')
   cleaned = cleaned.replace(/\u00A0/g, ' ')
+
+  cleaned = cleaned.replace(/\*\*|[*_#~`]/g, '')
+
+  cleaned = cleaned.replace(
+    /\[(?:TITULO\s+I+|CAPITULO\s+I+|CAP\.\s*\d+|ART\.\s*\d+|NUM\.\s*\d+)[^\]]*\]/gi,
+    ''
+  )
+  cleaned = cleaned.replace(/\[([^\]]+)\]/g, '$1')
+
+  const abbrPattern = new RegExp(
+    `\\b(${Object.keys(ABBREVIATION_MAP).join('|')})[.:]?\\s`,
+    'gi'
+  )
+  cleaned = cleaned.replace(abbrPattern, (_match, abbr) => {
+    return `${ABBREVIATION_MAP[abbr.toUpperCase()]} `
+  })
+
   cleaned = cleaned.replace(/\b[A-ZÁÉÍÓÚÑ]{3,}\b/g, (word) => {
     return word.charAt(0) + word.slice(1).toLowerCase()
   })
+
   cleaned = cleaned.replace(/\s{2,}/g, ' ').trim()
   return cleaned
 }
@@ -89,6 +116,42 @@ export function AudioPage() {
     setIsPaused(false)
   }
 
+  const speakText = (text: string, onEnd?: () => void) => {
+    if (!synth) return
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.lang = 'es-ES'
+    utterance.rate = speed
+    utterance.pitch = 1
+    utterance.volume = 1
+
+    utterance.onstart = () => {
+      setIsPlaying(true)
+      setIsPaused(false)
+    }
+
+    utterance.onend = () => {
+      if (onEnd) {
+        onEnd()
+      } else {
+        setIsPlaying(false)
+        setIsPaused(false)
+        if (autoPlay) {
+          setTimeout(() => {
+            handleNext()
+          }, 500)
+        }
+      }
+    }
+
+    utterance.onerror = () => {
+      setIsPlaying(false)
+      setIsPaused(false)
+    }
+
+    utteranceRef.current = utterance
+    synth.speak(utterance)
+  }
+
   const speakQuestion = () => {
     if (!synth || !currentQuestion) return
 
@@ -117,35 +180,19 @@ export function AudioPage() {
 
     const fullText = cleanTextForSpeech(parts.join(' '))
     console.log('[AudioPage] speechSynthesis text:', fullText)
-    console.log('[AudioPage] charCodes:', fullText.split('').map(c => `${c}(${c.charCodeAt(0)})`).join(' '))
-    const utterance = new SpeechSynthesisUtterance(fullText)
-    utterance.lang = 'es-ES'
-    utterance.rate = speed
-    utterance.pitch = 1
-    utterance.volume = 1
 
-    utterance.onstart = () => {
-      setIsPlaying(true)
-      setIsPaused(false)
+    const warmUp = new SpeechSynthesisUtterance('.')
+    warmUp.lang = 'es-ES'
+    warmUp.rate = speed
+    warmUp.volume = 0.01
+    warmUp.pitch = 1
+    warmUp.onend = () => {
+      speakText(fullText)
     }
-
-    utterance.onend = () => {
-      setIsPlaying(false)
-      setIsPaused(false)
-      if (autoPlay) {
-        setTimeout(() => {
-          handleNext()
-        }, 500)
-      }
+    warmUp.onerror = () => {
+      speakText(fullText)
     }
-
-    utterance.onerror = () => {
-      setIsPlaying(false)
-      setIsPaused(false)
-    }
-
-    utteranceRef.current = utterance
-    synth.speak(utterance)
+    synth.speak(warmUp)
   }
 
   useEffect(() => {
