@@ -228,14 +228,28 @@ export async function recordStudySession(session: {
   duration_seconds?: number
   questions_attempted?: number
   questions_correct?: number
-}) {
+}): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  const { error } = await supabase.from('user_study_sessions').insert({
+  if (!user) return null
+  const { data, error } = await supabase.from('user_study_sessions').insert({
     user_id: user.id,
     ...session,
-  })
-  if (error) throw error
+  }).select('id').single()
+  if (error) return null
+  return data?.id ?? null
+}
+
+export async function updateStudySession(
+  sessionId: string,
+  updates: {
+    ended_at?: string
+    duration_seconds?: number
+    questions_attempted?: number
+    questions_correct?: number
+  }
+) {
+  const { error } = await supabase.from('user_study_sessions').update(updates).eq('id', sessionId)
+  if (error) console.error('Error updating study session:', error)
 }
 
 export async function recordExamResult(result: {

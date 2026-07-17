@@ -23,7 +23,7 @@ import {
   ChevronLeft,
   Target
 } from 'lucide-react'
-import { getQuestionsBatch, type Question } from '../lib/supabase'
+import { getQuestionsBatch, recordStudySession, updateStudySession, recordExamResult, recordQuestionResponse, type Question } from '../lib/supabase'
 
 export function ExamPage() {
   const [mockQuestions, setMockQuestions] = useState<Question[]>([])
@@ -34,6 +34,8 @@ export function ExamPage() {
   const [timeLeft, setTimeLeft] = useState(3600) // 60 minutes
   const [isPaused, setIsPaused] = useState(false)
   const [isFinished, setIsFinished] = useState(false)
+  const [studySessionId, setStudySessionId] = useState<string | null>(null)
+  const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null)
 
   useEffect(() => {
     console.log('[ExamPage] Loading questions from Supabase...')
@@ -62,12 +64,23 @@ export function ExamPage() {
     return `${mins}:${secs.toString().padStart(2, '0')}`
   }
 
-  const handleStart = () => {
+  const handleStart = async () => {
     setIsExamStarted(true)
     setCurrentQuestionIndex(0)
     setSelectedOptions({})
     setTimeLeft(3600)
     setIsFinished(false)
+    setStudySessionId(null)
+    setSessionStartedAt(null)
+
+    const now = new Date()
+    setSessionStartedAt(now)
+    const sessionId = await recordStudySession({
+      activity_type: 'simulador',
+      started_at: now.toISOString(),
+    })
+    setStudySessionId(sessionId)
+
     toast.success('Simulacro iniciado')
   }
 
@@ -88,8 +101,41 @@ export function ExamPage() {
     }
   }
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     setIsFinished(true)
+
+    const correct = mockQuestions.filter(q => selectedOptions[q.id] === q.correctOption).length
+    const total = mockQuestions.length
+    const percentage = total > 0 ? Math.round((correct / total) * 100) : 0
+
+    await recordExamResult({
+      exam_type: 'simulador',
+      total_questions: total,
+      correct_answers: correct,
+      score_percentage: percentage,
+      time_spent_seconds: sessionStartedAt ? Math.floor((Date.now() - sessionStartedAt.getTime()) / 1000) : 0,
+    })
+
+    for (const q of mockQuestions) {
+      if (selectedOptions[q.id]) {
+        await recordQuestionResponse({
+          question_identifier: String(q.id),
+          selected_option: selectedOptions[q.id],
+          is_correct: selectedOptions[q.id] === q.correctOption,
+        })
+      }
+    }
+
+    if (studySessionId && sessionStartedAt) {
+      const durationSeconds = Math.floor((Date.now() - sessionStartedAt.getTime()) / 1000)
+      await updateStudySession(studySessionId, {
+        ended_at: new Date().toISOString(),
+        duration_seconds: durationSeconds,
+        questions_attempted: total,
+        questions_correct: correct,
+      })
+    }
+
     toast.success('Examen finalizado')
   }
 

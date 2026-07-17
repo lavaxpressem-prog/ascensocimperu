@@ -17,9 +17,10 @@ import {
   ChevronRight,
   Clock,
   CheckCircle2,
-  XCircle
+  XCircle,
+  RotateCcw
 } from 'lucide-react'
-import { getTopicsWithCount, getQuestionsByMateria, type TopicWithCount, type Question } from '../lib/supabase'
+import { getTopicsWithCount, getQuestionsByMateria, recordStudySession, updateStudySession, recordQuestionResponse, type TopicWithCount, type Question } from '../lib/supabase'
 
 export function PracticaPage() {
   const [topics, setTopics] = useState<TopicWithCount[]>([])
@@ -33,6 +34,10 @@ export function PracticaPage() {
   const [selectedOptions, setSelectedOptions] = useState<Record<number, string>>({})
   const [isFinished, setIsFinished] = useState(false)
   const [score, setScore] = useState(0)
+  const [isReviewMode, setIsReviewMode] = useState(false)
+  const [wrongQuestions, setWrongQuestions] = useState<Question[]>([])
+  const [studySessionId, setStudySessionId] = useState<string | null>(null)
+  const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null)
 
   useEffect(() => {
     getTopicsWithCount().then(t => {
@@ -43,7 +48,7 @@ export function PracticaPage() {
 
   const currentQuestion = topicQuestions[currentQuestionIndex]
 
-  const handleSelectTopic = (topic: TopicWithCount) => {
+  const handleSelectTopic = async (topic: TopicWithCount) => {
     setSelectedTopic(topic.nombre)
     setSelectedMateriaId(topic.id)
     setIsPracticing(true)
@@ -52,6 +57,15 @@ export function PracticaPage() {
     setIsFinished(false)
     setScore(0)
     setLoadingQuestions(true)
+
+    const now = new Date()
+    setSessionStartedAt(now)
+    const sessionId = await recordStudySession({
+      activity_type: 'practica',
+      started_at: now.toISOString(),
+    })
+    setStudySessionId(sessionId)
+
     getQuestionsByMateria(topic.id).then(qs => {
       setTopicQuestions(qs)
       setLoadingQuestions(false)
@@ -79,19 +93,57 @@ export function PracticaPage() {
     }
   }
 
-  const handleFinishPractice = () => {
+  const handleFinishPractice = async () => {
     let correct = 0
-    topicQuestions.forEach(q => {
-      if (selectedOptions[q.id] === q.correctOption && q.correctOption) {
+    const wrong: Question[] = []
+    
+    for (const q of topicQuestions) {
+      const isCorrect = selectedOptions[q.id] === q.correctOption && !!q.correctOption
+      if (isCorrect) {
         correct++
+      } else {
+        wrong.push(q)
       }
-    })
+
+      if (selectedOptions[q.id]) {
+        await recordQuestionResponse({
+          question_identifier: String(q.id),
+          selected_option: selectedOptions[q.id],
+          is_correct: isCorrect,
+        })
+      }
+    }
+
     const percentage = topicQuestions.length > 0 
       ? Math.round((correct / topicQuestions.length) * 100) 
       : 0
     setScore(percentage)
+    setWrongQuestions(wrong)
     setIsFinished(true)
+
+    if (studySessionId && sessionStartedAt) {
+      const durationSeconds = Math.floor((Date.now() - sessionStartedAt.getTime()) / 1000)
+      await updateStudySession(studySessionId, {
+        ended_at: new Date().toISOString(),
+        duration_seconds: durationSeconds,
+        questions_attempted: topicQuestions.length,
+        questions_correct: correct,
+      })
+    }
+
     toast.success('Práctica finalizada')
+  }
+
+  const handleStartReview = () => {
+    if (wrongQuestions.length === 0) return
+    setTopicQuestions(wrongQuestions)
+    setCurrentQuestionIndex(0)
+    setSelectedOptions({})
+    setIsFinished(false)
+    setScore(0)
+    setIsReviewMode(true)
+    setIsPracticing(true)
+    toast.success(`Repasando ${wrongQuestions.length} pregunta(s) fallada(s)`)
   }
 
   const handleBackToTopics = () => {
@@ -102,6 +154,10 @@ export function PracticaPage() {
     setCurrentQuestionIndex(0)
     setSelectedOptions({})
     setIsFinished(false)
+    setIsReviewMode(false)
+    setWrongQuestions([])
+    setStudySessionId(null)
+    setSessionStartedAt(null)
   }
 
   const totalQuestions = topics.reduce((sum, t) => sum + t.count, 0)
@@ -170,9 +226,31 @@ export function PracticaPage() {
               })}
             </div>
 
-            <Button onClick={handleBackToTopics} className="w-full">
-              Volver a Temas
-            </Button>
+            {wrongQuestions.length > 0 ? (
+              <div className="space-y-3">
+                <Button 
+                  onClick={handleStartReview} 
+                  className="w-full gap-2 bg-orange-600 hover:bg-orange-700"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Repasar {wrongQuestions.length} pregunta(s) fallada(s)
+                </Button>
+                <Button onClick={handleBackToTopics} variant="outline" className="w-full">
+                  Volver a Temas
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="text-center p-4 bg-green-50 dark:bg-green-950/50 rounded-lg border border-green-200 dark:border-green-800">
+                  <p className="text-green-700 dark:text-green-300 font-semibold">
+                    ¡Sin errores, buen trabajo!
+                  </p>
+                </div>
+                <Button onClick={handleBackToTopics} className="w-full">
+                  Volver a Temas
+                </Button>
+              </div>
+            )}
           </div>
         </PageBody>
       </Page>
@@ -202,9 +280,18 @@ export function PracticaPage() {
     return (
       <Page>
         <PageHeader>
-          <PageTitle>{selectedTopic}</PageTitle>
+          <div className="flex items-center gap-2">
+            {isReviewMode && (
+              <Badge variant="outline" className="border-orange-500 text-orange-600 dark:text-orange-400">
+                <RotateCcw className="w-3 h-3 mr-1" />
+                Repaso
+              </Badge>
+            )}
+            <PageTitle>{selectedTopic}</PageTitle>
+          </div>
           <PageDescription>
             Pregunta {currentQuestionIndex + 1} de {topicQuestions.length}
+            {isReviewMode && ' (preguntas falladas)'}
           </PageDescription>
         </PageHeader>
         <PageBody>
@@ -217,24 +304,24 @@ export function PracticaPage() {
                     <button
                       key={option.id}
                       onClick={() => handleSelectOption(option.id)}
-                      className={`w-full p-4 text-left rounded-lg border-2 transition ${
-                        selectedOptions[currentQuestion.id] === option.id
-                          ? 'border-indigo-600 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950/50'
-                          : 'border-border bg-card hover:border-indigo-300 dark:hover:border-indigo-500'
-                      }`}
+                      className={`
+                        flex items-center gap-4 p-5 rounded-xl text-left transition-all border-2
+                        ${selectedOptions[currentQuestion.id] === option.id
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-transparent bg-secondary hover:border-primary/20 hover:bg-secondary/80'
+                        }
+                      `}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                          selectedOptions[currentQuestion.id] === option.id
-                            ? 'border-indigo-600 bg-indigo-600 dark:border-indigo-400 dark:bg-indigo-400'
-                            : 'border-muted-foreground/50'
-                        }`}>
-                          {selectedOptions[currentQuestion.id] === option.id && (
-                            <span className="text-white text-sm font-bold">✓</span>
-                          )}
-                        </div>
-                        <span className="text-foreground">{option.id.toUpperCase()}. {option.text}</span>
+                      <div className={`
+                        h-8 w-8 rounded-lg flex items-center justify-center font-bold
+                        ${selectedOptions[currentQuestion.id] === option.id
+                          ? 'bg-primary text-white'
+                          : 'bg-card text-primary border border-border dark:bg-secondary dark:text-primary'
+                        }
+                      `}>
+                        {option.id.toUpperCase()}
                       </div>
+                      <span className="flex-1 font-medium">{option.id.toUpperCase()}. {option.text}</span>
                     </button>
                   ))}
                 </div>
