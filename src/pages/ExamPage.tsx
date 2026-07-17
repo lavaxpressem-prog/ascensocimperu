@@ -245,7 +245,7 @@ export function ExamPage() {
                     >
                       <div className={`
                         h-8 w-8 rounded-lg flex items-center justify-center font-bold
-                        ${isSelected ? 'bg-primary text-white' : 'bg-white text-primary border'}
+                        ${isSelected ? 'bg-primary text-white' : 'bg-card text-primary border border-border dark:bg-secondary dark:text-primary'}
                       `}>
                         {option.id.toUpperCase()}
                       </div>

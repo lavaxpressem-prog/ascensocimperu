@@ -120,11 +120,11 @@ export function PracticaPage() {
         </PageHeader>
         <PageBody>
           <div className="space-y-6">
-            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50">
+            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/50 dark:to-indigo-950/50">
               <CardContent className="pt-6">
                 <div className="text-center space-y-4">
-                  <div className="text-5xl font-bold text-indigo-600">{score}%</div>
-                  <div className="text-lg text-gray-700">
+                  <div className="text-5xl font-bold text-indigo-600 dark:text-indigo-400">{score}%</div>
+                  <div className="text-lg text-gray-700 dark:text-gray-300">
                     <span className="font-semibold">{correct}</span> de <span className="font-semibold">{topicQuestions.length}</span> respuestas correctas
                   </div>
                   <div className="flex gap-2 justify-center">
@@ -142,7 +142,7 @@ export function PracticaPage() {
                 const userAnswer = selectedOptions[q.id]
                 const isCorrect = userAnswer === q.correctOption && q.correctOption
                 return (
-                  <Card key={q.id} className={isCorrect ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}>
+                  <Card key={q.id} className={isCorrect ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50' : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50'}>
                     <CardContent className="pt-4">
                       <div className="space-y-2">
                         <div className="flex items-start justify-between">
@@ -219,21 +219,21 @@ export function PracticaPage() {
                       onClick={() => handleSelectOption(option.id)}
                       className={`w-full p-4 text-left rounded-lg border-2 transition ${
                         selectedOptions[currentQuestion.id] === option.id
-                          ? 'border-indigo-600 bg-indigo-50'
-                          : 'border-gray-200 bg-white hover:border-indigo-300'
+                          ? 'border-indigo-600 bg-indigo-50 dark:border-indigo-400 dark:bg-indigo-950/50'
+                          : 'border-border bg-card hover:border-indigo-300 dark:hover:border-indigo-500'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                           selectedOptions[currentQuestion.id] === option.id
-                            ? 'border-indigo-600 bg-indigo-600'
-                            : 'border-gray-300'
+                            ? 'border-indigo-600 bg-indigo-600 dark:border-indigo-400 dark:bg-indigo-400'
+                            : 'border-muted-foreground/50'
                         }`}>
                           {selectedOptions[currentQuestion.id] === option.id && (
                             <span className="text-white text-sm font-bold">✓</span>
                           )}
                         </div>
-                        <span>{option.id.toUpperCase()}. {option.text}</span>
+                        <span className="text-foreground">{option.id.toUpperCase()}. {option.text}</span>
                       </div>
                     </button>
                   ))}
@@ -286,11 +286,11 @@ export function PracticaPage() {
                 <CardContent className="pt-6">
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
-                      <div className="w-8 h-8 bg-gray-200 rounded" />
-                      <div className="w-20 h-5 bg-gray-200 rounded" />
+                      <div className="w-8 h-8 bg-muted rounded" />
+                      <div className="w-20 h-5 bg-muted rounded" />
                     </div>
-                    <div className="w-3/4 h-5 bg-gray-200 rounded" />
-                    <div className="w-full h-9 bg-gray-200 rounded" />
+                    <div className="w-3/4 h-5 bg-muted rounded" />
+                    <div className="w-full h-9 bg-muted rounded" />
                   </div>
                 </CardContent>
               </Card>
@@ -327,8 +327,8 @@ export function PracticaPage() {
 
         {!loadingTopics && topics.length === 0 && (
           <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No hay temas disponibles</p>
+            <BookOpen className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+            <p className="text-muted-foreground text-lg">No hay temas disponibles</p>
           </div>
         )}
       </PageBody>
