@@ -33,12 +33,13 @@ export function DirectorioPage() {
 
   const filtered = useMemo(() => {
     return comisarias.filter(c => {
+      const q = searchQuery.toLowerCase()
       const matchesSearch = !searchQuery || 
-        c.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.distrito?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.provincia?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.departamento?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        c.comando_superior.toLowerCase().includes(searchQuery.toLowerCase())
+        (c.nombre ?? '').toLowerCase().includes(q) ||
+        (c.distrito ?? '').toLowerCase().includes(q) ||
+        (c.provincia ?? '').toLowerCase().includes(q) ||
+        (c.departamento ?? '').toLowerCase().includes(q) ||
+        (c.comando_superior ?? '').toLowerCase().includes(q)
       
       const matchesRegion = selectedRegion === 'Todas' || c.region === selectedRegion
       
