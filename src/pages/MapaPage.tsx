@@ -15,7 +15,7 @@ export function MapaPage() {
       <PageBody className="space-y-6">
         <div className="grid md:grid-cols-3 gap-6">
           <Card className="md:col-span-2">
-            <CardContent className="p-0 h-96 md:h-[500px]">
+            <CardContent className="p-0 h-[600px] md:h-[750px]">
               <iframe
                 width="100%"
                 height="100%"
