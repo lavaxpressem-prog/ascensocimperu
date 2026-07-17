@@ -290,6 +290,7 @@ interface QuestionRow {
   indice_correcto: number
   ubicacion: string | null
   codigo: string | null
+  materia_id: number | null
   created_at: string
 }
 
@@ -336,7 +337,7 @@ function rowToQuestion(row: QuestionRow): Question {
   }
 }
 
-const PREGUNTAS_COLUMNS = 'id, numero, pregunta, opciones, respuesta_correcta, indice_correcto, ubicacion, codigo, created_at'
+const PREGUNTAS_COLUMNS = 'id, numero, pregunta, opciones, respuesta_correcta, indice_correcto, ubicacion, codigo, materia_id, created_at'
 
 async function fetchAllPreguntas(): Promise<QuestionRow[]> {
   const allRows: QuestionRow[] = []
@@ -384,24 +385,31 @@ export async function getQuestionsCount(): Promise<number> {
 export async function getQuestionsByMateria(materiaId: number): Promise<Question[]> {
   const rows = await fetchAllPreguntas()
 
-  const topicMap = new Map<string, number>()
-  let idx = 0
-  for (const row of rows) {
-    const topic = classifyQuestion(row)
-    if (!topicMap.has(topic)) {
-      topicMap.set(topic, idx)
-      idx++
+  // Filtrar por materia_id de la DB (clasificación oficial)
+  const filtered = rows.filter(row => row.materia_id === materiaId)
+
+  // Fallback: si no hay preguntas con ese materia_id, usar classifyQuestion
+  if (filtered.length === 0) {
+    console.log(`[getQuestionsByMateria] Sin resultados para materia_id=${materiaId}, usando classifyQuestion como fallback`)
+    const topicMap = new Map<string, number>()
+    let idx = 0
+    for (const row of rows) {
+      const topic = classifyQuestion(row)
+      if (!topicMap.has(topic)) {
+        topicMap.set(topic, idx)
+        idx++
+      }
     }
+    const topicEntries = Array.from(topicMap.entries())
+    const entry = topicEntries.find(([, id]) => id === materiaId)
+    if (!entry) return rows.map(rowToQuestion)
+    const topicName = entry[0]
+    return rows
+      .filter(row => classifyQuestion(row) === topicName)
+      .map(rowToQuestion)
   }
 
-  const topicEntries = Array.from(topicMap.entries())
-  const entry = topicEntries.find(([, id]) => id === materiaId)
-  if (!entry) return rows.map(rowToQuestion)
-
-  const topicName = entry[0]
-  return rows
-    .filter(row => classifyQuestion(row) === topicName)
-    .map(rowToQuestion)
+  return filtered.map(rowToQuestion)
 }
 
 export async function getRandomQuestions(count: number): Promise<Question[]> {
@@ -457,8 +465,50 @@ export interface TopicWithCount {
 }
 
 export async function getTopicsWithCount(): Promise<TopicWithCount[]> {
+  // Obtener materias desde la DB
+  const { data: materias, error: materiasError } = await supabase
+    .from('materias')
+    .select('id, nombre')
+    .order('id')
+
+  if (materiasError || !materias || materias.length === 0) {
+    console.log('[getTopicsWithCount] Error o tabla materias vacía, usando classifyQuestion como fallback')
+    return getTopicsWithCountFallback()
+  }
+
+  // Obtener todas las preguntas
   const rows = await fetchAllPreguntas()
   console.log('[PracticaPage] Total preguntas cargadas:', rows.length)
+
+  // Contar por materia_id
+  const materiaCounts = new Map<number, number>()
+  for (const row of rows) {
+    const mid = row.materia_id
+    if (mid !== null && mid !== undefined) {
+      materiaCounts.set(mid, (materiaCounts.get(mid) ?? 0) + 1)
+    }
+  }
+
+  // Construir lista de temas con conteo
+  const topics: TopicWithCount[] = materias
+    .map(m => ({
+      id: m.id,
+      nombre: m.nombre,
+      count: materiaCounts.get(m.id) ?? 0,
+    }))
+    .filter(t => t.count > 0) // Solo temas con preguntas
+    .sort((a, b) => b.count - a.count)
+
+  console.log('[PracticaPage] Temas encontrados:', topics.length)
+  topics.forEach(t => console.log(`  - ${t.nombre}: ${t.count} preguntas`))
+
+  return topics
+}
+
+// Fallback: usar classifyQuestion si la tabla materias no existe
+async function getTopicsWithCountFallback(): Promise<TopicWithCount[]> {
+  const rows = await fetchAllPreguntas()
+  console.log('[PracticaPage] Fallback - Total preguntas cargadas:', rows.length)
 
   const topicCounts = new Map<string, number>()
 
@@ -471,7 +521,7 @@ export async function getTopicsWithCount(): Promise<TopicWithCount[]> {
     .map(([nombre, count], id) => ({ id, nombre, count }))
     .sort((a, b) => b.count - a.count)
 
-  console.log('[PracticaPage] Temas encontrados:', topics.length)
+  console.log('[PracticaPage] Fallback - Temas encontrados:', topics.length)
   topics.forEach(t => console.log(`  - ${t.nombre}: ${t.count} preguntas`))
 
   return topics
