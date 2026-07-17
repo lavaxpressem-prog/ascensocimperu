@@ -282,6 +282,31 @@ export async function recordQuestionResponse(response: {
   if (error) throw error
 }
 
+// ── Directorio Telefónico ──
+
+export interface Comisaria {
+  id: number
+  region: string
+  comando_superior: string
+  nombre: string
+  tipo: string | null
+  categoria: string | null
+  direccion: string | null
+  distrito: string | null
+  provincia: string | null
+  departamento: string | null
+  telefono: string | null
+}
+
+export async function getComisarias(): Promise<Comisaria[]> {
+  const { data, error } = await supabase
+    .from('comisarias_pnp')
+    .select('*')
+    .order('nombre')
+  if (error) return []
+  return (data || []) as Comisaria[]
+}
+
 // ── Questions helpers ──
 
 export interface Question {

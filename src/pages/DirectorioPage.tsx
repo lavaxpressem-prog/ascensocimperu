@@ -1,68 +1,55 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { 
   Page, 
   PageHeader, 
   PageTitle, 
   PageDescription, 
   PageBody, 
-  DataTable, 
-  SearchInput,
   Card,
   CardContent,
-  Badge
+  Badge,
+  Input
 } from '@blinkdotnew/ui'
-import { Phone, Building2, MapPin, Search } from 'lucide-react'
+import { Phone, Building2, MapPin, Search, Filter } from 'lucide-react'
+import { getComisarias, type Comisaria } from '../lib/supabase'
 
 export function DirectorioPage() {
+  const [comisarias, setComisarias] = useState<Comisaria[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedRegion, setSelectedRegion] = useState<string>(' Todas')
 
-  const mockDirectory = [
-    { id: '1', unit: 'Comisaría de Miraflores', phone: '987-654-321', category: 'Comisaría', location: 'Miraflores, Lima' },
-    { id: '2', unit: 'DIVOPUS Centro 1', phone: '912-345-678', category: 'DIVOPUS', location: 'Lima Cercado' },
-    { id: '3', unit: 'Comisaría de San Isidro', phone: '999-888-777', category: 'Comisaría', location: 'San Isidro, Lima' },
-    { id: '4', unit: 'DEPINCRI Surco', phone: '944-555-666', category: 'DEPINCRI', location: 'Surco, Lima' },
-    { id: '5', unit: 'Comisaría PNP Familia Ayacucho "M"', phone: '966-831-065', category: 'Comisaría', location: 'Jr. Libertad N° 1200, Ayacucho – Huamanga – Ayacucho' },
-  ]
+  useEffect(() => {
+    getComisarias().then(data => {
+      setComisarias(data)
+      setLoading(false)
+    })
+  }, [])
 
-  const columns = [
-    { 
-      accessorKey: 'unit', 
-      header: 'Unidad / Comisaría',
-      cell: ({ row }: any) => (
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-            <Building2 size={16} />
-          </div>
-          <span className="font-bold">{row.original.unit}</span>
-        </div>
-      )
-    },
-    { 
-      accessorKey: 'category', 
-      header: 'Categoría',
-      cell: ({ row }: any) => <Badge variant="secondary">{row.original.category}</Badge>
-    },
-    { 
-      accessorKey: 'phone', 
-      header: 'Teléfono / Celular',
-      cell: ({ row }: any) => (
-        <div className="flex items-center gap-2 font-mono text-primary font-bold">
-          <Phone size={14} />
-          {row.original.phone}
-        </div>
-      )
-    },
-    { 
-      accessorKey: 'location', 
-      header: 'Jurisdicción',
-      cell: ({ row }: any) => (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <MapPin size={14} />
-          {row.original.location}
-        </div>
-      )
-    }
-  ]
+  const regions = useMemo(() => {
+    const unique = [...new Set(comisarias.map(c => c.region).filter(Boolean))]
+    return ['Todas', ...unique.sort()]
+  }, [comisarias])
+
+  const filtered = useMemo(() => {
+    return comisarias.filter(c => {
+      const matchesSearch = !searchQuery || 
+        c.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.distrito?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.provincia?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.departamento?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.comando_superior.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      const matchesRegion = selectedRegion === 'Todas' || c.region === selectedRegion
+      
+      return matchesSearch && matchesRegion
+    })
+  }, [comisarias, searchQuery, selectedRegion])
+
+  const formatPhone = (phone: string | null) => {
+    if (!phone) return 'Sin número'
+    return phone.replace(/\s+/g, '')
+  }
 
   return (
     <Page>
@@ -75,25 +62,118 @@ export function DirectorioPage() {
       
       <PageBody className="space-y-6">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="w-full max-w-md">
-            <SearchInput 
-              placeholder="Buscar por nombre o jurisdicción..." 
+          <div className="w-full max-w-md relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
+            <Input 
+              placeholder="Buscar por nombre, distrito o jurisdicción..." 
               value={searchQuery}
-              onChange={setSearchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
             />
           </div>
-          <div className="flex gap-2">
-            <Badge variant="outline" className="cursor-pointer hover:bg-primary/5">A - Z</Badge>
-            <Badge variant="outline" className="cursor-pointer hover:bg-primary/5">Por DIVOPUS</Badge>
-            <Badge variant="outline" className="cursor-pointer hover:bg-primary/5">Por Unidad</Badge>
+          <div className="flex gap-2 flex-wrap">
+            {regions.map(region => (
+              <Badge 
+                key={region}
+                variant={selectedRegion === region ? 'default' : 'outline'} 
+                className={`cursor-pointer transition-colors ${
+                  selectedRegion === region 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'hover:bg-primary/5'
+                }`}
+                onClick={() => setSelectedRegion(region)}
+              >
+                {region}
+              </Badge>
+            ))}
           </div>
         </div>
 
-        <DataTable 
-          columns={columns} 
-          data={mockDirectory} 
-          searchable={false}
-        />
+        <div className="text-sm text-muted-foreground">
+          {loading ? 'Cargando directorio...' : `${filtered.length} comisarías encontradas`}
+        </div>
+
+        {loading ? (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <Card key={i} className="animate-pulse">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="w-8 h-8 bg-muted rounded" />
+                      <div className="w-20 h-5 bg-muted rounded" />
+                    </div>
+                    <div className="w-3/4 h-5 bg-muted rounded" />
+                    <div className="w-full h-9 bg-muted rounded" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {filtered.map(comisaria => (
+              <Card key={comisaria.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                          <Building2 size={20} />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-sm line-clamp-2">{comisaria.nombre}</h3>
+                          {comisaria.categoria && (
+                            <Badge variant="secondary" className="mt-1 text-xs">{comisaria.categoria}</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <MapPin size={14} className="flex-shrink-0" />
+                      <span className="line-clamp-1">
+                        {comisaria.distrito}{comisaria.provincia ? `, ${comisaria.provincia}` : ''}
+                      </span>
+                    </div>
+
+                    {comisaria.direccion && (
+                      <div className="text-xs text-muted-foreground line-clamp-2">
+                        {comisaria.direccion}
+                      </div>
+                    )}
+
+                    {comisaria.telefono ? (
+                      <a 
+                        href={`tel:${formatPhone(comisaria.telefono)}`}
+                        className="flex items-center gap-2 p-3 bg-primary/5 hover:bg-primary/10 rounded-lg transition-colors group"
+                      >
+                        <Phone size={16} className="text-primary" />
+                        <span className="font-mono font-bold text-primary">{comisaria.telefono}</span>
+                        <span className="ml-auto text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                          Llamar
+                        </span>
+                      </a>
+                    ) : (
+                      <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg text-muted-foreground">
+                        <Phone size={16} />
+                        <span className="text-sm">Sin número registrado</span>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {!loading && filtered.length === 0 && (
+          <div className="text-center py-12">
+            <Search className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
+            <p className="text-muted-foreground text-lg">No se encontraron comisarías</p>
+            <p className="text-sm text-muted-foreground/70 mt-2">Intenta con otros términos de búsqueda</p>
+          </div>
+        )}
 
         <Card className="bg-primary/5 border-primary/20">
           <CardContent className="p-4 flex items-center gap-4 text-sm text-primary">

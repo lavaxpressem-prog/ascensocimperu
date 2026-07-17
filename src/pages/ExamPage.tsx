@@ -8,6 +8,7 @@ import {
   PageBody, 
   Button, 
   Card, 
+  CardContent,
   Badge,
   toast
 } from '@blinkdotnew/ui'
@@ -36,6 +37,8 @@ export function ExamPage() {
   const [isFinished, setIsFinished] = useState(false)
   const [studySessionId, setStudySessionId] = useState<string | null>(null)
   const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null)
+  const [wrongQuestions, setWrongQuestions] = useState<Question[]>([])
+  const [isReviewMode, setIsReviewMode] = useState(false)
 
   useEffect(() => {
     console.log('[ExamPage] Loading questions from Supabase...')
@@ -72,6 +75,8 @@ export function ExamPage() {
     setIsFinished(false)
     setStudySessionId(null)
     setSessionStartedAt(null)
+    setWrongQuestions([])
+    setIsReviewMode(false)
 
     const now = new Date()
     setSessionStartedAt(now)
@@ -82,6 +87,18 @@ export function ExamPage() {
     setStudySessionId(sessionId)
 
     toast.success('Simulacro iniciado')
+  }
+
+  const handleStartReview = () => {
+    if (wrongQuestions.length === 0) return
+    setMockQuestions(wrongQuestions)
+    setCurrentQuestionIndex(0)
+    setSelectedOptions({})
+    setTimeLeft(3600)
+    setIsFinished(false)
+    setIsExamStarted(true)
+    setIsReviewMode(true)
+    toast.success(`Repasando ${wrongQuestions.length} pregunta(s) fallada(s)`)
   }
 
   const handleOptionSelect = (questionId: string, optionId: string) => {
@@ -103,6 +120,14 @@ export function ExamPage() {
 
   const handleFinish = async () => {
     setIsFinished(true)
+
+    const wrong: Question[] = []
+    mockQuestions.forEach(q => {
+      if (selectedOptions[q.id] !== q.correctOption) {
+        wrong.push(q)
+      }
+    })
+    setWrongQuestions(wrong)
 
     const correct = mockQuestions.filter(q => selectedOptions[q.id] === q.correctOption).length
     const total = mockQuestions.length
@@ -215,6 +240,12 @@ export function ExamPage() {
     <Page>
       <PageHeader>
         <div className="flex flex-col gap-1">
+          {isReviewMode && (
+            <Badge variant="outline" className="w-fit border-orange-500 text-orange-600 dark:text-orange-400">
+              <RotateCcw className="w-3 h-3 mr-1" />
+              Modo Repaso
+            </Badge>
+          )}
           <Badge variant="outline" className="w-fit">{currentQuestion.topic}</Badge>
           <PageTitle className="text-xl">Pregunta {currentQuestionIndex + 1} de {mockQuestions.length}</PageTitle>
         </div>
@@ -236,28 +267,62 @@ export function ExamPage() {
       
       <PageBody className="max-w-3xl mx-auto space-y-8 py-8">
         {isFinished ? (
-          <Card className="text-center p-8 space-y-6">
-            <div className="space-y-2">
-              <h3 className="text-3xl font-bold font-serif">Resultados del Examen</h3>
-              <p className="text-muted-foreground">Resumen de tu desempeño</p>
+          <div className="space-y-6">
+            <Card className="text-center p-8 space-y-6">
+              <div className="space-y-2">
+                <h3 className="text-3xl font-bold font-serif">Resultados del Examen</h3>
+                <p className="text-muted-foreground">Resumen de tu desempeño</p>
+              </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-6 bg-secondary rounded-xl space-y-1">
+                  <div className="text-green-600 flex justify-center"><CheckCircle2 size={32} /></div>
+                  <div className="text-2xl font-bold">{stats.correct}</div>
+                  <div className="text-xs uppercase text-muted-foreground">Correctas</div>
+                </div>
+                <div className="p-6 bg-secondary rounded-xl space-y-1">
+                  <div className="text-destructive flex justify-center"><XCircle size={32} /></div>
+                  <div className="text-2xl font-bold">{stats.total - stats.correct}</div>
+                  <div className="text-xs uppercase text-muted-foreground">Incorrectas</div>
+                </div>
+                <div className="p-6 bg-primary text-white rounded-xl space-y-1">
+                  <div className="flex justify-center"><Target size={32} /></div>
+                  <div className="text-2xl font-bold">{stats.percentage}%</div>
+                  <div className="text-xs uppercase text-white/70">Puntaje</div>
+                </div>
+              </div>
+            </Card>
+
+            <div className="grid gap-4">
+              {mockQuestions.map((q, idx) => {
+                const userAnswer = selectedOptions[q.id]
+                const isCorrect = userAnswer === q.correctOption
+                return (
+                  <Card key={q.id} className={isCorrect ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50' : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50'}>
+                    <CardContent className="pt-4">
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-semibold text-sm mb-2">Pregunta {idx + 1}: {q.text}</p>
+                            <p className="text-sm">
+                              <span className="font-semibold">Tu respuesta:</span> {userAnswer ? userAnswer.toUpperCase() : 'No respondida'}
+                            </p>
+                            <p className="text-sm">
+                              <span className="font-semibold">Correcta:</span> {q.correctOption.toUpperCase()}
+                            </p>
+                          </div>
+                          {isCorrect ? (
+                            <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
+                          ) : (
+                            <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-6 bg-secondary rounded-xl space-y-1">
-                <div className="text-green-600 flex justify-center"><CheckCircle2 size={32} /></div>
-                <div className="text-2xl font-bold">{stats.correct}</div>
-                <div className="text-xs uppercase text-muted-foreground">Correctas</div>
-              </div>
-              <div className="p-6 bg-secondary rounded-xl space-y-1">
-                <div className="text-destructive flex justify-center"><XCircle size={32} /></div>
-                <div className="text-2xl font-bold">{stats.total - stats.correct}</div>
-                <div className="text-xs uppercase text-muted-foreground">Incorrectas</div>
-              </div>
-              <div className="p-6 bg-primary text-white rounded-xl space-y-1">
-                <div className="flex justify-center"><Target size={32} /></div>
-                <div className="text-2xl font-bold">{stats.percentage}%</div>
-                <div className="text-xs uppercase text-white/70">Puntaje</div>
-              </div>
-            </div>
+
             <div className="flex gap-4">
               <Button variant="outline" className="flex-1" onClick={() => setIsExamStarted(false)}>
                 Volver al Inicio
@@ -266,7 +331,17 @@ export function ExamPage() {
                 <RotateCcw size={18} className="mr-2" /> Reintentar
               </Button>
             </div>
-          </Card>
+
+            {wrongQuestions.length > 0 && (
+              <Button 
+                onClick={handleStartReview} 
+                className="w-full gap-2 bg-orange-600 hover:bg-orange-700"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Repasar {wrongQuestions.length} pregunta(s) fallada(s)
+              </Button>
+            )}
+          </div>
         ) : (
           <>
             <div className="space-y-6">
