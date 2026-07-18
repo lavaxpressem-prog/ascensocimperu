@@ -20,7 +20,7 @@ import {
   XCircle,
   RotateCcw
 } from 'lucide-react'
-import { getTopicsWithCount, getQuestionsByMateria, recordStudySession, updateStudySession, recordQuestionResponse, type TopicWithCount, type Question } from '../lib/supabase'
+import { getTopicsWithCount, getQuestionsByMateria, shuffleArray, recordStudySession, updateStudySession, recordQuestionResponse, type TopicWithCount, type Question } from '../lib/supabase'
 
 export function PracticaPage() {
   const [topics, setTopics] = useState<TopicWithCount[]>([])
@@ -67,7 +67,7 @@ export function PracticaPage() {
     setStudySessionId(sessionId)
 
     getQuestionsByMateria(topic.id).then(qs => {
-      setTopicQuestions(qs)
+      setTopicQuestions(shuffleArray(qs))
       setLoadingQuestions(false)
     })
   }

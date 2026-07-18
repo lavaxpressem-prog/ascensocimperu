@@ -24,10 +24,11 @@ import {
   ChevronLeft,
   Target
 } from 'lucide-react'
-import { getQuestionsBatch, recordStudySession, updateStudySession, recordExamResult, recordQuestionResponse, type Question } from '../lib/supabase'
+import { getQuestionsBatch, shuffleArray, recordStudySession, updateStudySession, recordExamResult, recordQuestionResponse, type Question } from '../lib/supabase'
 
 export function ExamPage() {
   const [mockQuestions, setMockQuestions] = useState<Question[]>([])
+  const [examQuestions, setExamQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
   const [isExamStarted, setIsExamStarted] = useState(false)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
@@ -77,6 +78,7 @@ export function ExamPage() {
     setSessionStartedAt(null)
     setWrongQuestions([])
     setIsReviewMode(false)
+    setExamQuestions(shuffleArray(mockQuestions))
 
     const now = new Date()
     setSessionStartedAt(now)
@@ -91,7 +93,7 @@ export function ExamPage() {
 
   const handleStartReview = () => {
     if (wrongQuestions.length === 0) return
-    setMockQuestions(wrongQuestions)
+    setExamQuestions(wrongQuestions)
     setCurrentQuestionIndex(0)
     setSelectedOptions({})
     setTimeLeft(3600)
@@ -107,7 +109,7 @@ export function ExamPage() {
   }
 
   const handleNext = () => {
-    if (currentQuestionIndex < mockQuestions.length - 1) {
+    if (currentQuestionIndex < examQuestions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1)
     }
   }
@@ -122,15 +124,15 @@ export function ExamPage() {
     setIsFinished(true)
 
     const wrong: Question[] = []
-    mockQuestions.forEach(q => {
+    examQuestions.forEach(q => {
       if (selectedOptions[q.id] !== q.correctOption) {
         wrong.push(q)
       }
     })
     setWrongQuestions(wrong)
 
-    const correct = mockQuestions.filter(q => selectedOptions[q.id] === q.correctOption).length
-    const total = mockQuestions.length
+    const correct = examQuestions.filter(q => selectedOptions[q.id] === q.correctOption).length
+    const total = examQuestions.length
     const percentage = total > 0 ? Math.round((correct / total) * 100) : 0
 
     await recordExamResult({
@@ -141,7 +143,7 @@ export function ExamPage() {
       time_spent_seconds: sessionStartedAt ? Math.floor((Date.now() - sessionStartedAt.getTime()) / 1000) : 0,
     })
 
-    for (const q of mockQuestions) {
+    for (const q of examQuestions) {
       if (selectedOptions[q.id]) {
         await recordQuestionResponse({
           question_identifier: String(q.id),
@@ -166,15 +168,15 @@ export function ExamPage() {
 
   const calculateScore = () => {
     let correct = 0
-    mockQuestions.forEach(q => {
+    examQuestions.forEach(q => {
       if (selectedOptions[q.id] === q.correctOption) {
         correct++
       }
     })
     return {
       correct,
-      total: mockQuestions.length,
-      percentage: Math.round((correct / mockQuestions.length) * 100)
+      total: examQuestions.length,
+      percentage: Math.round((correct / examQuestions.length) * 100)
     }
   }
 
@@ -233,7 +235,7 @@ export function ExamPage() {
     )
   }
 
-  const currentQuestion = mockQuestions[currentQuestionIndex]
+  const currentQuestion = examQuestions[currentQuestionIndex]
   const stats = calculateScore()
 
   return (
@@ -247,7 +249,7 @@ export function ExamPage() {
             </Badge>
           )}
           <Badge variant="outline" className="w-fit">{currentQuestion.topic}</Badge>
-          <PageTitle className="text-xl">Pregunta {currentQuestionIndex + 1} de {mockQuestions.length}</PageTitle>
+          <PageTitle className="text-xl">Pregunta {currentQuestionIndex + 1} de {examQuestions.length}</PageTitle>
         </div>
         <PageActions className="flex items-center gap-4">
           <div className="flex items-center gap-2 px-4 py-2 bg-secondary rounded-lg font-mono font-bold">
@@ -293,7 +295,7 @@ export function ExamPage() {
             </Card>
 
             <div className="grid gap-4">
-              {mockQuestions.map((q, idx) => {
+              {examQuestions.map((q, idx) => {
                 const userAnswer = selectedOptions[q.id]
                 const isCorrect = userAnswer === q.correctOption
                 return (
@@ -394,7 +396,7 @@ export function ExamPage() {
 
               <Button 
                 onClick={handleNext} 
-                disabled={currentQuestionIndex === mockQuestions.length - 1}
+                disabled={currentQuestionIndex === examQuestions.length - 1}
               >
                 Siguiente <ChevronRight size={20} className="ml-2" />
               </Button>
