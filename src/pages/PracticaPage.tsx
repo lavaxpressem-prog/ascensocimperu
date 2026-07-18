@@ -197,6 +197,8 @@ export function PracticaPage() {
               {topicQuestions.map((q, idx) => {
                 const userAnswer = selectedOptions[q.id]
                 const isCorrect = userAnswer === q.correctOption && q.correctOption
+                const userAnswerText = userAnswer ? q.options.find(o => o.id === userAnswer)?.text : null
+                const correctAnswerText = q.correctOption ? q.options.find(o => o.id === q.correctOption)?.text : null
                 return (
                   <Card key={q.id} className={isCorrect ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50' : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50'}>
                     <CardContent className="pt-4">
@@ -205,11 +207,11 @@ export function PracticaPage() {
                           <div className="flex-1">
                             <p className="font-semibold text-sm mb-2">Pregunta {idx + 1}: {q.text}</p>
                             <p className="text-sm">
-                              <span className="font-semibold">Tu respuesta:</span> {userAnswer ? userAnswer.toUpperCase() : 'No respondida'}
+                              <span className="font-semibold">Tu respuesta:</span> {userAnswer ? `${userAnswer.toUpperCase()} - ${userAnswerText}` : 'No respondida'}
                             </p>
                             {q.correctOption && (
                               <p className="text-sm">
-                                <span className="font-semibold">Correcta:</span> {q.correctOption.toUpperCase()}
+                                <span className="font-semibold">Correcta:</span> {q.correctOption.toUpperCase()} - {correctAnswerText}
                               </p>
                             )}
                           </div>
