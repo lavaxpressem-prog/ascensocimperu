@@ -289,13 +289,26 @@ export function PracticaPage() {
             )}
             <PageTitle>{selectedTopic}</PageTitle>
           </div>
-          <PageDescription>
-            Pregunta {currentQuestionIndex + 1} de {topicQuestions.length}
-            {isReviewMode && ' (preguntas falladas)'}
-          </PageDescription>
+          {isReviewMode && (
+            <PageDescription>
+              Preguntas falladas
+            </PageDescription>
+          )}
         </PageHeader>
         <PageBody>
           <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Pregunta {currentQuestionIndex + 1} de {topicQuestions.length}
+              </p>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={handleFinishPractice}
+              >
+                Finalizar práctica
+              </Button>
+            </div>
             <Card>
               <CardContent className="pt-6">
                 <h2 className="text-xl font-semibold mb-6">{currentQuestion.text}</h2>
