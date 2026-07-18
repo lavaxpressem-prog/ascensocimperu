@@ -302,16 +302,6 @@ export function ExamPage() {
                 <RotateCcw size={18} className="mr-2" /> Reintentar
               </Button>
             </div>
-
-            {wrongQuestions.length > 0 && (
-              <Button 
-                onClick={handleStartReview} 
-                className="w-full gap-2 bg-orange-600 hover:bg-orange-700"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Repasar {wrongQuestions.length} pregunta(s) fallada(s)
-              </Button>
-            )}
           </div>
         ) : (
           <>
