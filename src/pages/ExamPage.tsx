@@ -294,31 +294,6 @@ export function ExamPage() {
               </div>
             </Card>
 
-            <div className="grid gap-4">
-              {examQuestions.map((q, idx) => {
-                const userAnswer = selectedOptions[q.id]
-                const isCorrect = userAnswer === q.correctOption
-                return (
-                  <Card key={q.id} className={isCorrect ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/50' : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/50'}>
-                    <CardContent className="pt-4">
-                      <div className="space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="font-semibold text-sm mb-2">Pregunta {idx + 1}: {q.text}</p>
-                          </div>
-                          {isCorrect ? (
-                            <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
-                          ) : (
-                            <XCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )
-              })}
-            </div>
-
             <div className="flex gap-4">
               <Button variant="outline" className="flex-1" onClick={() => setIsExamStarted(false)}>
                 Volver al Inicio
