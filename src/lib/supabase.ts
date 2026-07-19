@@ -299,12 +299,21 @@ export interface Comisaria {
 }
 
 export async function getComisarias(): Promise<Comisaria[]> {
-  const { data, error } = await supabase
-    .from('comisarias_pnp')
-    .select('*')
-    .order('nombre')
-  if (error) return []
-  return (data || []) as Comisaria[]
+  const PAGE_SIZE = 1000
+  const all: Comisaria[] = []
+  let offset = 0
+  while (true) {
+    const { data, error } = await supabase
+      .from('comisarias_pnp')
+      .select('*')
+      .order('nombre')
+      .range(offset, offset + PAGE_SIZE - 1)
+    if (error || !data || data.length === 0) break
+    all.push(...(data as Comisaria[]))
+    if (data.length < PAGE_SIZE) break
+    offset += PAGE_SIZE
+  }
+  return all
 }
 
 // ── Questions helpers ──
