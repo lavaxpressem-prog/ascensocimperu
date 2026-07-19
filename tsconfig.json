@@ -20,7 +20,7 @@
     "noUnusedParameters": false,
     "noImplicitAny": false,
     "strictNullChecks": true,
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "noFallthroughCasesInSwitch": false,
     "skipDefaultLibCheck": true,
     "noImplicitReturns": false,

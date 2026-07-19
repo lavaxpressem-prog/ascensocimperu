@@ -10,6 +10,7 @@
     "lint": "tsc --noEmit"
   },
   "devDependencies": {
+    "@types/node": "^26.1.1",
     "@types/react-google-recaptcha": "^2.1.9",
     "@vercel/node": "^5.8.23",
     "stylelint": "^17.7.0",

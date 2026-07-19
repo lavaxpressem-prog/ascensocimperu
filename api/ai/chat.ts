@@ -1,14 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
-  if (!GOOGLE_AI_API_KEY) {
-    return res.status(500).json({ error: 'GOOGLE_AI_API_KEY is not configured on the server' })
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server' })
   }
 
   const { systemPrompt, messages } = req.body
@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }))
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GOOGLE_AI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
