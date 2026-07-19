@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { createRouter, createRoute, createRootRoute, RouterProvider, Outlet } from '@tanstack/react-router'
+import { createRouter, createRoute, createRootRoute, RouterProvider, Outlet, useLocation } from '@tanstack/react-router'
 import { DashboardLayout } from './layouts/DashboardLayout'
 import { AdminLayout } from './layouts/AdminLayout'
 import { LoginPageSimple } from './pages/LoginPageSimple'
@@ -40,44 +40,47 @@ function PageLoader() {
   )
 }
 
-const rootRoute = createRootRoute({
-  component: () => {
-    const { user, loading } = useAuth()
-    const isResetting = window.location.pathname === '/reset-password'
-    const isAdminRoute = window.location.pathname.startsWith('/admin')
+function RootComponent() {
+  const { user, loading } = useAuth()
+  const location = useLocation()
+  const isResetting = location.pathname === '/reset-password'
+  const isAdminRoute = location.pathname.startsWith('/admin')
 
-    if (loading) {
-      return <PageLoader />
-    }
+  if (loading) {
+    return <PageLoader />
+  }
 
-    if (isResetting) {
-      return <Outlet />
-    }
+  if (isResetting) {
+    return <Outlet />
+  }
 
-    if (!user) {
-      return <LoginPageSimple />
-    }
+  if (!user) {
+    return <LoginPageSimple />
+  }
 
-    if (isAdminRoute) {
-      return (
-        <AdminRoute>
-          <AdminLayout>
-            <Suspense fallback={<PageLoader />}>
-              <Outlet />
-            </Suspense>
-          </AdminLayout>
-        </AdminRoute>
-      )
-    }
-
+  if (isAdminRoute) {
     return (
-      <DashboardLayout>
-        <Suspense fallback={<PageLoader />}>
-          <Outlet />
-        </Suspense>
-      </DashboardLayout>
+      <AdminRoute>
+        <AdminLayout>
+          <Suspense fallback={<PageLoader />}>
+            <Outlet />
+          </Suspense>
+        </AdminLayout>
+      </AdminRoute>
     )
   }
+
+  return (
+    <DashboardLayout>
+      <Suspense fallback={<PageLoader />}>
+        <Outlet />
+      </Suspense>
+    </DashboardLayout>
+  )
+}
+
+const rootRoute = createRootRoute({
+  component: RootComponent
 })
 
 const indexRoute = createRoute({
