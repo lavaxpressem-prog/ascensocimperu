@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Page, PageHeader, PageTitle, PageDescription, PageBody, Card, Button, toast } from '@blinkdotnew/ui'
-import { Newspaper, Plus, Trash2, Edit, Eye, EyeOff, Upload } from 'lucide-react'
+import { Newspaper, Plus, Trash2, Edit, Eye, EyeOff, Upload, Loader2 } from 'lucide-react'
 import { getNoticias, createNoticia, updateNoticia, deleteNoticia, logAdminAction, supabase } from '../../lib/supabase'
 
 export function AdminNewsPage() {
@@ -8,6 +8,8 @@ export function AdminNewsPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
+  const [uploadingPdf, setUploadingPdf] = useState(false)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [form, setForm] = useState({ titulo: '', descripcion: '', categoria: 'Ley', fuente: '', estado: 'Vigente', fecha_publicacion: new Date().toISOString().split('T')[0], pdf_url: '', imagen_url: '', autor: '', is_published: true })
 
   const fetchNoticias = async () => {
@@ -54,16 +56,22 @@ export function AdminNewsPage() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'pdf' | 'image') => {
     const file = e.target.files?.[0]; if (!file) return
+    const setUploading = type === 'pdf' ? setUploadingPdf : setUploadingImage
+    setUploading(true)
     try {
       const ext = file.name.split('.').pop()
       const path = `noticias/${Date.now()}.${ext}`
       const { error } = await supabase.storage.from('noticias-pdf').upload(path, file)
       if (error) throw error
       const { data: urlData } = supabase.storage.from('noticias-pdf').getPublicUrl(path)
-      if (type === 'pdf') setForm({ ...form, pdf_url: urlData.publicUrl })
-      else setForm({ ...form, imagen_url: urlData.publicUrl })
-      toast.success(type === 'pdf' ? 'PDF subido' : 'Imagen subida')
-    } catch (err: any) { toast.error(err?.message || 'Error al subir archivo') }
+      const field = type === 'pdf' ? 'pdf_url' : 'imagen_url'
+      setForm(prev => ({ ...prev, [field]: urlData.publicUrl }))
+      toast.success(type === 'pdf' ? 'PDF subido correctamente' : 'Imagen subida correctamente')
+    } catch (err: any) {
+      console.error(`Error subiendo ${type}:`, err)
+      toast.error(err?.message || `Error al subir ${type === 'pdf' ? 'el PDF' : 'la imagen'}. Verifica que el bucket de storage exista y sea público.`)
+    }
+    setUploading(false)
     e.target.value = ''
   }
 
@@ -106,12 +114,18 @@ export function AdminNewsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-1">Subir PDF</label>
-                      <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/80 cursor-pointer text-sm"><Upload size={16} />Seleccionar PDF<input type="file" accept=".pdf" onChange={e => handleFileUpload(e, 'pdf')} className="hidden" /></label>
+                      <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors ${uploadingPdf ? 'bg-muted text-muted-foreground' : 'bg-secondary hover:bg-secondary/80'}`}>
+                        {uploadingPdf ? <><Loader2 size={16} className="animate-spin" />Subiendo...</> : <><Upload size={16} />Seleccionar PDF</>}
+                        <input type="file" accept=".pdf" onChange={e => handleFileUpload(e, 'pdf')} className="hidden" disabled={uploadingPdf} />
+                      </label>
                       {form.pdf_url && <span className="text-xs text-green-600 ml-2">PDF cargado</span>}
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-1">Subir Imagen</label>
-                      <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary hover:bg-secondary/80 cursor-pointer text-sm"><Upload size={16} />Seleccionar Imagen<input type="file" accept="image/*" onChange={e => handleFileUpload(e, 'image')} className="hidden" /></label>
+                      <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer text-sm transition-colors ${uploadingImage ? 'bg-muted text-muted-foreground' : 'bg-secondary hover:bg-secondary/80'}`}>
+                        {uploadingImage ? <><Loader2 size={16} className="animate-spin" />Subiendo...</> : <><Upload size={16} />Seleccionar Imagen</>}
+                        <input type="file" accept="image/*" onChange={e => handleFileUpload(e, 'image')} className="hidden" disabled={uploadingImage} />
+                      </label>
                       {form.imagen_url && <span className="text-xs text-green-600 ml-2">Imagen cargada</span>}
                     </div>
                   </div>
@@ -120,7 +134,7 @@ export function AdminNewsPage() {
                     <label className="text-sm">Publicada</label>
                   </div>
                   <div className="flex gap-3">
-                    <Button className="bg-primary hover:bg-primary/90 text-white" onClick={handleSubmit}>{editId ? 'Actualizar' : 'Crear'}</Button>
+                    <Button className="bg-primary hover:bg-primary/90 text-white" onClick={handleSubmit} disabled={uploadingPdf || uploadingImage}>{editId ? 'Actualizar' : 'Crear'}</Button>
                     <Button className="bg-secondary hover:bg-secondary/80" onClick={() => { setShowForm(false); setEditId(null) }}>Cancelar</Button>
                   </div>
                 </div>
