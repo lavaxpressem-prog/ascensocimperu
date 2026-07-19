@@ -10,14 +10,14 @@ import {
   Badge,
   Input
 } from '@blinkdotnew/ui'
-import { Phone, Building2, MapPin, Search, Filter } from 'lucide-react'
+import { Phone, Building2, MapPin, Search } from 'lucide-react'
 import { getComisarias, type Comisaria } from '../lib/supabase'
 
 export function DirectorioPage() {
   const [comisarias, setComisarias] = useState<Comisaria[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedRegion, setSelectedRegion] = useState<string>(' Todas')
+  const [selectedRegion, setSelectedRegion] = useState<string>('Todas')
 
   useEffect(() => {
     getComisarias().then(data => {
