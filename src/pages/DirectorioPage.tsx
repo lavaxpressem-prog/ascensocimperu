@@ -27,7 +27,7 @@ export function DirectorioPage() {
   }, [])
 
   const regions = useMemo(() => {
-    const unique = [...new Set(comisarias.map(c => c.region).filter(Boolean))]
+    const unique = [...new Set(comisarias.map(c => c.region_policial).filter(Boolean))]
     return ['Todas', ...unique.sort()]
   }, [comisarias])
 
@@ -41,7 +41,7 @@ export function DirectorioPage() {
         (c.departamento ?? '').toLowerCase().includes(q) ||
         (c.comando_superior ?? '').toLowerCase().includes(q)
       
-      const matchesRegion = selectedRegion === 'Todas' || c.region === selectedRegion
+      const matchesRegion = selectedRegion === 'Todas' || c.region_policial === selectedRegion
       
       return matchesSearch && matchesRegion
     })

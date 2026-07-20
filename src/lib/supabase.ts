@@ -286,16 +286,15 @@ export async function recordQuestionResponse(response: {
 
 export interface Comisaria {
   id: number
-  region: string
-  comando_superior: string
   nombre: string
-  tipo: string | null
-  categoria: string | null
   direccion: string | null
+  telefono: string | null
   distrito: string | null
   provincia: string | null
   departamento: string | null
-  telefono: string | null
+  comando_superior: string | null
+  region_policial: string
+  created_at: string
 }
 
 export async function getComisarias(): Promise<Comisaria[]> {
@@ -304,7 +303,7 @@ export async function getComisarias(): Promise<Comisaria[]> {
   let offset = 0
   while (true) {
     const { data, error } = await supabase
-      .from('comisarias_pnp')
+      .from('comisarias_nacional')
       .select('*')
       .order('nombre')
       .range(offset, offset + PAGE_SIZE - 1)
