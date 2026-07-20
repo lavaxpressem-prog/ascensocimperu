@@ -294,6 +294,7 @@ export interface Comisaria {
   departamento: string | null
   comando_superior: string | null
   region_policial: string
+  categoria: string | null
   created_at: string
 }
 
