@@ -97,12 +97,26 @@ function formatDate(dateStr: string): string {
   return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
+const MONTH_NAMES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+
+function getDaysInMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).getDate()
+}
+
+function getFirstDayOfWeek(year: number, month: number) {
+  const day = new Date(year, month, 1).getDay()
+  return day === 0 ? 6 : day - 1
+}
+
 export function TemariosPage() {
   const [categoriaActiva, setCategoriaActiva] = useState('Todas')
   const [busqueda, setBusqueda] = useState('')
   const [iaInput, setIaInput] = useState('')
   const [noticias, setNoticias] = useState<Noticia[]>([])
   const [loading, setLoading] = useState(true)
+  const now = new Date()
+  const [calendarMonth, setCalendarMonth] = useState(now.getMonth())
+  const [calendarYear, setCalendarYear] = useState(now.getFullYear())
 
   useEffect(() => {
     supabase
@@ -426,55 +440,91 @@ export function TemariosPage() {
           </div>
 
           {/* Calendario */}
-          <div className="bg-[#12161F] border border-gray-700/30 rounded-xl p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <Calendar size={16} className="text-yellow-500" />
-              <h3 className="font-bold text-white text-sm">Calendario de publicaciones</h3>
-            </div>
-            <div className="flex items-center justify-between mb-3">
-              <button className="text-gray-500 hover:text-white transition-colors">
-                <ChevronLeft size={16} />
-              </button>
-              <span className="text-sm font-semibold text-white">Junio 2026</span>
-              <button className="text-gray-500 hover:text-white transition-colors">
-                <ChevronRight size={16} />
-              </button>
-            </div>
-            <div className="grid grid-cols-7 gap-1 text-center">
-              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
-                <div key={i} className="text-[10px] text-gray-600 font-semibold py-1">{d}</div>
-              ))}
-              {[
-                [1, 2, 3, 4, 5, 6, 7],
-                [8, 9, 10, 11, 12, 13, 14],
-                [15, 16, 17, 18, 19, 20, 21],
-                [22, 23, 24, 25, 26, 27, 28],
-                [29, 30, 0, 0, 0, 0, 0],
-              ].flat().map((dia, i) => {
-                if (dia === 0) return <div key={i} />
-                const marcados = [1, 10, 15, 20]
-                const esHoy = dia === 2
-                const esMarcado = marcados.includes(dia)
-                return (
-                  <div
-                    key={i}
-                    className={`text-[11px] py-1.5 rounded-md cursor-pointer transition-colors ${
-                      esHoy
-                        ? 'bg-yellow-500 text-black font-bold'
-                        : esMarcado
-                        ? 'bg-yellow-500/20 text-yellow-400 font-semibold'
-                        : 'text-gray-400 hover:bg-gray-700/50'
-                    }`}
-                  >
-                    {dia}
-                  </div>
-                )
-              })}
-            </div>
-            <button className="w-full mt-4 text-sm text-gray-400 hover:text-yellow-400 transition-colors py-2 border border-gray-700/30 rounded-lg hover:border-yellow-500/30">
-              Ver calendario completo
-            </button>
-          </div>
+          {(() => {
+            const totalDays = getDaysInMonth(calendarYear, calendarMonth)
+            const firstDay = getFirstDayOfWeek(calendarYear, calendarMonth)
+            const totalCells = firstDay + totalDays
+            const paddedCells = Math.ceil(totalCells / 7) * 7
+
+            const pubDates = new Set(
+              noticias
+                .map(n => n.fecha_publicacion)
+                .filter(Boolean)
+                .map(d => d.slice(0, 10))
+            )
+
+            const today = new Date()
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+            const handlePrev = () => {
+              if (calendarMonth === 0) {
+                setCalendarMonth(11)
+                setCalendarYear(calendarYear - 1)
+              } else {
+                setCalendarMonth(calendarMonth - 1)
+              }
+            }
+            const handleNext = () => {
+              if (calendarMonth === 11) {
+                setCalendarMonth(0)
+                setCalendarYear(calendarYear + 1)
+              } else {
+                setCalendarMonth(calendarMonth + 1)
+              }
+            }
+
+            const days: (number | null)[] = []
+            for (let i = 0; i < paddedCells; i++) {
+              if (i < firstDay || i >= totalCells) {
+                days.push(null)
+              } else {
+                days.push(i - firstDay + 1)
+              }
+            }
+
+            return (
+              <div className="bg-[#12161F] border border-gray-700/30 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Calendar size={16} className="text-yellow-500" />
+                  <h3 className="font-bold text-white text-sm">Calendario de publicaciones</h3>
+                </div>
+                <div className="flex items-center justify-between mb-3">
+                  <button onClick={handlePrev} className="text-gray-500 hover:text-white transition-colors">
+                    <ChevronLeft size={16} />
+                  </button>
+                  <span className="text-sm font-semibold text-white">{MONTH_NAMES[calendarMonth]} {calendarYear}</span>
+                  <button onClick={handleNext} className="text-gray-500 hover:text-white transition-colors">
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-7 gap-1 text-center">
+                  {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
+                    <div key={i} className="text-[10px] text-gray-600 font-semibold py-1">{d}</div>
+                  ))}
+                  {days.map((dia, i) => {
+                    if (dia === null) return <div key={`e-${i}`} />
+                    const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+                    const esHoy = dateStr === todayStr
+                    const esMarcado = pubDates.has(dateStr)
+                    return (
+                      <div
+                        key={i}
+                        className={`text-[11px] py-1.5 rounded-md cursor-pointer transition-colors ${
+                          esHoy
+                            ? 'bg-yellow-500 text-black font-bold'
+                            : esMarcado
+                            ? 'bg-yellow-500/20 text-yellow-400 font-semibold'
+                            : 'text-gray-400 hover:bg-gray-700/50'
+                        }`}
+                      >
+                        {dia}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })()}
 
           {/* Notificaciones */}
           <div className="bg-[#12161F] border border-gray-700/30 rounded-xl p-5">
