@@ -91,6 +91,12 @@ export function AudioPage() {
     setIsPaused(false)
   }
 
+  const handleRestart = () => {
+    if (!synth) return
+    synth.cancel()
+    speakQuestion(true)
+  }
+
   const handleNext = () => {
     setSelectedOption('')
     if (currentIndex < questions.length - 1) {
@@ -162,10 +168,10 @@ export function AudioPage() {
     console.groupEnd()
   }
 
-  const speakQuestion = () => {
+  const speakQuestion = (forceRestart = false) => {
     if (!synth || !currentQuestion) return
 
-    if (isPlaying) {
+    if (!forceRestart && isPlaying) {
       synth.cancel()
       setIsPlaying(false)
       setIsPaused(false)
@@ -295,8 +301,9 @@ export function AudioPage() {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={handleStop}
-                disabled={!isPlaying && !isPaused}
+                onClick={handleRestart}
+                disabled={!currentQuestion}
+                title="Reiniciar audio"
               >
                 <RotateCcw size={18} />
               </Button>
