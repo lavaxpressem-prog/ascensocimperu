@@ -3,6 +3,7 @@ import { Link, useLocation } from '@tanstack/react-router'
 import {
   LayoutDashboard,
   Users,
+  UserPlus,
   FileText,
   Newspaper,
   Puzzle,
@@ -22,6 +23,7 @@ import { cn } from '../lib/utils'
 const ADMIN_NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/users', label: 'Usuarios', icon: Users },
+  { href: '/admin/register', label: 'Registro', icon: UserPlus },
   { href: '/admin/questions', label: 'Banco de Preguntas', icon: FileText },
   { href: '/admin/news', label: 'Noticias', icon: Newspaper },
   { href: '/admin/modules', label: 'Modulos', icon: Puzzle },

@@ -22,6 +22,7 @@ const PapeletasAtuPage = lazy(() => import('./pages/PapeletasAtuPage').then(m =>
 
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })))
 const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage').then(m => ({ default: m.AdminUsersPage })))
+const AdminRegisterPage = lazy(() => import('./pages/admin/AdminRegisterPage').then(m => ({ default: m.AdminRegisterPage })))
 const AdminQuestionsPage = lazy(() => import('./pages/admin/AdminQuestionsPage').then(m => ({ default: m.AdminQuestionsPage })))
 const AdminNewsPage = lazy(() => import('./pages/admin/AdminNewsPage').then(m => ({ default: m.AdminNewsPage })))
 const AdminModulesPage = lazy(() => import('./pages/admin/AdminModulesPage').then(m => ({ default: m.AdminModulesPage })))
@@ -176,6 +177,12 @@ const adminUsersRoute = createRoute({
   component: () => <Suspense fallback={<PageLoader />}><AdminUsersPage /></Suspense>
 })
 
+const adminRegisterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/register',
+  component: () => <Suspense fallback={<PageLoader />}><AdminRegisterPage /></Suspense>
+})
+
 const adminQuestionsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/questions',
@@ -234,6 +241,7 @@ const routeTree = rootRoute.addChildren([
   resetPasswordRoute,
   adminIndexRoute,
   adminUsersRoute,
+  adminRegisterRoute,
   adminQuestionsRoute,
   adminNewsRoute,
   adminModulesRoute,
