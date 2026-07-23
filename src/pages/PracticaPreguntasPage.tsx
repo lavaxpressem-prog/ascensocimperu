@@ -18,7 +18,8 @@ import {
   RotateCcw,
   ChevronRight,
   ChevronLeft,
-  ClipboardCheck
+  ClipboardCheck,
+  AlertTriangle
 } from 'lucide-react'
 import { getQuestionsBatch, shuffleArray, recordStudySession, updateStudySession, recordQuestionResponse, type Question } from '../lib/supabase'
 
@@ -34,6 +35,7 @@ export function PracticaPreguntasPage() {
   const [score, setScore] = useState(0)
   const [studySessionId, setStudySessionId] = useState<string | null>(null)
   const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
 
   useEffect(() => {
     getQuestionsBatch().then(qs => {
@@ -114,6 +116,26 @@ export function PracticaPreguntasPage() {
       setSelectedOption(null)
       setIsAnswered(false)
     }
+  }
+
+  const handleFinish = async () => {
+    setShowConfirmModal(false)
+    setIsFinished(true)
+
+    const total = practiceQuestions.length
+    const questionsAttempted = currentQuestionIndex + (isAnswered ? 1 : 0)
+
+    if (studySessionId && sessionStartedAt) {
+      const durationSeconds = Math.floor((Date.now() - sessionStartedAt.getTime()) / 1000)
+      await updateStudySession(studySessionId, {
+        ended_at: new Date().toISOString(),
+        duration_seconds: durationSeconds,
+        questions_attempted: questionsAttempted,
+        questions_correct: score,
+      })
+    }
+
+    toast.success('Práctica finalizada')
   }
 
   if (loading || allQuestions.length === 0) {
@@ -312,13 +334,21 @@ export function PracticaPreguntasPage() {
         )}
 
         <div className="flex items-center justify-between pt-4 border-t">
-          <Button 
-            variant="outline" 
-            onClick={handlePrev} 
-            disabled={currentQuestionIndex === 0}
-          >
-            <ChevronLeft size={20} className="mr-2" /> Anterior
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handlePrev} 
+              disabled={currentQuestionIndex === 0}
+            >
+              <ChevronLeft size={20} className="mr-2" /> Anterior
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowConfirmModal(true)}
+            >
+              <AlertTriangle size={20} className="mr-2" /> Finalizar
+            </Button>
+          </div>
 
           <div className="text-sm text-muted-foreground">
             {score} de {currentQuestionIndex + (isAnswered ? 1 : 0)} correctas
@@ -332,6 +362,32 @@ export function PracticaPreguntasPage() {
           )}
         </div>
       </PageBody>
+
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowConfirmModal(false)} />
+          <div className="relative bg-card border border-border rounded-xl p-6 shadow-xl max-w-sm w-full mx-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <AlertTriangle size={20} className="text-amber-600" />
+              </div>
+              <h3 className="text-lg font-semibold">Finalizar Práctica</h3>
+            </div>
+            <p className="text-muted-foreground">
+              ¿Estás seguro de que deseas finalizar la práctica? 
+              Se guardará tu progreso actual ({score} de {currentQuestionIndex + (isAnswered ? 1 : 0)} correctas).
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setShowConfirmModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleFinish}>
+                Finalizar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Page>
   )
 }
