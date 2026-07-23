@@ -51,17 +51,17 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               href="/" 
               active={location.pathname === '/'} 
             />
-            
-            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
-              Estudio
-            </div>
-            
             <SidebarItem 
               icon={<Newspaper size={20} />} 
               label="Noticias" 
               href="/temarios" 
               active={location.pathname === '/temarios'} 
             />
+            
+            <div className="pt-4 pb-2 px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
+              Estudio
+            </div>
+            
             <SidebarItem 
               icon={<FileText size={20} />} 
               label="Banco de Preguntas" 
