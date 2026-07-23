@@ -16,7 +16,8 @@ import {
   Moon,
   Sun,
   Search,
-  Shield
+  Shield,
+  ClipboardCheck
 } from 'lucide-react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { useTheme } from '../lib/hooks/useTheme'
@@ -83,6 +84,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               label="Práctica por Temas" 
               href="/practica" 
               active={location.pathname === '/practica'} 
+            />
+            <SidebarItem 
+              icon={<ClipboardCheck size={20} />} 
+              label="Práctica de Preguntas" 
+              href="/practica-de-preguntas" 
+              active={location.pathname === '/practica-de-preguntas'} 
             />
             
             <div className="pt-4 pb-2 px-3 text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">

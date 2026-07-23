@@ -283,7 +283,7 @@ export function AudioPage() {
               <Button
                 size="lg"
                 className="rounded-full h-14 w-14 flex-shrink-0"
-                onClick={speakQuestion}
+                onClick={() => speakQuestion()}
               >
                 {isPlaying && !isPaused ? <Pause size={24} /> : <Play size={24} className="ml-1" />}
               </Button>

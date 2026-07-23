@@ -17,6 +17,7 @@ const AudioPage = lazy(() => import('./pages/AudioPage').then(m => ({ default: m
 const MapaPage = lazy(() => import('./pages/MapaPage').then(m => ({ default: m.MapaPage })))
 const AyudaPage = lazy(() => import('./pages/AyudaPage').then(m => ({ default: m.AyudaPage })))
 const PracticaPage = lazy(() => import('./pages/PracticaPage').then(m => ({ default: m.PracticaPage })))
+const PracticaPreguntasPage = lazy(() => import('./pages/PracticaPreguntasPage').then(m => ({ default: m.PracticaPreguntasPage })))
 const PapeletasAtuPage = lazy(() => import('./pages/PapeletasAtuPage').then(m => ({ default: m.PapeletasAtuPage })))
 
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })))
@@ -143,6 +144,12 @@ const practicaRoute = createRoute({
   component: () => <Suspense fallback={<PageLoader />}><PracticaPage /></Suspense>
 })
 
+const practicaPreguntasRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/practica-de-preguntas',
+  component: () => <Suspense fallback={<PageLoader />}><PracticaPreguntasPage /></Suspense>
+})
+
 const papeletasAtuRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/papeletas-atu',
@@ -222,6 +229,7 @@ const routeTree = rootRoute.addChildren([
   mapaRoute,
   ayudaRoute,
   practicaRoute,
+  practicaPreguntasRoute,
   papeletasAtuRoute,
   resetPasswordRoute,
   adminIndexRoute,
