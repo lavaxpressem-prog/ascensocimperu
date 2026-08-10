@@ -685,13 +685,20 @@ export async function logAdminAction(
 
 export async function toggleUserLock(userId: string, lock: boolean) {
   const { error } = await supabase
-    .rpc('toggle_user_lock', { p_user_id: userId, p_lock: lock })
+    .from('profiles')
+    .update({
+      status: lock ? 'locked' : 'approved',
+      locked_until: lock ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : null,
+    })
+    .eq('id', userId)
   if (error) throw error
 }
 
 export async function setUserRole(userId: string, role: string) {
   const { error } = await supabase
-    .rpc('set_user_role', { p_user_id: userId, p_role: role })
+    .from('profiles')
+    .update({ role })
+    .eq('id', userId)
   if (error) throw error
 }
 
