@@ -602,11 +602,53 @@ export interface AdminStats {
 }
 
 export async function getAdminStats(): Promise<AdminStats | null> {
-  const { data, error } = await supabase
-    .rpc('get_admin_stats')
-    .single()
-  if (error) return null
-  return data as AdminStats
+  try {
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('status, last_login')
+
+    if (profilesError) {
+      console.error('[getAdminStats] Error fetching profiles:', profilesError)
+      return null
+    }
+
+    const total_users = profiles?.length ?? 0
+    const active_users = profiles?.filter(p => p.status === 'approved').length ?? 0
+    const pending_users = profiles?.filter(p => p.status === 'pending').length ?? 0
+    const locked_users = profiles?.filter(p => p.status === 'locked' || p.status === 'suspended').length ?? 0
+    const total_logins = profiles?.filter(p => p.last_login != null).length ?? 0
+
+    const [questionsResult, noticiasResult, filesResult, activityResult] = await Promise.all([
+      supabase.from('preguntas').select('*', { count: 'exact', head: true }),
+      supabase.from('noticias').select('is_published'),
+      supabase.from('uploaded_files').select('*', { count: 'exact', head: true }),
+      supabase.from('activity_logs').select('*', { count: 'exact', head: true })
+        .gt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+    ])
+
+    const total_questions = questionsResult.count ?? 0
+    const all_noticias = noticiasResult.data ?? []
+    const total_noticias = all_noticias.length
+    const published_noticias = all_noticias.filter(n => n.is_published).length
+    const total_files = filesResult.count ?? 0
+    const recent_activity = activityResult.count ?? 0
+
+    return {
+      total_users,
+      active_users,
+      pending_users,
+      locked_users,
+      total_questions,
+      total_noticias,
+      published_noticias,
+      total_files,
+      total_logins,
+      recent_activity
+    }
+  } catch (err) {
+    console.error('[getAdminStats] Unexpected error:', err)
+    return null
+  }
 }
 
 export interface AuditLogEntry {
