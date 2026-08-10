@@ -529,30 +529,45 @@ export function PracticaPage() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {topics.map(topic => (
-              <Card 
-                key={topic.id} 
-                className="hover:shadow-lg transition cursor-pointer"
-                onClick={() => handleSelectTopic(topic)}
-              >
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between">
-                      <BookOpen className="w-8 h-8 text-indigo-600" />
-                      <Badge variant="secondary">{topic.count} preguntas</Badge>
+            {topics.map((topic, index) => {
+              const pastelColors = [
+                'bg-[#E0F2FE]', // celeste pastel
+                'bg-[#D1FAE5]', // verde menta
+                'bg-[#EDE9FE]', // lavanda
+                'bg-[#FEF3C7]', // amarillo crema
+                'bg-[#FCE7F3]', // rosado pastel
+                'bg-[#DBEAFE]', // azul pastel
+                'bg-[#FFEDD5]', // durazno
+                'bg-[#D1FAE5]', // verde pastel
+                'bg-[#F3E8FF]', // lila suave
+              ];
+              const bgColor = pastelColors[index % pastelColors.length];
+              
+              return (
+                <Card 
+                  key={topic.id} 
+                  className={`hover:shadow-lg transition cursor-pointer ${bgColor}`}
+                  onClick={() => handleSelectTopic(topic)}
+                >
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <BookOpen className="w-8 h-8 text-indigo-600" />
+                        <Badge variant="secondary">{topic.count} preguntas</Badge>
+                      </div>
+                      <h3 className="font-semibold text-lg line-clamp-2">{topic.nombre}</h3>
+                      <Button 
+                        onClick={() => handleSelectTopic(topic)}
+                        className="w-full gap-2"
+                      >
+                        <Play className="w-4 h-4" />
+                        Practicar
+                      </Button>
                     </div>
-                    <h3 className="font-semibold text-lg line-clamp-2">{topic.nombre}</h3>
-                    <Button 
-                      onClick={() => handleSelectTopic(topic)}
-                      className="w-full gap-2"
-                    >
-                      <Play className="w-4 h-4" />
-                      Practicar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
 
