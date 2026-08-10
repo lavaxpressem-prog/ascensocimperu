@@ -9,6 +9,7 @@ import {
   CardContent,
   Button,
   Badge,
+  Input,
   toast
 } from '@blinkdotnew/ui'
 import { 
@@ -38,6 +39,9 @@ export function PracticaPage() {
   const [wrongQuestions, setWrongQuestions] = useState<Question[]>([])
   const [studySessionId, setStudySessionId] = useState<string | null>(null)
   const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null)
+  const [showCountSelector, setShowCountSelector] = useState(false)
+  const [pendingTopic, setPendingTopic] = useState<TopicWithCount | null>(null)
+  const [questionCountInput, setQuestionCountInput] = useState('')
 
   useEffect(() => {
     getTopicsWithCount().then(t => {
@@ -49,6 +53,22 @@ export function PracticaPage() {
   const currentQuestion = topicQuestions[currentQuestionIndex]
 
   const handleSelectTopic = async (topic: TopicWithCount) => {
+    setPendingTopic(topic)
+    setQuestionCountInput('')
+    setShowCountSelector(true)
+  }
+
+  const handleStartPracticeWithCount = async () => {
+    const topic = pendingTopic
+    if (!topic) return
+
+    const count = parseInt(questionCountInput, 10)
+    if (!questionCountInput.trim() || isNaN(count) || count <= 0) {
+      toast.error('Ingresa una cantidad válida de preguntas')
+      return
+    }
+
+    setShowCountSelector(false)
     setSelectedTopic(topic.nombre)
     setSelectedMateriaId(topic.id)
     setIsPracticing(true)
@@ -67,7 +87,9 @@ export function PracticaPage() {
     setStudySessionId(sessionId)
 
     getQuestionsByMateria(topic.id).then(qs => {
-      setTopicQuestions(shuffleArray(qs))
+      const shuffled = shuffleArray(qs)
+      const limited = count >= shuffled.length ? shuffled : shuffled.slice(0, count)
+      setTopicQuestions(limited)
       setLoadingQuestions(false)
     })
   }
@@ -158,9 +180,116 @@ export function PracticaPage() {
     setWrongQuestions([])
     setStudySessionId(null)
     setSessionStartedAt(null)
+    setShowCountSelector(false)
+    setPendingTopic(null)
+    setQuestionCountInput('')
   }
 
   const totalQuestions = topics.reduce((sum, t) => sum + t.count, 0)
+
+  // Mostrar selector de cantidad de preguntas
+  if (showCountSelector && pendingTopic) {
+    const maxAvailable = pendingTopic.count
+    const selectedCount = parseInt(questionCountInput, 10)
+    const isValidInput = questionCountInput.trim() !== '' && !isNaN(selectedCount) && selectedCount > 0
+    const exceedsAvailable = isValidInput && selectedCount > maxAvailable
+    const quickOptions = [5, 10, 15, 20, 30].filter(n => n <= maxAvailable)
+
+    return (
+      <Page>
+        <PageHeader>
+          <PageTitle>{pendingTopic.nombre}</PageTitle>
+          <PageDescription>Selecciona cuántas preguntas quieres practicar</PageDescription>
+        </PageHeader>
+        <PageBody>
+          <Card>
+            <CardContent className="pt-6 space-y-6">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Preguntas disponibles: <span className="font-semibold text-foreground">{maxAvailable}</span>
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-sm font-medium">Cantidad de preguntas</p>
+                <div className="flex flex-wrap gap-2">
+                  {quickOptions.map(n => (
+                    <Button
+                      key={n}
+                      variant={questionCountInput === String(n) ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setQuestionCountInput(String(n))}
+                    >
+                      {n}
+                    </Button>
+                  ))}
+                  <Button
+                    variant={questionCountInput === String(maxAvailable) ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setQuestionCountInput(String(maxAvailable))}
+                  >
+                    Todas ({maxAvailable})
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  type="number"
+                  min={1}
+                  max={maxAvailable}
+                  placeholder={`Ej: 1-${maxAvailable}`}
+                  value={questionCountInput}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    if (val === '' || (Number(val) >= 0 && Number(val) <= 9999)) {
+                      setQuestionCountInput(val)
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && isValidInput && !exceedsAvailable) {
+                      handleStartPracticeWithCount()
+                    }
+                  }}
+                />
+                {exceedsAvailable && (
+                  <p className="text-sm text-yellow-600 dark:text-yellow-400">
+                    Solo hay {maxAvailable} preguntas disponibles. Se usarán todas.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowCountSelector(false)
+                    setPendingTopic(null)
+                    setQuestionCountInput('')
+                  }}
+                >
+                  ← Volver
+                </Button>
+                <Button
+                  className="flex-1 gap-2"
+                  disabled={!isValidInput || selectedCount <= 0}
+                  onClick={() => {
+                    if (exceedsAvailable) {
+                      setQuestionCountInput(String(maxAvailable))
+                    }
+                    handleStartPracticeWithCount()
+                  }}
+                >
+                  <Play className="w-4 h-4" />
+                  Comenzar Práctica
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </PageBody>
+      </Page>
+    )
+  }
 
   // Mostrar resultados
   if (isPracticing && isFinished && selectedTopic) {

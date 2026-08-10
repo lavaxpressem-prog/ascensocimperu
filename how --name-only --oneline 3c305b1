@@ -1,0 +1,935 @@
+[33m3c305b1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Add project files with .env protection in .gitignore
+ .editorconfig                                      |    6 [32m+[m
+ .github/ISSUE_TEMPLATE/bug_report.yml              |   59 [32m+[m
+ .github/ISSUE_TEMPLATE/config.yml                  |    1 [32m+[m
+ .github/ISSUE_TEMPLATE/feature_request.yml         |   53 [32m+[m
+ .../PULL_REQUEST_TEMPLATE/pull_request_template.md |   14 [32m+[m
+ .github/ci-gradle.properties                       |   28 [32m+[m
+ .github/workflows/build.yml                        |  123 [32m++[m
+ .github/workflows/issues-stale.yml                 |   17 [32m+[m
+ .gitignore                                         |   70 [32m+[m[31m-[m
+ .google/packaging.yaml                             |   41 [32m+[m
+ .idea/.gitignore                                   |    3 [32m+[m
+ .idea/assetWizardSettings.xml                      |   45 [32m+[m
+ .idea/codeStyles/Project.xml                       |  124 [32m++[m
+ .idea/codeStyles/codeStyleConfig.xml               |    5 [32m+[m
+ .idea/copyright/AOSP.xml                           |    6 [32m+[m
+ .idea/copyright/profiles_settings.xml              |    7 [32m+[m
+ .idea/kotlinc.xml                                  |    6 [32m+[m
+ .idea/markdown.xml                                 |    8 [32m+[m
+ .idea/migrations.xml                               |   10 [32m+[m
+ .vercel/README.txt                                 |   11 [32m+[m
+ .vercel/project.json                               |    1 [32m+[m
+ CODEOWNERS                                         |    1 [32m+[m
+ CODE_OF_CONDUCT.md                                 |   63 [32m+[m
+ CONTRIBUTING.md                                    |   28 [32m+[m
+ LICENSE                                            |  201 [32m++++[m
+ README.md                                          |   93 [32m+[m[31m-[m
+ app/.gitignore                                     |    1 [32m+[m
+ app/README.md                                      |   24 [32m+[m
+ app/build.gradle.kts                               |  110 [32m++[m
+ app/proguard-rules.pro                             |   21 [32m+[m
+ app/src/main/AndroidManifest.xml                   |   58 [32m+[m
+ .../java/com/example/platform/app/ApiSurface.kt    |  238 [32m++++[m
+ .../java/com/example/platform/app/CatalogScreen.kt |  122 [32m++[m
+ .../java/com/example/platform/app/MainActivity.kt  |   36 [32m+[m
+ .../main/java/com/example/platform/app/MainApp.kt  |   19 [32m+[m
+ .../main/java/com/example/platform/app/NavGraph.kt |  104 [32m++[m
+ .../java/com/example/platform/app/SampleDemo.kt    | 1204 [32m++++++++++++++++++++[m
+ .../res/drawable-v24/ic_launcher_background.xml    |   39 [32m+[m
+ .../res/drawable-v24/ic_launcher_foreground.xml    |  237 [32m++++[m
+ .../res/drawable-v24/ic_launcher_monochrome.xml    |   26 [32m+[m
+ app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml |   21 [32m+[m
+ app/src/main/res/mipmap-hdpi/ic_launcher.png       |  Bin [31m0[m -> [32m6275[m bytes
+ app/src/main/res/mipmap-mdpi/ic_launcher.png       |  Bin [31m0[m -> [32m3450[m bytes
+ app/src/main/res/mipmap-xhdpi/ic_launcher.png      |  Bin [31m0[m -> [32m9384[m bytes
+ app/src/main/res/mipmap-xxhdpi/ic_launcher.png     |  Bin [31m0[m -> [32m17117[m bytes
+ app/src/main/res/mipmap-xxxhdpi/ic_launcher.png    |  Bin [31m0[m -> [32m27083[m bytes
+ app/src/main/res/values/strings.xml                |   22 [32m+[m
+ app/src/main/res/values/themes.xml                 |   20 [32m+[m
+ build.gradle.kts                                   |   28 [32m+[m
+ checksum.sh                                        |   40 [32m+[m
+ dist/_redirects                                    |    1 [31m-[m
+ dist/favicon.svg                                   |    0
+ dist/felicidades.png.jpeg                          |  Bin [31m122508[m -> [32m0[m bytes
+ dist/icons.svg                                     |    0
+ dist/index.html                                    |   20 [31m-[m
+ gradle.properties                                  |   74 [32m++[m
+ gradle/libs.versions.toml                          |  179 [32m+++[m
+ gradle/spotless-init.gradle.kts                    |   58 [32m+[m
+ gradle/wrapper/gradle-wrapper.jar                  |  Bin [31m0[m -> [32m43583[m bytes
+ gradle/wrapper/gradle-wrapper.properties           |    7 [32m+[m
+ gradlew                                            |  252 [32m++++[m
+ gradlew.bat                                        |   94 [32m++[m
+ renovate.json                                      |    6 [32m+[m
+ samples/accessibility/README.md                    |   25 [32m+[m
+ samples/accessibility/build.gradle.kts             |   57 [32m+[m
+ .../platform/accessibility/ColorContrast.kt        |   71 [32m++[m
+ .../platform/accessibility/LiveRegionView.kt       |   59 [32m+[m
+ .../platform/accessibility/SpeakableText.kt        |   99 [32m++[m
+ .../com/example/platform/accessibility/UIUtil.kt   |   28 [32m+[m
+ .../src/main/res/layout/liveregion_fragment.xml    |   52 [32m+[m
+ .../accessibility/src/main/res/values/dimens.xml   |   21 [32m+[m
+ .../accessibility/src/main/res/values/strings.xml  |   20 [32m+[m
+ samples/camera/camera2/README.md                   |   32 [32m+[m
+ samples/camera/camera2/build.gradle.kts            |   65 [32m++[m
+ .../camera/camera2/src/main/AndroidManifest.xml    |   25 [32m+[m
+ .../platform/camera/common/AutoFitSurfaceView.kt   |   79 [32m++[m
+ .../example/platform/camera/common/CameraSizes.kt  |   81 [32m++[m
+ .../camera/common/CombinedCaptureResult.kt         |   33 [32m+[m
+ .../platform/camera/common/DirectExecutor.kt       |   25 [32m+[m
+ .../example/platform/camera/common/ExifUtils.kt    |   74 [32m++[m
+ .../platform/camera/common/OrientationLiveData.kt  |  100 [32m++[m
+ .../platform/camera/common/SimpleImageViewer.kt    |   54 [32m+[m
+ .../camera/imagecapture/Camera2ImageCapture.kt     |  636 [32m+++++++++++[m
+ .../camera/imagecapture/Camera2UltraHDRCapture.kt  |  643 [32m+++++++++++[m
+ .../platform/camera/preview/Camera2Preview.kt      |  355 [32m++++++[m
+ .../camera2/src/main/res/drawable/ic_back.xml      |   26 [32m+[m
+ .../camera2/src/main/res/drawable/ic_shutter.xml   |   20 [32m+[m
+ .../src/main/res/drawable/ic_shutter_focused.xml   |   33 [32m+[m
+ .../src/main/res/drawable/ic_shutter_normal.xml    |   33 [32m+[m
+ .../src/main/res/drawable/ic_shutter_pressed.xml   |   33 [32m+[m
+ .../src/main/res/layout/camera2_image_capture.xml  |   62 [32m+[m
+ .../src/main/res/layout/camera2_preview.xml        |   32 [32m+[m
+ .../main/res/layout/camera2_ultrahdr_capture.xml   |   66 [32m++[m
+ .../camera/camera2/src/main/res/values/strings.xml |   24 [32m+[m
+ samples/camera/camerax/README.md                   |    1 [32m+[m
+ samples/camera/camerax/build.gradle.kts            |   67 [32m++[m
+ .../camera/camerax/src/main/AndroidManifest.xml    |   43 [32m+[m
+ .../example/platform/camerax/basic/CameraXBasic.kt |  309 [32m+++++[m
+ .../camerax/basic/CameraXBasicViewModel.kt         |  194 [32m++++[m
+ .../extensions/CameraExtensionsViewModel.kt        |  455 [32m++++++++[m
+ .../camerax/extensions/CameraXExtensions.kt        |  442 [32m+++++++[m
+ .../platform/camerax/mlkit/CameraXMlKitSample.kt   |  219 [32m++++[m
+ .../platform/camerax/mlkit/QrCodeDrawable.kt       |   85 [32m++[m
+ .../platform/camerax/mlkit/QrCodeViewModel.kt      |   61 [32m+[m
+ .../example/platform/camerax/video/CameraXVideo.kt |  505 [32m++++++++[m
+ .../connectivity/UwbRanging/.idea/workspace.xml    |  249 [32m++++[m
+ samples/connectivity/UwbRanging/README.md          |   74 [32m++[m
+ samples/connectivity/UwbRanging/build.gradle.kts   |  108 [32m++[m
+ .../UwbRanging/src/main/AndroidManifest.xml        |   39 [32m+[m
+ .../java/com/google/uwb/hellouwb/AppContainer.kt   |   29 [32m+[m
+ .../com/google/uwb/hellouwb/HelloUwbApplication.kt |   31 [32m+[m
+ .../google/uwb/hellouwb/data/AppContainerImpl.kt   |   62 [32m+[m
+ .../com/google/uwb/hellouwb/data/SettingsStore.kt  |   33 [32m+[m
+ .../google/uwb/hellouwb/data/SettingsStoreImpl.kt  |   98 [32m++[m
+ .../uwb/hellouwb/data/UwbRangingControlSource.kt   |   43 [32m+[m
+ .../hellouwb/data/UwbRangingControlSourceImpl.kt   |  124 [32m++[m
+ .../java/com/google/uwb/hellouwb/ui/HelloUwbApp.kt |   43 [32m+[m
+ .../main/java/com/google/uwb/hellouwb/ui/Screen.kt |   33 [32m+[m
+ .../google/uwb/hellouwb/ui/UwbRangingActivity.kt   |  120 [32m++[m
+ .../google/uwb/hellouwb/ui/control/ControlRoute.kt |   31 [32m+[m
+ .../uwb/hellouwb/ui/control/ControlScreen.kt       |   90 [32m++[m
+ .../uwb/hellouwb/ui/control/ControlViewModel.kt    |  116 [32m++[m
+ .../com/google/uwb/hellouwb/ui/home/HomeRoute.kt   |   29 [32m+[m
+ .../com/google/uwb/hellouwb/ui/home/HomeScreen.kt  |  233 [32m++++[m
+ .../google/uwb/hellouwb/ui/home/HomeViewModel.kt   |  111 [32m++[m
+ .../com/google/uwb/hellouwb/ui/nav/AppNavBar.kt    |   84 [32m++[m
+ .../com/google/uwb/hellouwb/ui/nav/AppNavGraph.kt  |   86 [32m++[m
+ .../google/uwb/hellouwb/ui/nav/AppNavigation.kt    |   48 [32m+[m
+ .../uwb/hellouwb/ui/ranging/RangingControlIcon.kt  |   86 [32m++[m
+ .../uwb/hellouwb/ui/ranging/RangingViewModel.kt    |   56 [32m+[m
+ .../com/google/uwb/hellouwb/ui/send/SendRoute.kt   |   34 [32m+[m
+ .../com/google/uwb/hellouwb/ui/send/SendScreen.kt  |  145 [32m+++[m
+ .../google/uwb/hellouwb/ui/send/SendViewModel.kt   |  151 [32m+++[m
+ .../uwb/hellouwb/ui/settings/SettingsRoute.kt      |   34 [32m+[m
+ .../uwb/hellouwb/ui/settings/SettingsScreen.kt     |  171 [32m+++[m
+ .../uwb/hellouwb/ui/settings/SettingsViewModel.kt  |   70 [32m++[m
+ .../java/com/google/uwb/hellouwb/ui/theme/Color.kt |   29 [32m+[m
+ .../java/com/google/uwb/hellouwb/ui/theme/Theme.kt |   77 [32m++[m
+ .../java/com/google/uwb/hellouwb/ui/theme/Type.kt  |   54 [32m+[m
+ .../com/google/uwb/uwbranging/EndpointEvents.kt    |   48 [32m+[m
+ .../google/uwb/uwbranging/UwbConnectionManager.kt  |   38 [32m+[m
+ .../java/com/google/uwb/uwbranging/UwbEndpoint.kt  |   37 [32m+[m
+ .../com/google/uwb/uwbranging/UwbSessionScope.kt   |   28 [32m+[m
+ .../uwb/uwbranging/impl/NearbyConnections.kt       |  168 [32m+++[m
+ .../google/uwb/uwbranging/impl/NearbyConnector.kt  |  123 [32m++[m
+ .../uwbranging/impl/NearbyControleeConnector.kt    |  108 [32m++[m
+ .../uwbranging/impl/NearbyControllerConnector.kt   |  120 [32m++[m
+ .../com/google/uwb/uwbranging/impl/OobConnector.kt |   27 [32m+[m
+ .../uwbranging/impl/UwbConnectionManagerImpl.kt    |   51 [32m+[m
+ .../com/google/uwb/uwbranging/impl/UwbOobEvent.kt  |   96 [32m++[m
+ .../uwb/uwbranging/impl/UwbSessionScopeImpl.kt     |  107 [32m++[m
+ .../UwbRanging/src/main/proto/appsetttings.proto   |   39 [32m+[m
+ .../UwbRanging/src/main/proto/uwbinfo.proto        |   69 [32m++[m
+ .../src/main/res/drawable/lock_close24px.xml       |   23 [32m+[m
+ .../src/main/res/drawable/lock_open24px.xml        |   23 [32m+[m
+ .../UwbRanging/src/main/res/drawable/uwb.png       |  Bin [31m0[m -> [32m7784[m bytes
+ .../UwbRanging/src/main/res/values/colors.xml      |   22 [32m+[m
+ .../UwbRanging/src/main/res/values/strings.xml     |   15 [32m+[m
+ .../UwbRanging/src/main/res/values/themes.xml      |   16 [32m+[m
+ .../UwbRanging/src/main/res/xml/backup_rules.xml   |   26 [32m+[m
+ .../src/main/res/xml/data_extraction_rules.xml     |   32 [32m+[m
+ samples/connectivity/audio/README.md               |   30 [32m+[m
+ samples/connectivity/audio/build.gradle.kts        |   51 [32m+[m
+ samples/connectivity/audio/src/AndroidManifest.xml |   21 [32m+[m
+ .../connectivity/audio/AudioCommsSample.kt         |  195 [32m++++[m
+ .../connectivity/audio/AudioDeviceState.kt         |  173 [32m+++[m
+ .../platform/connectivity/audio/AudioLoopSource.kt |  135 [32m+++[m
+ samples/connectivity/bluetooth/ble/README.md       |   29 [32m+[m
+ .../connectivity/bluetooth/ble/build.gradle.kts    |   53 [32m+[m
+ .../bluetooth/ble/src/main/AndroidManifest.xml     |   61 [32m+[m
+ .../bluetooth/ble/BLEScanIntentSample.kt           |  221 [32m++++[m
+ .../bluetooth/ble/BluetoothSampleBox.kt            |  135 [32m+++[m
+ .../bluetooth/ble/ConnectGATTSample.kt             |  339 [32m++++++[m
+ .../bluetooth/ble/FindBLEDevicesSample.kt          |  281 [32m+++++[m
+ .../bluetooth/ble/server/GATTServerSample.kt       |  114 [32m++[m
+ .../ble/server/GATTServerSampleService.kt          |  288 [32m+++++[m
+ samples/connectivity/bluetooth/companion/README.md |   38 [32m+[m
+ .../bluetooth/companion/build.gradle.kts           |   52 [32m+[m
+ .../companion/src/main/AndroidManifest.xml         |   45 [32m+[m
+ .../bluetooth/cdm/AssociatedDeviceCompat.kt        |   65 [32m++[m
+ .../bluetooth/cdm/CompanionDeviceManagerSample.kt  |  352 [32m++++++[m
+ .../bluetooth/cdm/CompanionDeviceSampleService.kt  |  168 [32m+++[m
+ samples/connectivity/callnotification/README.md    |    3 [32m+[m
+ .../connectivity/callnotification/build.gradle.kts |   55 [32m+[m
+ .../callnotification/src/main/AndroidManifest.xml  |   32 [32m+[m
+ .../callnotification/CallNotificationSample.kt     |  121 [32m++[m
+ .../callnotification/NotificationSource.kt         |  218 [32m++++[m
+ samples/connectivity/telecom/README.md             |   19 [32m+[m
+ samples/connectivity/telecom/build.gradle.kts      |   69 [32m++[m
+ .../connectivity/telecom/TelecomSampleTest.kt      |  107 [32m++[m
+ .../telecom/src/main/AndroidManifest.xml           |   38 [32m+[m
+ .../connectivity/telecom/TelecomCallSample.kt      |  168 [32m+++[m
+ .../telecom/call/TelecomCallActivity.kt            |  121 [32m++[m
+ .../telecom/call/TelecomCallBroadcast.kt           |   62 [32m+[m
+ .../telecom/call/TelecomCallNotificationManager.kt |  198 [32m++++[m
+ .../connectivity/telecom/call/TelecomCallScreen.kt |  448 [32m++++++++[m
+ .../telecom/call/TelecomCallService.kt             |  195 [32m++++[m
+ .../connectivity/telecom/model/TelecomCall.kt      |   72 [32m++[m
+ .../telecom/model/TelecomCallAction.kt             |   52 [32m+[m
+ .../telecom/model/TelecomCallRepository.kt         |  331 [32m++++++[m
+ .../telecom/src/main/res/drawable/ic_mic_24.xml    |    5 [32m+[m
+ .../src/main/res/drawable/ic_mic_off_24.xml        |    5 [32m+[m
+ .../src/main/res/drawable/ic_phone_paused_24.xml   |    5 [32m+[m
+ .../src/main/res/drawable/ic_round_call_24.xml     |    5 [32m+[m
+ .../main/res/drawable/round_arrow_drop_down_24.xml |    5 [32m+[m
+ .../main/res/drawable/round_arrow_drop_up_24.xml   |    5 [32m+[m
+ .../main/res/drawable/round_bluetooth_audio_24.xml |    5 [32m+[m
+ .../src/main/res/drawable/round_headphones_24.xml  |    5 [32m+[m
+ .../main/res/drawable/round_phone_paused_24.xml    |    5 [32m+[m
+ .../main/res/drawable/round_send_to_mobile_24.xml  |    7 [32m+[m
+ .../src/main/res/drawable/round_smartphone_24.xml  |    5 [32m+[m
+ .../main/res/drawable/round_speaker_phone_24.xml   |    9 [32m+[m
+ samples/graphics/pdf/README.md                     |   20 [32m+[m
+ samples/graphics/pdf/build.gradle.kts              |   51 [32m+[m
+ samples/graphics/pdf/src/main/assets/sample.pdf    |  Bin [31m0[m -> [32m453132[m bytes
+ .../example/platform/graphics/pdf/PdfRenderer.kt   |   88 [32m++[m
+ .../platform/graphics/pdf/PdfRendererViewModel.kt  |  129 [32m+++[m
+ samples/graphics/ultrahdr/README.md                |   24 [32m+[m
+ samples/graphics/ultrahdr/build.gradle.kts         |   66 [32m++[m
+ .../src/main/assets/gainmaps/grand_canyon.jpg      |  Bin [31m0[m -> [32m4714624[m bytes
+ .../ultrahdr/src/main/assets/gainmaps/lamps.jpg    |  Bin [31m0[m -> [32m1645109[m bytes
+ .../src/main/assets/gainmaps/night_highrise.jpg    |  Bin [31m0[m -> [32m2789951[m bytes
+ .../ultrahdr/src/main/assets/gainmaps/office.jpg   |  Bin [31m0[m -> [32m5934600[m bytes
+ .../main/assets/gainmaps/train_station_night.jpg   |  Bin [31m0[m -> [32m3281254[m bytes
+ .../src/main/assets/sdr/night_highrise.jpg         |  Bin [31m0[m -> [32m3619183[m bytes
+ .../main/assets/shaders/fs_uhdr_tonemapper.frag    |  111 [32m++[m
+ .../assets/shaders/vs_uhdr_texture_sampling.vert   |   30 [32m+[m
+ .../main/assets/ultrahdr/ultrahdr_cityscape.jpg    |  Bin [31m0[m -> [32m6917983[m bytes
+ .../graphics/ultrahdr/common/ColorModeControls.kt  |  146 [32m+++[m
+ .../graphics/ultrahdr/common/WindowObserver.kt     |   22 [32m+[m
+ .../ultrahdr/display/CompressingUltraHDRImages.kt  |  151 [32m+++[m
+ .../ultrahdr/display/DisplayUltraHDRScreen.kt      |  209 [32m++++[m
+ .../ultrahdr/display/DisplayingUltraHDR.kt         |   97 [32m++[m
+ .../display/DisplayingUltraHDRUsing3PLibrary.kt    |  252 [32m++++[m
+ .../display/VisualizingAnUltraHDRGainmap.kt        |  184 [32m+++[m
+ .../graphics/ultrahdr/edit/EditingUltraHDR.kt      |  221 [32m++++[m
+ .../graphics/ultrahdr/opengl/UltraHDRWithOpenGL.kt |  262 [32m+++++[m
+ .../ultrahdr/opengl/UltraHDRWithOpenGLRenderer.kt  |  494 [32m++++++++[m
+ .../src/main/res/layout/color_mode_controls.xml    |   56 [32m+[m
+ .../src/main/res/layout/compress_ultrahdr.xml      |   70 [32m++[m
+ .../src/main/res/layout/displaying_ultrahdr.xml    |   64 [32m++[m
+ .../displaying_ultrahdr_using_3p_library.xml       |   94 [32m++[m
+ .../src/main/res/layout/editing_ultrahdr.xml       |   96 [32m++[m
+ .../src/main/res/layout/ultrahdr_with_graphics.xml |   93 [32m++[m
+ .../res/layout/visualizing_an_ultrahdr_gainmap.xml |   66 [32m++[m
+ .../ultrahdr/src/main/res/values/dimens.xml        |   19 [32m+[m
+ .../ultrahdr/src/main/res/values/strings.xml       |   64 [32m++[m
+ samples/location/README.md                         |   32 [32m+[m
+ samples/location/build.gradle.kts                  |   56 [32m+[m
+ samples/location/src/main/AndroidManifest.xml      |   25 [32m+[m
+ .../bglocationaccess/BgLocationAccessScreen.kt     |  118 [32m++[m
+ .../location/bglocationaccess/BgLocationWorker.kt  |   60 [32m+[m
+ .../currentLocation/CurrentLocationScreen.kt       |  135 [32m+++[m
+ .../geofencing/GeofenceBroadcastReceiver.kt        |   68 [32m++[m
+ .../location/geofencing/GeofenceManager.kt         |  102 [32m++[m
+ .../location/geofencing/GeofencingScreen.kt        |  212 [32m++++[m
+ .../locationupdates/LocationUpdatesScreen.kt       |  178 [32m+++[m
+ .../location/permission/LocationPermissions.kt     |  148 [32m+++[m
+ .../permission/LocationPermissionsScreen.kt        |  171 [32m+++[m
+ .../UserActivityBroadcastReceiver.kt               |   60 [32m+[m
+ .../UserActivityRecognitionScreen.kt               |  119 [32m++[m
+ .../UserActivityTransitionManager.kt               |  137 [32m+++[m
+ .../example/platform/location/utils/Constants.kt   |   25 [32m+[m
+ samples/media/README.md                            |   24 [32m+[m
+ samples/media/ultrahdr/README.md                   |   24 [32m+[m
+ samples/media/ultrahdr/build.gradle.kts            |   76 [32m++[m
+ .../src/main/assets/gainmaps/desert_palms.jpg      |  Bin [31m0[m -> [32m3859886[m bytes
+ .../src/main/assets/gainmaps/desert_sunset.jpg     |  Bin [31m0[m -> [32m2577663[m bytes
+ .../src/main/assets/gainmaps/desert_wanda.jpg      |  Bin [31m0[m -> [32m1925203[m bytes
+ .../media/ultrahdr/video/UltraHDRToHDRVideo.kt     |  612 [32m++++++++++[m
+ .../src/main/res/layout/ultrahdr_to_hdr_video.xml  |  103 [32m++[m
+ .../media/ultrahdr/src/main/res/values/strings.xml |   22 [32m+[m
+ samples/media/video/build.gradle.kts               |   89 [32m++[m
+ samples/media/video/download_model.gradle          |   51 [32m+[m
+ samples/media/video/src/main/AndroidManifest.xml   |   21 [32m+[m
+ samples/media/video/src/main/assets/style1.jpg     |  Bin [31m0[m -> [32m209963[m bytes
+ samples/media/video/src/main/assets/style2.jpg     |  Bin [31m0[m -> [32m124857[m bytes
+ samples/media/video/src/main/assets/style3.jpg     |  Bin [31m0[m -> [32m115029[m bytes
+ .../platform/media/video/StyleTransferEffect.kt    |  185 [32m+++[m
+ .../platform/media/video/TransformerTFLite.kt      |  266 [32m+++++[m
+ .../media/video/TransformerVideoComposition.kt     |  321 [32m++++++[m
+ .../media/video/src/main/res/drawable/style1.jpg   |  Bin [31m0[m -> [32m209963[m bytes
+ .../media/video/src/main/res/drawable/style2.jpg   |  Bin [31m0[m -> [32m124857[m bytes
+ .../media/video/src/main/res/drawable/style3.jpg   |  Bin [31m0[m -> [32m115029[m bytes
+ .../res/layout/transformer_composition_layout.xml  |   82 [32m++[m
+ .../main/res/layout/transformer_tflite_layout.xml  |   96 [32m++[m
+ .../media/video/src/main/res/values/strings.xml    |   35 [32m+[m
+ samples/privacy/data/README.md                     |   25 [32m+[m
+ samples/privacy/data/build.gradle.kts              |   50 [32m+[m
+ samples/privacy/data/src/main/AndroidManifest.xml  |   37 [32m+[m
+ .../platform/privacy/data/PackageVisibility.kt     |  150 [32m+++[m
+ samples/privacy/permissions/README.md              |   41 [32m+[m
+ samples/privacy/permissions/build.gradle.kts       |   62 [32m+[m
+ .../permissions/src/main/AndroidManifest.xml       |   39 [32m+[m
+ .../privacy/permissions/ComposePermissions.kt      |   92 [32m++[m
+ .../privacy/permissions/MultiplePermissions.kt     |  205 [32m++++[m
+ .../platform/privacy/permissions/Permissionless.kt |  524 [32m+++++++++[m
+ .../privacy/permissions/SinglePermission.kt        |  132 [32m+++[m
+ .../privacy/permissions/common/PermissionScreen.kt |  106 [32m++[m
+ .../permissions/src/main/res/xml/image_paths.xml   |   21 [32m+[m
+ samples/privacy/transparency/README.md             |   26 [32m+[m
+ samples/privacy/transparency/build.gradle.kts      |   54 [32m+[m
+ .../transparency/src/main/AndroidManifest.xml      |   25 [32m+[m
+ .../platform/privacy/transparency/DataAccess.kt    |  192 [32m++++[m
+ .../privacy/transparency/ScreenshotDetection.kt    |  102 [32m++[m
+ samples/storage/README.md                          |   28 [32m+[m
+ samples/storage/build.gradle.kts                   |   63 [32m+[m
+ samples/storage/src/main/AndroidManifest.xml       |   38 [32m+[m
+ .../platform/storage/mediastore/FileEntry.kt       |   11 [32m+[m
+ .../platform/storage/mediastore/MediaStoreQuery.kt |  165 [32m+++[m
+ .../storage/mediastore/SelectedPhotosAccess.kt     |  293 [32m+++++[m
+ .../platform/storage/photopicker/PhotoPicker.kt    |  166 [32m+++[m
+ .../storageaccessframework/GetContentSample.kt     |  196 [32m++++[m
+ .../storageaccessframework/shared/FileCard.kt      |  455 [32m++++++++[m
+ .../storageaccessframework/shared/FileRecord.kt    |   81 [32m++[m
+ .../src/main/res/drawable/ic_audio_file_24.xml     |   21 [32m+[m
+ .../src/main/res/drawable/ic_description_24.xml    |   21 [32m+[m
+ .../src/main/res/drawable/ic_filter_alt_24.xml     |   21 [32m+[m
+ .../storage/src/main/res/drawable/ic_image_24.xml  |   21 [32m+[m
+ .../main/res/drawable/ic_insert_drive_file_24.xml  |   21 [32m+[m
+ .../src/main/res/drawable/ic_picture_as_pdf_24.xml |   21 [32m+[m
+ .../src/main/res/drawable/ic_video_file_24.xml     |   21 [32m+[m
+ samples/user-interface/appwidgets/README.md        |  114 [32m++[m
+ samples/user-interface/appwidgets/build.gradle.kts |   72 [32m++[m
+ .../appwidgets/screenshots/ActionListLayout.png    |  Bin [31m0[m -> [32m511430[m bytes
+ .../appwidgets/screenshots/CanonicalLayouts.png    |  Bin [31m0[m -> [32m701002[m bytes
+ .../appwidgets/screenshots/CheckListLayout.png     |  Bin [31m0[m -> [32m455506[m bytes
+ .../appwidgets/screenshots/ImageGridLayout.png     |  Bin [31m0[m -> [32m978556[m bytes
+ .../appwidgets/screenshots/ImageTextLayout.png     |  Bin [31m0[m -> [32m781858[m bytes
+ .../appwidgets/screenshots/ImageTextListLayout.png |  Bin [31m0[m -> [32m654929[m bytes
+ .../appwidgets/screenshots/SearchToolbarLayout.png |  Bin [31m0[m -> [32m534062[m bytes
+ .../appwidgets/screenshots/TextLayout.png          |  Bin [31m0[m -> [32m542864[m bytes
+ .../appwidgets/screenshots/Toolbar.png             |  Bin [31m0[m -> [32m499699[m bytes
+ .../appwidgets/screenshots/run-widget-config.png   |  Bin [31m0[m -> [32m42694[m bytes
+ .../appwidgets/screenshots/weather-gif.gif         |  Bin [31m0[m -> [32m1133748[m bytes
+ .../appwidgets/src/main/AndroidManifest.xml        |  214 [32m++++[m
+ .../ui/appwidgets/AppWidgetPinnedReceiver.kt       |   33 [32m+[m
+ .../example/platform/ui/appwidgets/AppWidgets.kt   |  226 [32m++++[m
+ .../platform/ui/appwidgets/glance/GlanceKtx.kt     |  114 [32m++[m
+ .../glance/layout/ActionDemonstrationActivity.kt   |   47 [32m+[m
+ .../glance/layout/CanonicalLayoutActivity.kt       |  371 [32m++++++[m
+ .../ui/appwidgets/glance/layout/CollectionsKtx.kt  |   48 [32m+[m
+ .../layout/collections/ActionListAppWidget.kt      |   86 [32m++[m
+ .../layout/collections/CheckListAppWidget.kt       |   95 [32m++[m
+ .../layout/collections/ImageGridAppWidget.kt       |   95 [32m++[m
+ .../layout/collections/ImageTextListAppWidget.kt   |   99 [32m++[m
+ .../data/FakeActionListDataRepository.kt           |  129 [32m+++[m
+ .../data/FakeCheckListDataRepository.kt            |  125 [32m++[m
+ .../data/FakeImageGridDataRepository.kt            |  220 [32m++++[m
+ .../data/FakeImageTextListDataRepository.kt        |  205 [32m++++[m
+ .../layout/collections/layout/ActionListLayout.kt  |  560 [32m+++++++++[m
+ .../layout/collections/layout/CheckListLayout.kt   |  462 [32m++++++++[m
+ .../layout/collections/layout/EmptyListContent.kt  |   23 [32m+[m
+ .../layout/collections/layout/ImageGridLayout.kt   |  405 [32m+++++++[m
+ .../collections/layout/ImageTextListLayout.kt      |  497 [32m++++++++[m
+ .../glance/layout/collections/layout/ListItem.kt   |   85 [32m++[m
+ .../layout/collections/layout/NoDataContent.kt     |   77 [32m++[m
+ .../layout/RoundedScrollingLazyColumn.kt           |   79 [32m++[m
+ .../layout/RoundedScrollingLazyVerticalGrid.kt     |  127 [32m+++[m
+ .../layout/collections/layout/VerticalListItem.kt  |   89 [32m++[m
+ .../glance/layout/text/FullBleedImageAppWidget.kt  |  104 [32m++[m
+ .../glance/layout/text/LongTextAppWidget.kt        |   84 [32m++[m
+ .../glance/layout/text/TextWithImageAppWidget.kt   |  103 [32m++[m
+ .../layout/text/data/FakeLongTextRespository.kt    |   90 [32m++[m
+ .../text/data/FakeTextWithImageRepository.kt       |  160 [32m+++[m
+ .../layout/text/layout/FullBleedImageLayout.kt     |  222 [32m++++[m
+ .../glance/layout/text/layout/LongTextLayout.kt    |  347 [32m++++++[m
+ .../layout/text/layout/TextWithImageLayout.kt      |  520 [32m+++++++++[m
+ .../layout/toolbars/ExpressiveToolbarAppWidget.kt  |   93 [32m++[m
+ .../layout/toolbars/SearchToolBarAppWidget.kt      |   88 [32m++[m
+ .../glance/layout/toolbars/ToolBarAppWidget.kt     |   90 [32m++[m
+ .../glance/layout/toolbars/layout/Buttons.kt       |  135 [32m+++[m
+ .../toolbars/layout/ExpressiveToolbarLayout.kt     |  412 [32m+++++++[m
+ .../layout/toolbars/layout/LayoutComponents.kt     |  223 [32m++++[m
+ .../layout/toolbars/layout/SearchToolBarLayout.kt  |  417 [32m+++++++[m
+ .../glance/layout/toolbars/layout/ToolBarLayout.kt |  455 [32m++++++++[m
+ .../ui/appwidgets/glance/layout/ui/theme/Color.kt  |   11 [32m+[m
+ .../ui/appwidgets/glance/layout/ui/theme/Theme.kt  |   70 [32m++[m
+ .../ui/appwidgets/glance/layout/ui/theme/Type.kt   |   34 [32m+[m
+ .../appwidgets/glance/layout/utils/ActionUtils.kt  |   24 [32m+[m
+ .../ui/appwidgets/glance/layout/utils/FontUtils.kt |  102 [32m++[m
+ .../glance/layout/utils/ImageAspectRatio.kt        |   45 [32m+[m
+ .../appwidgets/glance/layout/utils/ImageUtils.kt   |   81 [32m++[m
+ .../glance/layout/utils/PreviewAnnotations.kt      |   71 [32m++[m
+ .../glance/weather/WeatherGlanceWidget.kt          |  400 [32m+++++++[m
+ .../glance/weather/WeatherGlanceWidgetReceiver.kt  |   44 [32m+[m
+ .../ui/appwidgets/glance/weather/WeatherInfo.kt    |   44 [32m+[m
+ .../ui/appwidgets/glance/weather/WeatherRepo.kt    |   95 [32m++[m
+ .../rv/weather/WeatherForecastAppWidget.kt         |   55 [32m+[m
+ .../sample_action_list_preview.png                 |  Bin [31m0[m -> [32m39932[m bytes
+ .../sample_check_list_preview.png                  |  Bin [31m0[m -> [32m26992[m bytes
+ .../sample_expressive_toolbar_preview.png          |  Bin [31m0[m -> [32m27491[m bytes
+ .../sample_image_grid_preview.png                  |  Bin [31m0[m -> [32m1427288[m bytes
+ .../sample_image_text_list_preview.png             |  Bin [31m0[m -> [32m332127[m bytes
+ .../sample_long_text_preview.png                   |  Bin [31m0[m -> [32m29950[m bytes
+ .../sample_search_toolbar_preview.png              |  Bin [31m0[m -> [32m25296[m bytes
+ .../sample_text_image_preview.png                  |  Bin [31m0[m -> [32m774263[m bytes
+ .../sample_toolbar_preview.png                     |  Bin [31m0[m -> [32m18538[m bytes
+ .../drawable-nodpi/cl_activity_row_action_list.png |  Bin [31m0[m -> [32m57283[m bytes
+ .../drawable-nodpi/cl_activity_row_checklist.png   |  Bin [31m0[m -> [32m62978[m bytes
+ .../cl_activity_row_expressive_toolbar.png         |  Bin [31m0[m -> [32m52189[m bytes
+ .../cl_activity_row_full_bleed_image.png           |  Bin [31m0[m -> [32m818055[m bytes
+ .../drawable-nodpi/cl_activity_row_hero_image.png  |  Bin [31m0[m -> [32m552616[m bytes
+ .../drawable-nodpi/cl_activity_row_image_grid.png  |  Bin [31m0[m -> [32m622361[m bytes
+ .../cl_activity_row_image_text_list.png            |  Bin [31m0[m -> [32m215704[m bytes
+ .../drawable-nodpi/cl_activity_row_long_text.png   |  Bin [31m0[m -> [32m64856[m bytes
+ .../cl_activity_row_search_toolbar.png             |  Bin [31m0[m -> [32m60017[m bytes
+ .../drawable-nodpi/cl_activity_row_text_image.png  |  Bin [31m0[m -> [32m383463[m bytes
+ .../res/drawable-nodpi/cl_activity_row_toolbar.png |  Bin [31m0[m -> [32m68867[m bytes
+ .../src/main/res/drawable-nodpi/ic_cloudy.xml      |   26 [32m+[m
+ .../main/res/drawable-nodpi/ic_partly_cloudy.xml   |   41 [32m+[m
+ .../src/main/res/drawable-nodpi/ic_rainy.xml       |   35 [32m+[m
+ .../src/main/res/drawable-nodpi/ic_sunny.xml       |   50 [32m+[m
+ .../drawable-nodpi/sample_action_list_preview.png  |  Bin [31m0[m -> [32m39411[m bytes
+ .../drawable-nodpi/sample_check_list_preview.png   |  Bin [31m0[m -> [32m25817[m bytes
+ .../sample_expressive_toolbar_preview.png          |  Bin [31m0[m -> [32m26531[m bytes
+ .../sample_full_bleed_image_preview.png            |  Bin [31m0[m -> [32m350029[m bytes
+ .../drawable-nodpi/sample_image_grid_preview.png   |  Bin [31m0[m -> [32m1426778[m bytes
+ .../sample_image_text_list_preview.png             |  Bin [31m0[m -> [32m332631[m bytes
+ .../drawable-nodpi/sample_long_text_preview.png    |  Bin [31m0[m -> [32m29361[m bytes
+ .../drawable-nodpi/sample_placeholder_image.png    |  Bin [31m0[m -> [32m1792[m bytes
+ .../sample_search_toolbar_preview.png              |  Bin [31m0[m -> [32m24599[m bytes
+ .../drawable-nodpi/sample_text_image_preview.png   |  Bin [31m0[m -> [32m778880[m bytes
+ .../res/drawable-nodpi/sample_toolbar_preview.png  |  Bin [31m0[m -> [32m17729[m bytes
+ .../weather_forecast_widget_preview.png            |  Bin [31m0[m -> [32m83985[m bytes
+ .../res/drawable-v21/app_widget_background.xml     |   27 [32m+[m
+ .../app_widget_inner_view_background.xml           |   27 [32m+[m
+ .../sample_action_list_preview.png                 |  Bin [31m0[m -> [32m38887[m bytes
+ .../sample_check_list_preview.png                  |  Bin [31m0[m -> [32m33296[m bytes
+ .../sample_image_grid_preview.png                  |  Bin [31m0[m -> [32m2114906[m bytes
+ .../sample_image_text_list_preview.png             |  Bin [31m0[m -> [32m328472[m bytes
+ .../sample_long_text_preview.png                   |  Bin [31m0[m -> [32m36718[m bytes
+ .../sample_search_toolbar_preview.png              |  Bin [31m0[m -> [32m28463[m bytes
+ .../sample_text_image_preview.png                  |  Bin [31m0[m -> [32m1115243[m bytes
+ .../sample_toolbar_preview.png                     |  Bin [31m0[m -> [32m21335[m bytes
+ .../sample_action_list_preview.png                 |  Bin [31m0[m -> [32m38490[m bytes
+ .../sample_check_list_preview.png                  |  Bin [31m0[m -> [32m32405[m bytes
+ .../sample_image_grid_preview.png                  |  Bin [31m0[m -> [32m2114114[m bytes
+ .../sample_image_text_list_preview.png             |  Bin [31m0[m -> [32m328890[m bytes
+ .../sample_long_text_preview.png                   |  Bin [31m0[m -> [32m36311[m bytes
+ .../sample_search_toolbar_preview.png              |  Bin [31m0[m -> [32m27765[m bytes
+ .../sample_text_image_preview.png                  |  Bin [31m0[m -> [32m1119818[m bytes
+ .../sample_toolbar_preview.png                     |  Bin [31m0[m -> [32m20568[m bytes
+ .../res/drawable/four_side_cookie_background.xml   |   26 [32m+[m
+ .../src/main/res/drawable/sample_ac_icon.xml       |   10 [32m+[m
+ .../src/main/res/drawable/sample_add_icon.xml      |    5 [32m+[m
+ .../src/main/res/drawable/sample_app_logo.xml      |   26 [32m+[m
+ .../main/res/drawable/sample_arrow_right_icon.xml  |    5 [32m+[m
+ .../src/main/res/drawable/sample_bulb_icon.xml     |   11 [32m+[m
+ .../src/main/res/drawable/sample_camera_icon.xml   |   27 [32m+[m
+ .../res/drawable/sample_checked_circle_icon.xml    |    5 [32m+[m
+ .../src/main/res/drawable/sample_circle_icon.xml   |    5 [32m+[m
+ .../src/main/res/drawable/sample_delete_icon.xml   |    5 [32m+[m
+ .../src/main/res/drawable/sample_door_icon.xml     |   10 [32m+[m
+ .../src/main/res/drawable/sample_edit_icon.xml     |    6 [32m+[m
+ .../main/res/drawable/sample_file_upload_icon.xml  |   26 [32m+[m
+ .../src/main/res/drawable/sample_grid_icon.xml     |    5 [32m+[m
+ .../src/main/res/drawable/sample_heart_icon.xml    |    3 [32m+[m
+ .../src/main/res/drawable/sample_home_icon.xml     |    3 [32m+[m
+ .../src/main/res/drawable/sample_image_icon.xml    |    3 [32m+[m
+ .../src/main/res/drawable/sample_info_icon.xml     |    5 [32m+[m
+ .../src/main/res/drawable/sample_mic_icon.xml      |   25 [32m+[m
+ .../src/main/res/drawable/sample_no_data_icon.xml  |    6 [32m+[m
+ .../src/main/res/drawable/sample_pin_icon.xml      |    5 [32m+[m
+ .../main/res/drawable/sample_placeholder_image.png |  Bin [31m0[m -> [32m58241[m bytes
+ .../res/drawable/sample_power_settings_icon.xml    |    3 [32m+[m
+ .../src/main/res/drawable/sample_refresh_icon.xml  |    3 [32m+[m
+ .../main/res/drawable/sample_scrim_gradient.xml    |   41 [32m+[m
+ .../src/main/res/drawable/sample_search_icon.xml   |   25 [32m+[m
+ .../src/main/res/drawable/sample_share_icon.xml    |    5 [32m+[m
+ .../src/main/res/drawable/sample_snooze_icon.xml   |    5 [32m+[m
+ .../src/main/res/drawable/sample_text_icon.xml     |    3 [32m+[m
+ .../main/res/drawable/sample_thermostat_icon.xml   |    3 [32m+[m
+ .../src/main/res/drawable/sample_videocam_icon.xml |   25 [32m+[m
+ .../res/layout/widget_weather_forecast_large.xml   |  233 [32m++++[m
+ .../res/layout/widget_weather_forecast_medium.xml  |   62 [32m+[m
+ ...er_forecast_region_temperature_coming_hours.xml |  168 [32m+++[m
+ .../res/layout/widget_weather_forecast_small.xml   |   75 [32m++[m
+ .../main/res/values-night-v31/glance_colors.xml    |   56 [32m+[m
+ .../src/main/res/values-night/glance_colors.xml    |   51 [32m+[m
+ .../appwidgets/src/main/res/values-v26/flags.xml   |   19 [32m+[m
+ .../src/main/res/values-v31/glance_colors.xml      |   58 [32m+[m
+ .../appwidgets/src/main/res/values-v31/styles.xml  |   39 [32m+[m
+ .../appwidgets/src/main/res/values-v31/themes.xml  |   26 [32m+[m
+ .../src/main/res/values-xlarge/dimens.xml          |  130 [32m+++[m
+ .../appwidgets/src/main/res/values/attrs.xml       |   22 [32m+[m
+ .../appwidgets/src/main/res/values/colors.xml      |   29 [32m+[m
+ .../appwidgets/src/main/res/values/dimens.xml      |  146 [32m+++[m
+ .../appwidgets/src/main/res/values/flags.xml       |   19 [32m+[m
+ .../src/main/res/values/glance_colors.xml          |   51 [32m+[m
+ .../appwidgets/src/main/res/values/strings.xml     |   96 [32m++[m
+ .../appwidgets/src/main/res/values/styles.xml      |   55 [32m+[m
+ .../appwidgets/src/main/res/values/themes.xml      |   52 [32m+[m
+ .../main/res/xml/app_widget_weather_forecast.xml   |   33 [32m+[m
+ .../res/xml/app_widget_weather_forecast_glance.xml |   29 [32m+[m
+ .../res/xml/sample_action_list_widget_info.xml     |   33 [32m+[m
+ .../main/res/xml/sample_check_list_widget_info.xml |   34 [32m+[m
+ .../xml/sample_expressive_toolbar_widget_info.xml  |   28 [32m+[m
+ .../xml/sample_full_bleed_image_widget_info.xml    |   26 [32m+[m
+ .../main/res/xml/sample_image_grid_widget_info.xml |   33 [32m+[m
+ .../res/xml/sample_image_text_list_widget_info.xml |   33 [32m+[m
+ .../main/res/xml/sample_long_text_widget_info.xml  |   28 [32m+[m
+ .../res/xml/sample_search_toolbar_widget_info.xml  |   28 [32m+[m
+ .../res/xml/sample_text_with_image_widget_info.xml |   29 [32m+[m
+ .../main/res/xml/sample_toolbar_widget_info.xml    |   28 [32m+[m
+ samples/user-interface/constraintlayout/README.md  |   70 [32m++[m
+ .../constraintlayout/build.gradle.kts              |   51 [32m+[m
+ .../ui/constraintlayout/ConstraintLayout.kt        |   68 [32m++[m
+ .../platform/ui/constraintlayout/MotionLayout.kt   |  202 [32m++++[m
+ .../platform/ui/constraintlayout/helpers/FadeIn.kt |   33 [32m+[m
+ .../ui/constraintlayout/helpers/FadeOut.kt         |   33 [32m+[m
+ .../constraintlayout/helpers/FlyingBounceHelper.kt |   52 [32m+[m
+ .../ui/constraintlayout/view/BoundsImageView.kt    |   43 [32m+[m
+ .../ui/constraintlayout/view/CollapsibleToolbar.kt |   38 [32m+[m
+ .../ui/constraintlayout/view/DrawerContent.kt      |   47 [32m+[m
+ .../ui/constraintlayout/view/MotionLayoutUtils.kt  |   53 [32m+[m
+ .../ui/constraintlayout/view/TextListAdapter.kt    |   46 [32m+[m
+ .../ui/constraintlayout/view/TouchFrameLayout.kt   |   67 [32m++[m
+ .../ui/constraintlayout/view/ViewPager2.kt         |   36 [32m+[m
+ .../src/main/res/animator/hide.xml                 |   23 [32m+[m
+ .../src/main/res/animator/show.xml                 |   23 [32m+[m
+ .../main/res/drawable-nodpi/avatar_1_raster.png    |  Bin [31m0[m -> [32m8870[m bytes
+ .../main/res/drawable-nodpi/avatar_2_raster.png    |  Bin [31m0[m -> [32m9641[m bytes
+ .../main/res/drawable-nodpi/avatar_3_raster.png    |  Bin [31m0[m -> [32m9543[m bytes
+ .../main/res/drawable-nodpi/avatar_4_raster.png    |  Bin [31m0[m -> [32m9746[m bytes
+ .../main/res/drawable-nodpi/avatar_5_raster.png    |  Bin [31m0[m -> [32m10808[m bytes
+ .../main/res/drawable-nodpi/avatar_6_raster.png    |  Bin [31m0[m -> [32m10665[m bytes
+ .../main/res/drawable-nodpi/avatar_7_raster.png    |  Bin [31m0[m -> [32m9875[m bytes
+ .../main/res/drawable-nodpi/avatar_8_raster.png    |  Bin [31m0[m -> [32m9681[m bytes
+ .../src/main/res/drawable-nodpi/car.png            |  Bin [31m0[m -> [32m865[m bytes
+ .../src/main/res/drawable-nodpi/cat_1.jpeg         |  Bin [31m0[m -> [32m22285[m bytes
+ .../src/main/res/drawable-nodpi/hoford.jpg         |  Bin [31m0[m -> [32m105247[m bytes
+ .../src/main/res/drawable-nodpi/lake.jpg           |  Bin [31m0[m -> [32m775787[m bytes
+ .../src/main/res/drawable-nodpi/monterey.jpg       |  Bin [31m0[m -> [32m28296[m bytes
+ .../src/main/res/drawable-nodpi/mountains.jpg      |  Bin [31m0[m -> [32m21168[m bytes
+ .../src/main/res/drawable-nodpi/roard.jpg          |  Bin [31m0[m -> [32m16600[m bytes
+ .../src/main/res/drawable-nodpi/sea.jpg            |  Bin [31m0[m -> [32m105959[m bytes
+ .../src/main/res/drawable-nodpi/sunset2.jpg        |  Bin [31m0[m -> [32m371913[m bytes
+ .../src/main/res/drawable-nodpi/trees.png          |  Bin [31m0[m -> [32m4469[m bytes
+ .../src/main/res/drawable/circle.xml               |   27 [32m+[m
+ .../src/main/res/drawable/ic_add_a_photo_24dp.xml  |   26 [32m+[m
+ .../main/res/drawable/ic_android_black_24dp.xml    |   25 [32m+[m
+ .../src/main/res/drawable/ic_clear_gray_32dp.xml   |   26 [32m+[m
+ .../main/res/drawable/ic_dashboard_black_24dp.xml  |   25 [32m+[m
+ .../src/main/res/drawable/ic_home_black_24dp.xml   |   25 [32m+[m
+ .../src/main/res/drawable/ic_info_black_24dp.xml   |   26 [32m+[m
+ .../main/res/drawable/ic_keyboard_arrow_right.xml  |   26 [32m+[m
+ .../src/main/res/drawable/ic_keyboard_arrow_up.xml |   26 [32m+[m
+ .../res/drawable/ic_notifications_black_24dp.xml   |   25 [32m+[m
+ .../main/res/drawable/ic_play_arrow_gray_32dp.xml  |   26 [32m+[m
+ .../src/main/res/drawable/wcircle.xml              |   27 [32m+[m
+ .../src/main/res/layout/activity_scrolling.xml     |   38 [32m+[m
+ .../src/main/res/layout/advanced_arrangement.xml   |  167 [32m+++[m
+ .../src/main/res/layout/advanced_chains.xml        |  216 [32m++++[m
+ .../src/main/res/layout/aspect_ratio.xml           |   91 [32m++[m
+ .../src/main/res/layout/basic_arrangement.xml      |  142 [32m+++[m
+ .../src/main/res/layout/basic_chains.xml           |  105 [32m++[m
+ .../src/main/res/layout/centering_views.xml        |  110 [32m++[m
+ .../src/main/res/layout/constraint_set_big.xml     |   67 [32m++[m
+ .../src/main/res/layout/constraint_set_main.xml    |   69 [32m++[m
+ .../src/main/res/layout/content_scrolling.xml      |   32 [32m+[m
+ .../src/main/res/layout/guidelines.xml             |  152 [32m+++[m
+ .../src/main/res/layout/motion_01_basic.xml        |   34 [32m+[m
+ .../src/main/res/layout/motion_01_cl_end.xml       |   32 [32m+[m
+ .../src/main/res/layout/motion_01_cl_start.xml     |   32 [32m+[m
+ .../src/main/res/layout/motion_02_basic.xml        |   34 [32m+[m
+ .../layout/motion_02_basic_autocomplete_false.xml  |   34 [32m+[m
+ .../main/res/layout/motion_03_custom_attribute.xml |   31 [32m+[m
+ .../src/main/res/layout/motion_04_imagefilter.xml  |   33 [32m+[m
+ .../src/main/res/layout/motion_05_imagefilter.xml  |   31 [32m+[m
+ .../src/main/res/layout/motion_06_keyframe.xml     |   30 [32m+[m
+ .../src/main/res/layout/motion_07_keyframe.xml     |   35 [32m+[m
+ .../src/main/res/layout/motion_08_cycle.xml        |   33 [32m+[m
+ .../res/layout/motion_09_coordinatorlayout.xml     |   36 [32m+[m
+ .../layout/motion_09_coordinatorlayout_header.xml  |   47 [32m+[m
+ .../res/layout/motion_10_coordinatorlayout.xml     |   36 [32m+[m
+ .../layout/motion_10_coordinatorlayout_header.xml  |   56 [32m+[m
+ .../res/layout/motion_11_coordinatorlayout.xml     |   37 [32m+[m
+ .../layout/motion_11_coordinatorlayout_header.xml  |   95 [32m++[m
+ .../src/main/res/layout/motion_12_drawerlayout.xml |   28 [32m+[m
+ .../res/layout/motion_12_drawerlayout_content.xml  |   26 [32m+[m
+ .../res/layout/motion_12_drawerlayout_menu.xml     |  111 [32m++[m
+ .../src/main/res/layout/motion_13_drawerlayout.xml |   27 [32m+[m
+ .../res/layout/motion_13_drawerlayout_menu.xml     |  112 [32m++[m
+ .../src/main/res/layout/motion_14_side_panel.xml   |   35 [32m+[m
+ .../src/main/res/layout/motion_15_parallax.xml     |   61 [32m+[m
+ .../src/main/res/layout/motion_16_viewpager.xml    |   39 [32m+[m
+ .../main/res/layout/motion_16_viewpager_page1.xml  |   34 [32m+[m
+ .../main/res/layout/motion_16_viewpager_page2.xml  |   34 [32m+[m
+ .../main/res/layout/motion_16_viewpager_page3.xml  |   34 [32m+[m
+ .../src/main/res/layout/motion_17_coordination.xml |   26 [32m+[m
+ .../res/layout/motion_17_coordination_header.xml   |   60 [32m+[m
+ .../src/main/res/layout/motion_18_coordination.xml |   34 [32m+[m
+ .../src/main/res/layout/motion_19_coordination.xml |   35 [32m+[m
+ .../res/layout/motion_19_coordination_header.xml   |   53 [32m+[m
+ .../src/main/res/layout/motion_20_reveal.xml       |   82 [32m++[m
+ .../src/main/res/layout/motion_21_container.xml    |   33 [32m+[m
+ .../main/res/layout/motion_21_first_fragment.xml   |   32 [32m+[m
+ .../main/res/layout/motion_21_second_fragment.xml  |   59 [32m+[m
+ .../main/res/layout/motion_22_list_fragment.xml    |   31 [32m+[m
+ .../src/main/res/layout/motion_23_parallax.xml     |   31 [32m+[m
+ .../src/main/res/layout/motion_23_viewpager.xml    |   41 [32m+[m
+ .../src/main/res/layout/motion_24_youtube.xml      |  100 [32m++[m
+ .../src/main/res/layout/motion_25_keytrigger.xml   |   38 [32m+[m
+ .../src/main/res/layout/motion_26_multistate.xml   |  284 [32m+++++[m
+ .../src/main/res/menu/bottom_nav_menu.xml          |   34 [32m+[m
+ .../src/main/res/raw/walkthrough.json              |    1 [32m+[m
+ .../src/main/res/values/colors.xml                 |   23 [32m+[m
+ .../src/main/res/values/dimens.xml                 |   20 [32m+[m
+ .../src/main/res/values/strings.xml                |  211 [32m++++[m
+ .../src/main/res/xml/list_scene.xml                |   32 [32m+[m
+ .../src/main/res/xml/main_scene.xml                |   63 [32m+[m
+ .../constraintlayout/src/main/res/xml/scene_01.xml |   30 [32m+[m
+ .../constraintlayout/src/main/res/xml/scene_02.xml |   55 [32m+[m
+ .../main/res/xml/scene_02_autocomplete_false.xml   |   56 [32m+[m
+ .../constraintlayout/src/main/res/xml/scene_03.xml |   61 [32m+[m
+ .../constraintlayout/src/main/res/xml/scene_04.xml |   60 [32m+[m
+ .../constraintlayout/src/main/res/xml/scene_05.xml |   58 [32m+[m
+ .../constraintlayout/src/main/res/xml/scene_06.xml |   70 [32m++[m
+ .../constraintlayout/src/main/res/xml/scene_07.xml |   76 [32m++[m
+ .../constraintlayout/src/main/res/xml/scene_08.xml |   86 [32m++[m
+ .../constraintlayout/src/main/res/xml/scene_09.xml |   64 [32m++[m
+ .../src/main/res/xml/scene_10_header.xml           |   84 [32m++[m
+ .../src/main/res/xml/scene_11_header.xml           |  126 [32m++[m
+ .../src/main/res/xml/scene_12_content.xml          |   50 [32m+[m
+ .../src/main/res/xml/scene_13_menu.xml             |  168 [32m+++[m
+ .../constraintlayout/src/main/res/xml/scene_14.xml |   66 [32m++[m
+ .../constraintlayout/src/main/res/xml/scene_15.xml |  101 [32m++[m
+ .../constraintlayout/src/main/res/xml/scene_17.xml |   62 [32m+[m
+ .../src/main/res/xml/scene_17_header.xml           |   96 [32m++[m
+ .../constraintlayout/src/main/res/xml/scene_18.xml |   84 [32m++[m
+ .../constraintlayout/src/main/res/xml/scene_19.xml |   84 [32m++[m
+ .../src/main/res/xml/scene_19_header.xml           |   84 [32m++[m
+ .../constraintlayout/src/main/res/xml/scene_20.xml |  148 [32m+++[m
+ .../src/main/res/xml/scene_21_second_fragment.xml  |   62 [32m+[m
+ .../constraintlayout/src/main/res/xml/scene_23.xml |   41 [32m+[m
+ .../constraintlayout/src/main/res/xml/scene_24.xml |  185 [32m+++[m
+ .../constraintlayout/src/main/res/xml/scene_25.xml |   82 [32m++[m
+ .../constraintlayout/src/main/res/xml/scene_26.xml |  215 [32m++++[m
+ samples/user-interface/draganddrop/README.md       |   39 [32m+[m
+ .../user-interface/draganddrop/build.gradle.kts    |   59 [32m+[m
+ .../draganddrop/src/main/AndroidManifest.xml       |   40 [32m+[m
+ .../example/platform/ui/draganddrop/BitmapUtil.kt  |   69 [32m++[m
+ .../example/platform/ui/draganddrop/DragAndDrop.kt |  248 [32m++++[m
+ .../ui/draganddrop/DragAndDropFileProvider.kt      |   22 [32m+[m
+ .../ui/draganddrop/DragAndDropMultiWindow.kt       |   95 [32m++[m
+ .../DragAndDropRichContentReceiverFragment.kt      |  181 [32m+++[m
+ .../ui/draganddrop/DragAndDropUsingCompose.kt      |  170 [32m+++[m
+ .../ui/draganddrop/DragAndDropWithHelper.kt        |  105 [32m++[m
+ .../ui/draganddrop/DragAndDropWithViews.kt         |  137 [32m+++[m
+ .../ui/draganddrop/RichContentReceiverAdapter.kt   |   60 [32m+[m
+ .../src/main/res/drawable-nodpi/earth.png          |  Bin [31m0[m -> [32m155081[m bytes
+ .../src/main/res/drawable/bg_drag_normal.xml       |   10 [32m+[m
+ .../src/main/res/drawable/bg_target_normal.xml     |    8 [32m+[m
+ .../draganddrop/src/main/res/drawable/ic_clear.xml |   10 [32m+[m
+ .../src/main/res/layout/drag_and_drop_activity.xml |  107 [32m++[m
+ .../main/res/layout/fragment_dnd_multiwindow.xml   |   52 [32m+[m
+ .../main/res/layout/fragment_dnd_richcontent.xml   |   99 [32m++[m
+ .../layout/fragment_drag_and_drop_with_helper.xml  |   61 [32m+[m
+ .../layout/fragment_drag_and_drop_with_views.xml   |   62 [32m+[m
+ .../draganddrop/src/main/res/layout/grid_item.xml  |   33 [32m+[m
+ .../draganddrop/src/main/res/values/colors.xml     |   19 [32m+[m
+ .../draganddrop/src/main/res/values/dimens.xml     |   19 [32m+[m
+ .../draganddrop/src/main/res/values/strings.xml    |   43 [32m+[m
+ .../draganddrop/src/main/res/xml/filepaths.xml     |    6 [32m+[m
+ samples/user-interface/haptics/README.md           |   98 [32m++[m
+ samples/user-interface/haptics/build.gradle.kts    |   51 [32m+[m
+ .../user-interface/haptics/screenshots/bounce.gif  |  Bin [31m0[m -> [32m275277[m bytes
+ .../user-interface/haptics/screenshots/expand.gif  |  Bin [31m0[m -> [32m388189[m bytes
+ .../user-interface/haptics/screenshots/resist.gif  |  Bin [31m0[m -> [32m726400[m bytes
+ .../user-interface/haptics/screenshots/wobble.gif  |  Bin [31m0[m -> [32m523416[m bytes
+ .../haptics/src/main/AndroidManifest.xml           |   23 [32m+[m
+ .../com/example/platform/ui/haptics/Haptics.kt     |  105 [32m++[m
+ .../platform/ui/haptics/basic/HapticsBasicRoute.kt |  191 [32m++++[m
+ .../ui/haptics/basic/HapticsBasicViewModel.kt      |  227 [32m++++[m
+ .../platform/ui/haptics/bounce/BounceRoute.kt      |  342 [32m++++++[m
+ .../platform/ui/haptics/bounce/BounceViewModel.kt  |   61 [32m+[m
+ .../platform/ui/haptics/components/Screen.kt       |  112 [32m++[m
+ .../platform/ui/haptics/expand/ExpandRoute.kt      |  341 [32m++++++[m
+ .../platform/ui/haptics/expand/ExpandShape.kt      |   54 [32m+[m
+ .../platform/ui/haptics/expand/ExpandViewModel.kt  |   63 [32m+[m
+ .../platform/ui/haptics/modifiers/Modifiers.kt     |   34 [32m+[m
+ .../platform/ui/haptics/resist/ResistRoute.kt      |  329 [32m++++++[m
+ .../platform/ui/haptics/resist/ResistViewModel.kt  |   69 [32m++[m
+ .../platform/ui/haptics/shapes/ElasticTopShape.kt  |   77 [32m++[m
+ .../com/example/platform/ui/haptics/theme/Shape.kt |   22 [32m+[m
+ .../example/platform/ui/haptics/utils/MathUtils.kt |   28 [32m+[m
+ .../platform/ui/haptics/wobble/WobbleRoute.kt      |  245 [32m++++[m
+ .../platform/ui/haptics/wobble/WobbleViewModel.kt  |   61 [32m+[m
+ .../src/main/res/drawable/outline_touch_app_24.xml |    5 [32m+[m
+ .../main/res/drawable/round_arrow_downward_24.xml  |    5 [32m+[m
+ .../haptics/src/main/res/values/strings.xml        |   46 [32m+[m
+ .../user-interface/live-updates/build.gradle.kts   |   39 [32m+[m
+ .../live-updates/src/main/AndroidManifest.xml      |   23 [32m+[m
+ .../platform/ui/live_updates/LiveUpdateSample.kt   |  179 [32m+++[m
+ .../ui/live_updates/SnackbarNotificationManager.kt |  279 [32m+++++[m
+ .../src/main/res/drawable/check_circle.xml         |   15 [32m+[m
+ .../live-updates/src/main/res/drawable/cupcake.jpg |  Bin [31m0[m -> [32m43780[m bytes
+ .../src/main/res/drawable/delivery_truck.xml       |   15 [32m+[m
+ .../src/main/res/drawable/shopping_bag.xml         |   15 [32m+[m
+ .../src/main/res/drawable/small_icon.xml           |   42 [32m+[m
+ .../live-updates/src/main/res/values/colors.xml    |    5 [32m+[m
+ .../live-updates/src/main/res/values/strings.xml   |   13 [32m+[m
+ .../live-updates/src/main/res/values/themes.xml    |    9 [32m+[m
+ .../user-interface/picture-in-picture/README.md    |   42 [32m+[m
+ .../picture-in-picture/build.gradle.kts            |   66 [32m++[m
+ .../example/android/pip/PiPMovieActivityTest.kt    |  132 [32m+++[m
+ .../example/android/pip/PiPSampleActivityTest.kt   |   57 [32m+[m
+ .../src/main/AndroidManifest.xml                   |   41 [32m+[m
+ .../com/example/android/pip/PiPMovieActivity.kt    |  344 [32m++++++[m
+ .../com/example/android/pip/PiPSampleActivity.kt   |  222 [32m++++[m
+ .../java/com/example/android/pip/PiPViewModel.kt   |   80 [32m++[m
+ .../com/example/android/pip/widget/MovieView.kt    |  462 [32m++++++++[m
+ .../src/main/res/drawable/ic_fast_forward_64dp.xml |   22 [32m+[m
+ .../src/main/res/drawable/ic_fast_rewind_64dp.xml  |   22 [32m+[m
+ .../src/main/res/drawable/ic_minimize_24dp.xml     |   22 [32m+[m
+ .../src/main/res/drawable/ic_pause_24dp.xml        |   22 [32m+[m
+ .../src/main/res/drawable/ic_pause_64dp.xml        |   24 [32m+[m
+ .../res/drawable/ic_picture_in_picture_alt.xml     |   22 [32m+[m
+ .../src/main/res/drawable/ic_play_arrow_24dp.xml   |   22 [32m+[m
+ .../src/main/res/drawable/ic_play_arrow_64dp.xml   |   22 [32m+[m
+ .../src/main/res/drawable/ic_refresh_24dp.xml      |   26 [32m+[m
+ .../src/main/res/drawable/shade.xml                |   21 [32m+[m
+ .../src/main/res/layout/pip_activity.xml           |  119 [32m++[m
+ .../src/main/res/layout/pip_movie_activity.xml     |   75 [32m++[m
+ .../src/main/res/layout/view_movie.xml             |   77 [32m++[m
+ .../src/main/res/raw/vid_bigbuckbunny.mp4          |  Bin [31m0[m -> [32m5510872[m bytes
+ .../src/main/res/values/attrs.xml                  |   25 [32m+[m
+ .../src/main/res/values/colors.xml                 |   21 [32m+[m
+ .../src/main/res/values/dimens.xml                 |   20 [32m+[m
+ .../src/main/res/values/strings.xml                |   44 [32m+[m
+ .../src/main/res/values/styles.xml                 |   32 [32m+[m
+ samples/user-interface/predictiveback/README.md    |  289 [32m+++++[m
+ .../user-interface/predictiveback/build.gradle.kts |   56 [32m+[m
+ .../predictiveback/src/main/AndroidManifest.xml    |   22 [32m+[m
+ .../platform/ui/predictiveback/PBAnimation.kt      |   75 [32m++[m
+ .../PBCustomCrossActivityAnimation.kt              |   51 [32m+[m
+ .../ui/predictiveback/PBHostingActivity.kt         |   37 [32m+[m
+ .../platform/ui/predictiveback/PBListFragment.kt   |  105 [32m++[m
+ .../PBMaterialSharedAxisAnimations.kt              |   47 [32m+[m
+ .../PBNavigationComponentDefaultAnimations.kt      |   43 [32m+[m
+ .../platform/ui/predictiveback/PBProgressAPI.kt    |  127 [32m+++[m
+ .../PBSetCustomAnimationsActivity.kt               |   41 [32m+[m
+ .../PBSetCustomAnimationsFirstFragment.kt          |   58 [32m+[m
+ .../PBSetCustomAnimationsSecondFragment.kt         |   45 [32m+[m
+ .../PBSharedElementTransitionFragment.kt           |   51 [32m+[m
+ .../platform/ui/predictiveback/PBTransition.kt     |  123 [32m++[m
+ .../src/main/res/drawable/android.xml              |   26 [32m+[m
+ .../predictiveback/src/main/res/drawable/box.xml   |   29 [32m+[m
+ .../src/main/res/drawable/button.xml               |   20 [32m+[m
+ .../res/layout/activity_custom_cross_animation.xml |   61 [32m+[m
+ .../res/layout/activity_set_custom_animations.xml  |   35 [32m+[m
+ .../main/res/layout/fragment_animation_list.xml    |  387 [32m+++++++[m
+ .../res/layout/fragment_material_shared_axis.xml   |   61 [32m+[m
+ ...ent_navigation_component_default_animations.xml |   61 [32m+[m
+ .../src/main/res/layout/fragment_progress_api.xml  |   80 [32m++[m
+ .../res/layout/fragment_set_custom_animations.xml  |   63 [32m+[m
+ .../fragment_set_custom_animations_second.xml      |   60 [32m+[m
+ .../layout/fragment_shared_element_transition.xml  |   58 [32m+[m
+ .../src/main/res/layout/fragment_transition.xml    |   86 [32m++[m
+ .../src/main/res/layout/hosting_activity.xml       |   28 [32m+[m
+ .../src/main/res/navigation/nav_graph.xml          |   89 [32m++[m
+ .../src/main/res/values-v23/themes.xml             |   25 [32m+[m
+ .../predictiveback/src/main/res/values/strings.xml |   35 [32m+[m
+ .../predictiveback/src/main/res/values/themes.xml  |   27 [32m+[m
+ samples/user-interface/quicksettings/README.md     |   29 [32m+[m
+ .../user-interface/quicksettings/build.gradle.kts  |   51 [32m+[m
+ .../quicksettings/src/main/AndroidManifest.xml     |   61 [32m+[m
+ .../platform/ui/quicksettings/QuickSettings.kt     |  135 [32m+++[m
+ .../ui/quicksettings/QuickSettingsDataStore.kt     |   29 [32m+[m
+ .../platform/ui/quicksettings/SampleTileService.kt |  130 [32m+++[m
+ .../src/main/res/drawable/ic_android.xml           |   25 [32m+[m
+ .../quicksettings/src/main/res/values/strings.xml  |   18 [32m+[m
+ samples/user-interface/share/README.md             |   31 [32m+[m
+ samples/user-interface/share/build.gradle.kts      |   51 [32m+[m
+ .../share/src/main/AndroidManifest.xml             |   82 [32m++[m
+ .../share/src/main/assets/contact/cat.jpg          |  Bin [31m0[m -> [32m41237[m bytes
+ .../share/src/main/assets/contact/dog.jpg          |  Bin [31m0[m -> [32m30140[m bytes
+ .../share/src/main/assets/contact/parrot.jpg       |  Bin [31m0[m -> [32m44701[m bytes
+ .../share/src/main/assets/contact/sheep.jpg        |  Bin [31m0[m -> [32m32500[m bytes
+ .../example/platform/ui/share/receiver/Contact.kt  |   50 [32m+[m
+ .../platform/ui/share/receiver/ShareReceiver.kt    |  348 [32m++++++[m
+ .../ui/share/receiver/ShareReceiverActivity.kt     |   32 [32m+[m
+ .../platform/ui/share/sender/AssetFileProvider.kt  |   96 [32m++[m
+ .../ui/share/sender/ShareResultReceiver.kt         |   70 [32m++[m
+ .../platform/ui/share/sender/ShareSender.kt        |  261 [32m+++++[m
+ .../share/src/main/res/drawable/ic_search.xml      |   25 [32m+[m
+ .../share/src/main/res/values/strings.xml          |   18 [32m+[m
+ .../share/src/main/res/xml/sharing_shortcuts.xml   |   22 [32m+[m
+ samples/user-interface/text/README.md              |   79 [32m++[m
+ samples/user-interface/text/build.gradle.kts       |   51 [32m+[m
+ .../text/src/main/AndroidManifest.xml              |   29 [32m+[m
+ .../example/platform/ui/text/ConversionEditText.kt |  128 [32m+++[m
+ .../platform/ui/text/ConversionInputConnection.kt  |   66 [32m++[m
+ .../platform/ui/text/ConversionSuggestions.kt      |   37 [32m+[m
+ .../example/platform/ui/text/DownloadableFonts.kt  |  151 [32m+++[m
+ .../platform/ui/text/EditTextDialogFragment.kt     |   73 [32m++[m
+ .../com/example/platform/ui/text/Hyphenation.kt    |   60 [32m+[m
+ .../java/com/example/platform/ui/text/LineBreak.kt |   81 [32m++[m
+ .../java/com/example/platform/ui/text/Linkify.kt   |   45 [32m+[m
+ .../java/com/example/platform/ui/text/TextSpan.kt  |   54 [32m+[m
+ .../example/platform/ui/text/utils/AdapterView.kt  |   38 [32m+[m
+ .../com/example/platform/ui/text/utils/SeekBar.kt  |   39 [32m+[m
+ .../text/src/main/res/drawable/ic_edit.xml         |   26 [32m+[m
+ .../text/src/main/res/font/lobster_two.xml         |   21 [32m+[m
+ .../res/layout/conversion_suggestions_fragment.xml |   39 [32m+[m
+ .../res/layout/downloadable_fonts_fragment.xml     |   84 [32m++[m
+ .../main/res/layout/edit_text_dialog_fragment.xml  |   33 [32m+[m
+ .../src/main/res/layout/hyphenation_fragment.xml   |   68 [32m++[m
+ .../src/main/res/layout/line_break_fragment.xml    |  103 [32m++[m
+ .../text/src/main/res/layout/linkify_fragment.xml  |   37 [32m+[m
+ .../src/main/res/layout/text_span_fragment.xml     |   32 [32m+[m
+ .../text/src/main/res/values/dimens.xml            |   21 [32m+[m
+ .../text/src/main/res/values/font_certs.xml        |   35 [32m+[m
+ .../text/src/main/res/values/font_families.xml     |  838 [32m++++++++++++++[m
+ .../text/src/main/res/values/preloaded_fonts.xml   |   21 [32m+[m
+ .../text/src/main/res/values/strings.xml           |   62 [32m+[m
+ samples/user-interface/window-insets/README.md     |   95 [32m++[m
+ .../user-interface/window-insets/build.gradle.kts  |   54 [32m+[m
+ .../window-insets/src/main/AndroidManifest.xml     |   29 [32m+[m
+ .../example/platform/ui/insets/ImmersiveMode.kt    |  205 [32m++++[m
+ .../platform/ui/insets/WindowInsetsAnimation.kt    |   38 [32m+[m
+ .../ControlFocusInsetsAnimationCallback.kt         |   73 [32m++[m
+ .../ui/insets/animation/ConversationAdapter.kt     |   60 [32m+[m
+ .../ui/insets/animation/ConversationFragment.kt    |  141 [32m+++[m
+ .../animation/InsetsAnimationLinearLayout.kt       |  306 [32m+++++[m
+ .../animation/InsetsAnimationTouchListener.kt      |  194 [32m++++[m
+ .../animation/RootViewDeferringInsetsCallback.kt   |  132 [32m+++[m
+ .../animation/SimpleImeAnimationController.kt      |  389 [32m+++++++[m
+ .../TranslateDeferringInsetsAnimationCallback.kt   |   84 [32m++[m
+ .../example/platform/ui/insets/animation/utils.kt  |   71 [32m++[m
+ .../src/main/res/color/color_on_surface_15.xml     |   20 [32m+[m
+ .../src/main/res/color/color_on_surface_5.xml      |   20 [32m+[m
+ .../src/main/res/drawable/ic_face.xml              |   27 [32m+[m
+ .../src/main/res/drawable/ic_phone.xml             |   27 [32m+[m
+ .../src/main/res/drawable/ic_send.xml              |   27 [32m+[m
+ .../src/main/res/drawable/ic_videocam.xml          |   26 [32m+[m
+ .../src/main/res/drawable/shape_rect.xml           |   20 [32m+[m
+ .../src/main/res/layout/activity_main.xml          |   30 [32m+[m
+ .../src/main/res/layout/fragment_conversation.xml  |   99 [32m++[m
+ .../src/main/res/layout/message_bubble_other.xml   |   44 [32m+[m
+ .../src/main/res/layout/message_bubble_self.xml    |   45 [32m+[m
+ .../window-insets/src/main/res/menu/menu_main.xml  |   33 [32m+[m
+ .../window-insets/src/main/res/values/dimens.xml   |   23 [32m+[m
+ .../window-insets/src/main/res/values/shape.xml    |   31 [32m+[m
+ .../window-insets/src/main/res/values/strings.xml  |   30 [32m+[m
+ .../window-insets/src/main/res/values/themes.xml   |   27 [32m+[m
+ samples/user-interface/windowmanager/README.md     |   41 [32m+[m
+ .../user-interface/windowmanager/build.gradle.kts  |   55 [32m+[m
+ .../windowmanager/src/main/AndroidManifest.xml     |  196 [32m++++[m
+ .../ui/windowmanager/DisplayFeaturesActivity.kt    |  157 [32m+++[m
+ .../ui/windowmanager/DualScreenActivity.kt         |  159 [32m+++[m
+ .../ui/windowmanager/MediaPlayerActivity.kt        |  147 [32m+++[m
+ .../ui/windowmanager/RearDisplayModeActivity.kt    |  145 [32m+++[m
+ .../platform/ui/windowmanager/SplitLayout.kt       |  197 [32m++++[m
+ .../ui/windowmanager/SplitLayoutActivity.kt        |   54 [32m+[m
+ .../ui/windowmanager/WindowMetricsActivity.kt      |   82 [32m++[m
+ .../platform/ui/windowmanager/demos/DemoAdapter.kt |   39 [32m+[m
+ .../platform/ui/windowmanager/demos/DemoItem.kt    |   21 [32m+[m
+ .../platform/ui/windowmanager/demos/DemoVH.kt      |   40 [32m+[m
+ .../ui/windowmanager/demos/WindowDemosActivity.kt  |   99 [32m++[m
+ .../embedding/DemoActivityEmbeddingController.kt   |   84 [32m++[m
+ .../embedding/ExampleWindowInitializer.kt          |  260 [32m+++++[m
+ .../embedding/ExpandedDialogActivity.kt            |   44 [32m+[m
+ .../ui/windowmanager/embedding/SplitActivityA.kt   |   18 [32m+[m
+ .../ui/windowmanager/embedding/SplitActivityB.kt   |   38 [32m+[m
+ .../windowmanager/embedding/SplitActivityBase.java |  400 [32m+++++++[m
+ .../ui/windowmanager/embedding/SplitActivityC.kt   |   29 [32m+[m
+ .../ui/windowmanager/embedding/SplitActivityD.kt   |   29 [32m+[m
+ .../windowmanager/embedding/SplitActivityDetail.kt |   45 [32m+[m
+ .../ui/windowmanager/embedding/SplitActivityE.kt   |   29 [32m+[m
+ .../ui/windowmanager/embedding/SplitActivityF.kt   |   29 [32m+[m
+ .../windowmanager/embedding/SplitActivityList.kt   |   64 [32m++[m
+ .../embedding/SplitActivityListPlaceholder.kt      |   19 [32m+[m
+ .../embedding/SplitActivityPlaceholder.kt          |   34 [32m+[m
+ .../embedding/SplitActivityTrampoline.kt           |   56 [32m+[m
+ .../embedding/SplitAttributesToggleActivityBase.kt |  115 [32m++[m
+ .../embedding/SplitAttributesToggleMainActivity.kt |  403 [32m+++++++[m
+ .../SplitAttributesTogglePlaceholderActivity.kt    |   28 [32m+[m
+ .../SplitAttributesTogglePrimaryActivity.kt        |   78 [32m++[m
+ .../SplitAttributesToggleSecondaryActivity.kt      |  182 [32m+++[m
+ .../embedding/SplitDeviceStateActivityA.kt         |   19 [32m+[m
+ .../embedding/SplitDeviceStateActivityB.kt         |   30 [32m+[m
+ .../embedding/SplitDeviceStateActivityBase.kt      |  400 [32m+++++++[m
+ .../platform/ui/windowmanager/infolog/InfoLog.kt   |   19 [32m+[m
+ .../ui/windowmanager/infolog/InfoLogAdapter.kt     |   53 [32m+[m
+ .../platform/ui/windowmanager/infolog/InfoLogVH.kt |   27 [32m+[m
+ .../ui/windowmanager/util/PictureInPictureUtil.kt  |  107 [32m++[m
+ .../platform/ui/windowmanager/util/SampleTools.kt  |  122 [32m++[m
+ .../windowmanager/src/main/res/drawable/border.xml |   22 [32m+[m
+ .../main/res/drawable/ic_android_green_320dp.xml   |   21 [32m+[m
+ .../main/res/layout/activity_display_features.xml  |   94 [32m++[m
+ .../src/main/res/layout/activity_dual_screen.xml   |   59 [32m+[m
+ .../src/main/res/layout/activity_media_player.xml  |   58 [32m+[m
+ .../main/res/layout/activity_rear_display_mode.xml |   50 [32m+[m
+ .../res/layout/activity_split_activity_layout.xml  |  177 [32m+++[m
+ .../activity_split_activity_list_detail_layout.xml |   45 [32m+[m
+ .../layout/activity_split_activity_list_layout.xml |   96 [32m++[m
+ .../activity_split_activity_placeholder_layout.xml |   35 [32m+[m
+ ...ty_split_attributes_toggle_primary_activity.xml |  195 [32m++++[m
+ ..._split_attributes_toggle_secondary_activity.xml |   77 [32m++[m
+ .../layout/activity_split_device_state_layout.xml  |  165 [32m+++[m
+ .../src/main/res/layout/activity_split_layout.xml  |   42 [32m+[m
+ .../src/main/res/layout/activity_window_demos.xml  |   22 [32m+[m
+ .../main/res/layout/activity_window_metrics.xml    |   24 [32m+[m
+ .../src/main/res/layout/split_layout_content.xml   |   44 [32m+[m
+ .../src/main/res/layout/split_layout_control.xml   |   92 [32m++[m
+ .../src/main/res/layout/view_holder_demo_item.xml  |   45 [32m+[m
+ .../src/main/res/layout/view_holder_info_log.xml   |   35 [32m+[m
+ .../src/main/res/menu/picture_in_picture_menu.xml  |   19 [32m+[m
+ .../windowmanager/src/main/res/values/attrs.xml    |   32 [32m+[m
+ .../windowmanager/src/main/res/values/colors.xml   |   28 [32m+[m
+ .../windowmanager/src/main/res/values/strings.xml  |  114 [32m++[m
+ .../windowmanager/src/main/res/values/styles.xml   |   36 [32m+[m
+ .../main/res/xml/activity_mediaplayer_scene.xml    |   31 [32m+[m
+ .../src/main/res/xml/main_split_config.xml         |   37 [32m+[m
+ settings.gradle.kts                                |   75 [32m++[m
+ shared/.gitignore                                  |    1 [32m+[m
+ shared/build.gradle.kts                            |   49 [32m+[m
+ .../consumer-rules.pro                             |    0
+ shared/proguard-rules.pro                          |   21 [32m+[m
+ shared/src/main/AndroidManifest.xml                |    4 [32m+[m
+ .../java/com/example/platform/shared/MinSdkBox.kt  |   57 [32m+[m
+ .../com/example/platform/shared/PermissionBox.kt   |  242 [32m++++[m
+ .../com/example/platform/shared/theme/Color.kt     |   11 [32m+[m
+ .../com/example/platform/shared/theme/Theme.kt     |   74 [32m++[m
+ .../java/com/example/platform/shared/theme/Type.kt |   50 [32m+[m
+ shared/src/main/res/drawable/round_warning_24.xml  |    5 [32m+[m
+ spotless/copyright.kt                              |   16 [32m+[m
+ spotless/copyright.kts                             |   15 [32m+[m
+ spotless/copyright.xml                             |   16 [32m+[m
+ tools/pre-push                                     |   95 [32m++[m
+ tools/setup.sh                                     |   41 [32m+[m
+ 933 files changed, 70288 insertions(+), 68 deletions(-)
