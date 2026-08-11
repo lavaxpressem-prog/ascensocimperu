@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import {
   Search, Bell, Calendar, Download, GitCompare, BookOpen, Share2, Bookmark,
   ChevronDown, Clock, Send, TrendingUp, RefreshCw, ChevronLeft, ChevronRight,
-  Newspaper, ArrowRight, Eye, FileText
+  Newspaper, ArrowRight, Eye, FileText, X, Check
 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+import { supabase, getSavedNoticiaIds, toggleSaveNoticia } from '../lib/supabase'
 
 interface Noticia {
   id: string
@@ -118,6 +118,11 @@ export function TemariosPage() {
   const [calendarMonth, setCalendarMonth] = useState(now.getMonth())
   const [calendarYear, setCalendarYear] = useState(now.getFullYear())
 
+  const [selectedNoticia, setSelectedNoticia] = useState<Noticia | null>(null)
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const [userId, setUserId] = useState<string | null>(null)
+  const [notification, setNotification] = useState<string | null>(null)
+
   useEffect(() => {
     supabase
       .from('noticias')
@@ -128,6 +133,100 @@ export function TemariosPage() {
         setLoading(false)
       })
   }, [])
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserId(user.id)
+        const ids = await getSavedNoticiaIds(user.id)
+        setSavedIds(new Set(ids))
+      }
+    }
+    loadUser()
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUserId(session.user.id)
+        getSavedNoticiaIds(session.user.id).then(ids => setSavedIds(new Set(ids)))
+      } else {
+        setUserId(null)
+        setSavedIds(new Set())
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const showNotification = useCallback((msg: string) => {
+    setNotification(msg)
+    setTimeout(() => setNotification(null), 2500)
+  }, [])
+
+  const handleLeer = useCallback((noticia: Noticia) => {
+    setSelectedNoticia(noticia)
+  }, [])
+
+  const handleCloseLeer = useCallback(() => {
+    setSelectedNoticia(null)
+  }, [])
+
+  const handleDownloadPdf = useCallback(async (noticia: Noticia) => {
+    if (!noticia.pdf_url) return
+    try {
+      const response = await fetch(noticia.pdf_url)
+      if (!response.ok) throw new Error('Error al descargar')
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${noticia.titulo.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      window.open(noticia.pdf_url, '_blank')
+    }
+  }, [])
+
+  const handleShare = useCallback(async (noticia: Noticia) => {
+    const shareUrl = `${window.location.origin}/temarios`
+    const shareData = { title: noticia.titulo, text: noticia.descripcion, url: shareUrl }
+    if (navigator.share) {
+      try { await navigator.share(shareData) } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl)
+        showNotification('Enlace copiado al portapapeles')
+      } catch {
+        const textarea = document.createElement('textarea')
+        textarea.value = shareUrl
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+        showNotification('Enlace copiado al portapapeles')
+      }
+    }
+  }, [showNotification])
+
+  const handleToggleSave = useCallback(async (noticia: Noticia) => {
+    if (!userId) {
+      showNotification('Inicia sesion para guardar noticias')
+      return
+    }
+    try {
+      const isNowSaved = await toggleSaveNoticia(userId, noticia.id)
+      setSavedIds(prev => {
+        const next = new Set(prev)
+        if (isNowSaved) next.add(noticia.id)
+        else next.delete(noticia.id)
+        return next
+      })
+      showNotification(isNowSaved ? 'Noticia guardada' : 'Noticia eliminada de guardados')
+    } catch {
+      showNotification('Error al guardar la noticia')
+    }
+  }, [userId, showNotification])
 
   const filteredNoticias = noticias.filter((n) => {
     const matchCat =
@@ -283,42 +382,38 @@ export function TemariosPage() {
                       </div>
                       <p className="text-xs text-gray-500">Fuente: {noticia.fuente}</p>
                       <div className="flex items-center gap-4 pt-2 border-t border-gray-700/30">
+                        <button
+                          onClick={() => handleLeer(noticia)}
+                          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-yellow-400 transition-colors"
+                        >
+                          <BookOpen size={14} />
+                          Leer
+                        </button>
                         {noticia.pdf_url ? (
-                          <a
-                            href={noticia.pdf_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-yellow-400 transition-colors"
-                          >
-                            <BookOpen size={14} />
-                            Leer
-                          </a>
-                        ) : (
-                          <span className="flex items-center gap-1.5 text-xs text-gray-600 cursor-not-allowed">
-                            <BookOpen size={14} />
-                            Leer
-                          </span>
-                        )}
-                        {noticia.pdf_url ? (
-                          <a
-                            href={noticia.pdf_url}
-                            download
+                          <button
+                            onClick={() => handleDownloadPdf(noticia)}
                             className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-yellow-400 transition-colors"
                           >
                             <Download size={14} />
                             PDF
-                          </a>
+                          </button>
                         ) : (
                           <span className="flex items-center gap-1.5 text-xs text-gray-600 cursor-not-allowed">
                             <Download size={14} />
                             PDF
                           </span>
                         )}
-                        <button className="text-gray-400 hover:text-yellow-400 transition-colors ml-auto">
+                        <button
+                          onClick={() => handleShare(noticia)}
+                          className="text-gray-400 hover:text-yellow-400 transition-colors ml-auto"
+                        >
                           <Share2 size={14} />
                         </button>
-                        <button className="text-gray-400 hover:text-yellow-400 transition-colors">
-                          <Bookmark size={14} />
+                        <button
+                          onClick={() => handleToggleSave(noticia)}
+                          className="text-gray-400 hover:text-yellow-400 transition-colors"
+                        >
+                          <Bookmark size={14} fill={savedIds.has(noticia.id) ? 'currentColor' : 'none'} />
                         </button>
                       </div>
                     </div>
@@ -549,6 +644,95 @@ export function TemariosPage() {
           </div>
         </div>
       </div>
+
+      {/* Modal Leer Noticia */}
+      {selectedNoticia && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+          onClick={handleCloseLeer}
+        >
+          <div
+            className="bg-[#12161F] border border-gray-700/30 rounded-xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-5 border-b border-gray-700/30">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${categoriaColorMap[selectedNoticia.categoria] || 'bg-gray-500'}`}>
+                  <BookOpen size={20} className="text-white" />
+                </div>
+                <div className="min-w-0">
+                  <span className={`inline-block ${categoriaColorMap[selectedNoticia.categoria] || 'bg-gray-500'} text-white text-[11px] font-bold px-2.5 py-1 rounded-md mb-1`}>
+                    {selectedNoticia.categoria}
+                  </span>
+                  <h2 className="font-bold text-white text-lg leading-snug line-clamp-2">{selectedNoticia.titulo}</h2>
+                </div>
+              </div>
+              <button onClick={handleCloseLeer} className="text-gray-400 hover:text-white transition-colors shrink-0 ml-3">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-5 space-y-4 flex-1">
+              <div className="flex items-center gap-3 text-sm text-gray-400">
+                <Calendar size={14} />
+                <span>{formatDate(selectedNoticia.fecha_publicacion)}</span>
+                {selectedNoticia.estado && (
+                  <span className={`${estadoColorMap[selectedNoticia.estado] || 'bg-gray-500'} text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full`}>
+                    {selectedNoticia.estado}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">Fuente: {selectedNoticia.fuente}</p>
+              <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{selectedNoticia.descripcion}</p>
+              {selectedNoticia.pdf_url && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
+                    <FileText size={16} className="text-yellow-500" />
+                    Documento PDF adjunto
+                  </h4>
+                  <iframe
+                    src={selectedNoticia.pdf_url}
+                    className="w-full h-[500px] rounded-lg border border-gray-700/30 bg-white"
+                    title={`PDF - ${selectedNoticia.titulo}`}
+                  />
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-3 p-5 border-t border-gray-700/30">
+              {selectedNoticia.pdf_url && (
+                <button
+                  onClick={() => handleDownloadPdf(selectedNoticia)}
+                  className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+                >
+                  <Download size={14} />
+                  Descargar PDF
+                </button>
+              )}
+              <button
+                onClick={() => handleShare(selectedNoticia)}
+                className="flex items-center gap-2 border border-white/30 hover:border-white/50 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+              >
+                <Share2 size={14} />
+                Compartir
+              </button>
+              <button
+                onClick={() => handleToggleSave(selectedNoticia)}
+                className="flex items-center gap-2 border border-white/30 hover:border-white/50 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+              >
+                <Bookmark size={14} fill={savedIds.has(selectedNoticia.id) ? 'currentColor' : 'none'} />
+                {savedIds.has(selectedNoticia.id) ? 'Guardado' : 'Guardar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notificacion */}
+      {notification && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-yellow-500 text-black font-semibold px-5 py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm animate-in fade-in slide-in-from-bottom-4">
+          <Check size={16} />
+          {notification}
+        </div>
+      )}
     </div>
   )
 }

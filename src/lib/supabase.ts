@@ -854,6 +854,41 @@ export async function deleteNoticia(id: string) {
   if (error) throw error
 }
 
+// ── Noticias Guardadas helpers ──
+
+export async function getSavedNoticiaIds(userId: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('noticias_guardadas')
+    .select('noticia_id')
+    .eq('user_id', userId)
+  if (error) return []
+  return (data ?? []).map((r: { noticia_id: string }) => r.noticia_id)
+}
+
+export async function toggleSaveNoticia(userId: string, noticiaId: string): Promise<boolean> {
+  const { data: existing } = await supabase
+    .from('noticias_guardadas')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('noticia_id', noticiaId)
+    .maybeSingle()
+  if (existing) {
+    const { error } = await supabase
+      .from('noticias_guardadas')
+      .delete()
+      .eq('user_id', userId)
+      .eq('noticia_id', noticiaId)
+    if (error) throw error
+    return false
+  } else {
+    const { error } = await supabase
+      .from('noticias_guardadas')
+      .insert({ user_id: userId, noticia_id: noticiaId })
+    if (error) throw error
+    return true
+  }
+}
+
 // ── Modules helpers ──
 
 export interface ModuleAdmin {
