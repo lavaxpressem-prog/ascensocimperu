@@ -38,10 +38,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(403).json({ error: 'Forbidden: admin access required' })
   }
 
-  const { email, password, nombre, apellidoPaterno, apellidoMaterno, role } = req.body
+  const { email, password, nombre, apellidoPaterno, apellidoMaterno, cip, role } = req.body
 
   if (!email || !password || !nombre) {
     return res.status(400).json({ error: 'Email, password y nombre son requeridos' })
+  }
+
+  if (!cip || typeof cip !== 'string' || !cip.trim()) {
+    return res.status(400).json({ error: 'El CIP es obligatorio' })
   }
 
   const serviceClient = createClient(supabaseUrl, serviceRoleKey)
@@ -54,6 +58,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       nombre,
       apellido_paterno: apellidoPaterno,
       apellido_materno: apellidoMaterno,
+      cip: cip.trim(),
     }
   })
 
@@ -72,6 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       name: nombre,
       apellido_paterno: apellidoPaterno || null,
       apellido_materno: apellidoMaterno || null,
+      cip: cip.trim(),
       role: role || 'user',
       status: 'approved',
     })

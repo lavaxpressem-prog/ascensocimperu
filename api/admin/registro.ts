@@ -41,7 +41,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ── Validate input ──
-  const { email, password, nombre, apellido_paterno, apellido_materno, role } = req.body
+  const { email, password, nombre, apellido_paterno, apellido_materno, cip, role } = req.body
 
   if (!email || typeof email !== 'string' || !email.trim()) {
     return res.status(400).json({ error: 'El email es obligatorio' })
@@ -54,6 +54,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   if (!nombre || typeof nombre !== 'string' || !nombre.trim()) {
     return res.status(400).json({ error: 'El nombre es obligatorio' })
+  }
+  if (!cip || typeof cip !== 'string' || !cip.trim()) {
+    return res.status(400).json({ error: 'El CIP es obligatorio' })
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -91,6 +94,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       name: nombre.trim(),
       apellido_paterno: apellido_paterno?.trim() || null,
       apellido_materno: apellido_materno?.trim() || null,
+      cip: cip.trim(),
       role: validRole,
       status: 'approved',
     })

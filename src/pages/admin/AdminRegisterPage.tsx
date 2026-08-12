@@ -7,6 +7,7 @@ export function AdminRegisterPage() {
   const [nombre, setNombre] = useState('')
   const [apellidoPaterno, setApellidoPaterno] = useState('')
   const [apellidoMaterno, setApellidoMaterno] = useState('')
+  const [cip, setCip] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -19,6 +20,7 @@ export function AdminRegisterPage() {
 
     if (!nombre.trim()) newErrors.nombre = 'El nombre es obligatorio'
     if (!apellidoPaterno.trim()) newErrors.apellidoPaterno = 'El apellido paterno es obligatorio'
+    if (!cip.trim()) newErrors.cip = 'El CIP es obligatorio'
     if (!email.trim()) {
       newErrors.email = 'El email es obligatorio'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -63,6 +65,7 @@ export function AdminRegisterPage() {
           nombre: nombre.trim(),
           apellidoPaterno: apellidoPaterno.trim(),
           apellidoMaterno: apellidoMaterno.trim(),
+          cip: cip.trim(),
           role,
         }),
       })
@@ -80,6 +83,7 @@ export function AdminRegisterPage() {
       setNombre('')
       setApellidoPaterno('')
       setApellidoMaterno('')
+      setCip('')
       setEmail('')
       setPassword('')
       setConfirmPassword('')
@@ -133,6 +137,12 @@ export function AdminRegisterPage() {
                   <option value="admin">Administrador</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-1">CIP *</label>
+              <input type="text" value={cip} onChange={e => setCip(e.target.value)} className={inputClass('cip')} placeholder="Ingresa tu CIP" />
+              {errors.cip && <p className="text-xs text-red-500 mt-1">{errors.cip}</p>}
             </div>
 
             <div>

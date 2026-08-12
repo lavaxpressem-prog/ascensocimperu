@@ -5,6 +5,7 @@ import {
   Newspaper, ArrowRight, Eye, FileText, X, Check
 } from 'lucide-react'
 import { supabase, getSavedNoticiaIds, toggleSaveNoticia } from '../lib/supabase'
+import { PdfViewerModal } from '../components/PdfViewerModal'
 
 interface Noticia {
   id: string
@@ -119,6 +120,8 @@ export function TemariosPage() {
   const [calendarYear, setCalendarYear] = useState(now.getFullYear())
 
   const [selectedNoticia, setSelectedNoticia] = useState<Noticia | null>(null)
+  const [pdfViewerUrl, setPdfViewerUrl] = useState<string | null>(null)
+  const [pdfViewerTitle, setPdfViewerTitle] = useState('')
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
   const [userId, setUserId] = useState<string | null>(null)
   const [notification, setNotification] = useState<string | null>(null)
@@ -162,11 +165,21 @@ export function TemariosPage() {
   }, [])
 
   const handleLeer = useCallback((noticia: Noticia) => {
-    setSelectedNoticia(noticia)
+    if (noticia.pdf_url) {
+      setPdfViewerUrl(noticia.pdf_url)
+      setPdfViewerTitle(noticia.titulo)
+    } else {
+      setSelectedNoticia(noticia)
+    }
   }, [])
 
   const handleCloseLeer = useCallback(() => {
     setSelectedNoticia(null)
+  }, [])
+
+  const handleClosePdfViewer = useCallback(() => {
+    setPdfViewerUrl(null)
+    setPdfViewerTitle('')
   }, [])
 
   const handleDownloadPdf = useCallback(async (noticia: Noticia) => {
@@ -683,30 +696,8 @@ export function TemariosPage() {
               </div>
               <p className="text-xs text-gray-500">Fuente: {selectedNoticia.fuente}</p>
               <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{selectedNoticia.descripcion}</p>
-              {selectedNoticia.pdf_url && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-semibold text-white mb-2 flex items-center gap-2">
-                    <FileText size={16} className="text-yellow-500" />
-                    Documento PDF adjunto
-                  </h4>
-                  <iframe
-                    src={selectedNoticia.pdf_url}
-                    className="w-full h-[500px] rounded-lg border border-gray-700/30 bg-white"
-                    title={`PDF - ${selectedNoticia.titulo}`}
-                  />
-                </div>
-              )}
             </div>
             <div className="flex items-center gap-3 p-5 border-t border-gray-700/30">
-              {selectedNoticia.pdf_url && (
-                <button
-                  onClick={() => handleDownloadPdf(selectedNoticia)}
-                  className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
-                >
-                  <Download size={14} />
-                  Descargar PDF
-                </button>
-              )}
               <button
                 onClick={() => handleShare(selectedNoticia)}
                 className="flex items-center gap-2 border border-white/30 hover:border-white/50 text-white px-4 py-2 rounded-lg text-sm transition-colors"
@@ -724,6 +715,15 @@ export function TemariosPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Visor PDF Flotante */}
+      {pdfViewerUrl && (
+        <PdfViewerModal
+          pdfUrl={pdfViewerUrl}
+          title={pdfViewerTitle}
+          onClose={handleClosePdfViewer}
+        />
       )}
 
       {/* Notificacion */}
