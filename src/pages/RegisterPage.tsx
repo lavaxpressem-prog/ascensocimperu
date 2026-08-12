@@ -111,6 +111,59 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2">
+                  Nombres
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Ingresa tus nombres"
+                  value={nombres}
+                  onChange={(e) => setNombres(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-2">
+                    Apellido Paterno
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Paterno"
+                    value={apellidoPaterno}
+                    onChange={(e) => setApellidoPaterno(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-600 mb-2">
+                    Apellido Materno
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Materno"
+                    value={apellidoMaterno}
+                    onChange={(e) => setApellidoMaterno(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-2">
+                  CIP (Carnet de Identidad Policial)
+                </label>
+                <Input
+                  type="text"
+                  placeholder="Ingresa tu CIP"
+                  value={cip}
+                  onChange={(e) => setCip(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-2">
                   Correo electrónico
                 </label>
                 <Input
@@ -174,59 +227,6 @@ export function RegisterPage({ onBackToLogin }: RegisterPageProps) {
                     )}
                   </button>
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  Nombres
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Ingresa tus nombres"
-                  value={nombres}
-                  onChange={(e) => setNombres(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Apellido Paterno
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="Paterno"
-                    value={apellidoPaterno}
-                    onChange={(e) => setApellidoPaterno(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">
-                    Apellido Materno
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="Materno"
-                    value={apellidoMaterno}
-                    onChange={(e) => setApellidoMaterno(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-600 mb-2">
-                  CIP (Carnet de Identidad Policial)
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Ingresa tu CIP"
-                  value={cip}
-                  onChange={(e) => setCip(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                />
               </div>
 
               <Button 

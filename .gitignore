@@ -63,3 +63,5 @@ node_modules
 
 # Build output
 dist/
+
+.vercel
