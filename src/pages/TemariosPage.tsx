@@ -246,13 +246,13 @@ export function TemariosPage() {
         {/* Main Content */}
         <div className="flex-1 min-w-0 space-y-5">
           {/* Header */}
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div>
               <h1 className="text-3xl font-bold text-white">Noticias</h1>
               <p className="text-gray-400 mt-1">Centro de Actualizaciones Normativas PNP</p>
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-400">Libros, artículos y leyes de la PNP</span>
+              <span className="hidden sm:inline text-sm text-gray-400">Libros, artículos y leyes de la PNP</span>
               <div className="relative">
                 <Bell size={22} className="text-gray-300" />
                 <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">3</span>
@@ -278,7 +278,7 @@ export function TemariosPage() {
                   <span className="drop-shadow-[0_1px_3px_rgba(0,0,0,0.4)]">Publicado hoy, 02 de junio 2026</span>
                   <span className="bg-emerald-500 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full">Vigente</span>
                 </div>
-                <div className="flex items-center gap-3 pt-2">
+                <div className="flex flex-wrap items-center gap-3 pt-2">
                   <button className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors shadow-lg">
                     <BookOpen size={16} />
                     Leer modificación

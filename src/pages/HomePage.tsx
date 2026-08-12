@@ -173,9 +173,9 @@ export function HomePage() {
             </Card>
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <h3 className="text-xl font-bold font-serif">Ranking por Grados</h3>
-                <div className="w-64 relative">
+                <div className="w-full sm:w-64 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={18} />
                   <Input 
                     placeholder="Buscar oficial..." 

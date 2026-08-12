@@ -555,7 +555,7 @@ export function PracticaPage() {
                         <BookOpen className="w-8 h-8 text-indigo-600" />
                         <Badge variant="secondary">{topic.count} preguntas</Badge>
                       </div>
-                      <h3 className="font-semibold text-lg line-clamp-2">{topic.nombre}</h3>
+                      <h3 className="font-semibold text-lg line-clamp-2 text-black dark:text-black">{topic.nombre}</h3>
                       <Button 
                         onClick={() => handleSelectTopic(topic)}
                         className="w-full gap-2"
