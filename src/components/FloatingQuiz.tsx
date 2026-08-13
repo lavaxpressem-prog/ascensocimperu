@@ -3,7 +3,6 @@ import { getRandomQuestions, type Question } from '../lib/supabase'
 import { Brain, CheckCircle2, XCircle, Sparkles, Trophy, X } from 'lucide-react'
 
 const STORAGE_KEY = 'ascensocim_recent_quiz_ids'
-const SESSION_KEY = 'ascensocim_quiz_session'
 const QUESTIONS_PER_SESSION = 2
 const MAX_RECENT_IDS = 20
 
@@ -16,14 +15,6 @@ function getRecentIds(): number[] {
 
 function saveRecentIds(ids: number[]) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ids.slice(-MAX_RECENT_IDS))) } catch {}
-}
-
-function hasSeenQuizThisSession(): boolean {
-  try { return sessionStorage.getItem(SESSION_KEY) === '1' } catch { return false }
-}
-
-function markQuizSeen() {
-  try { sessionStorage.setItem(SESSION_KEY, '1') } catch {}
 }
 
 const PASTEL = {
@@ -90,10 +81,8 @@ export function FloatingQuiz() {
   }, [])
 
   useEffect(() => {
-    if (hasSeenQuizThisSession()) return
     loadQuestions().then(() => {
       setIsVisible(true)
-      markQuizSeen()
     })
   }, [loadQuestions])
 
