@@ -6,6 +6,7 @@ import { LoginPageSimple } from './pages/LoginPageSimple'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { useAuth } from './lib/AuthProvider'
 import { AdminRoute } from './lib/guards'
+import { FloatingQuiz } from './components/FloatingQuiz'
 
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })))
 const ExamPage = lazy(() => import('./pages/ExamPage').then(m => ({ default: m.ExamPage })))
@@ -67,6 +68,7 @@ function RootComponent() {
           <Suspense fallback={<PageLoader />}>
             <Outlet />
           </Suspense>
+          <FloatingQuiz />
         </AdminLayout>
       </AdminRoute>
     )
@@ -77,6 +79,7 @@ function RootComponent() {
       <Suspense fallback={<PageLoader />}>
         <Outlet />
       </Suspense>
+      <FloatingQuiz />
     </DashboardLayout>
   )
 }

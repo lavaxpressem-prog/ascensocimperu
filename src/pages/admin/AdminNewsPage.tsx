@@ -24,12 +24,24 @@ export function AdminNewsPage() {
   const handleSubmit = async () => {
     if (!form.titulo.trim() || !form.descripcion.trim()) { toast.error('Completa titulo y descripcion'); return }
     try {
+      const payload = {
+        titulo: form.titulo,
+        descripcion: form.descripcion,
+        categoria: form.categoria,
+        fuente: form.fuente,
+        estado: form.estado,
+        fecha_publicacion: form.fecha_publicacion,
+        pdf_url: form.pdf_url || undefined,
+        imagen_url: form.imagen_url || undefined,
+        autor: form.autor || undefined,
+        is_published: form.is_published,
+      }
       if (editId) {
-        await updateNoticia(editId, form)
+        await updateNoticia(editId, payload)
         await logAdminAction('update_noticia', 'noticia', editId)
         toast.success('Noticia actualizada')
       } else {
-        await createNoticia(form)
+        await createNoticia(payload)
         await logAdminAction('create_noticia', 'noticia')
         toast.success('Noticia creada')
       }

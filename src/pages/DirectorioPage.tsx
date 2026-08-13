@@ -13,6 +13,47 @@ import {
 import { Phone, Building2, MapPin, Search } from 'lucide-react'
 import { getComisarias, type Comisaria } from '../lib/supabase'
 
+function normalize(str: string | null | undefined): string {
+  if (!str) return ''
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/[\u2018\u2019\u0060]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+}
+
+function getDedupeKey(c: Comisaria): string {
+  return [
+    normalize(c.nombre),
+    normalize(c.categoria),
+    normalize(c.distrito),
+    normalize(c.provincia),
+    normalize(c.departamento),
+  ].join('|')
+}
+
+function deduplicateComisarias(items: Comisaria[]): Comisaria[] {
+  const map = new Map<string, Comisaria>()
+  for (const item of items) {
+    const key = getDedupeKey(item)
+    if (!map.has(key)) {
+      map.set(key, item)
+    } else {
+      const existing = map.get(key)!
+      const merged = { ...existing }
+      if (!merged.telefono && item.telefono) merged.telefono = item.telefono
+      if (!merged.direccion && item.direccion) merged.direccion = item.direccion
+      if (!merged.distrito && item.distrito) merged.distrito = item.distrito
+      if (!merged.provincia && item.provincia) merged.provincia = item.provincia
+      if (!merged.departamento && item.departamento) merged.departamento = item.departamento
+      if (!merged.comando_superior && item.comando_superior) merged.comando_superior = item.comando_superior
+      map.set(key, merged)
+    }
+  }
+  return Array.from(map.values())
+}
+
 export function DirectorioPage() {
   const [comisarias, setComisarias] = useState<Comisaria[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,13 +67,15 @@ export function DirectorioPage() {
     })
   }, [])
 
+  const deduplicated = useMemo(() => deduplicateComisarias(comisarias), [comisarias])
+
   const regions = useMemo(() => {
-    const unique = [...new Set(comisarias.map(c => c.region_policial).filter(Boolean))]
+    const unique = [...new Set(deduplicated.map(c => c.region_policial).filter(Boolean))]
     return ['Todas', ...unique.sort()]
-  }, [comisarias])
+  }, [deduplicated])
 
   const filtered = useMemo(() => {
-    return comisarias.filter(c => {
+    return deduplicated.filter(c => {
       const q = searchQuery.toLowerCase()
       const matchesSearch = !searchQuery || 
         (c.nombre ?? '').toLowerCase().includes(q) ||
@@ -45,7 +88,7 @@ export function DirectorioPage() {
       
       return matchesSearch && matchesRegion
     })
-  }, [comisarias, searchQuery, selectedRegion])
+  }, [deduplicated, searchQuery, selectedRegion])
 
   const formatPhone = (phone: string | null) => {
     if (!phone) return 'Sin número'
