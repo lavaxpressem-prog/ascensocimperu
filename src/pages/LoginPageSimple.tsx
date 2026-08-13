@@ -36,6 +36,7 @@ export function LoginPageSimple() {
     try {
       await login(email, password)
       toast.success('¡Bienvenido!')
+      localStorage.setItem('quizShowAfterLogin', 'true')
       window.location.reload()
     } catch (err: any) {
       setSubmitError(err.message || 'Error al iniciar sesión')

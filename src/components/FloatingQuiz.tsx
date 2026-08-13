@@ -81,6 +81,10 @@ export function FloatingQuiz() {
   }, [])
 
   useEffect(() => {
+    const shouldShow = localStorage.getItem('quizShowAfterLogin') === 'true'
+    if (!shouldShow) return
+
+    localStorage.removeItem('quizShowAfterLogin')
     loadQuestions().then(() => {
       setIsVisible(true)
     })
