@@ -343,7 +343,7 @@ function QuestionView({
             className="w-full py-3 rounded-xl text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]"
             style={{ background: 'linear-gradient(135deg, #A78BFA, #60A5FA)' }}
           >
-            {currentIdx < total - 1 ? 'Siguiente Pregunta →' : 'Ver Resultados ✨'}
+            {currentIdx < total - 1 ? 'Siguiente' : 'Ver Resultados ✨'}
           </button>
         </div>
       )}
