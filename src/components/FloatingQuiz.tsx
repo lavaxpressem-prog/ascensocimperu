@@ -142,7 +142,7 @@ export function FloatingQuiz() {
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-4"
-      style={{ transition: 'opacity 0.3s', opacity: isClosing ? 0 : 1 }}
+      style={{ transition: 'opacity 0.3s', opacity: isClosing ? 0 : 1, minHeight: '100dvh' }}
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={handleClose} />
 
@@ -151,7 +151,9 @@ export function FloatingQuiz() {
         style={{
           background: 'linear-gradient(135deg, #FDF2F8 0%, #F0F4FF 30%, #ECFDF5 60%, #FFFBEB 100%)',
           animation: isClosing ? 'quizSlideOut 0.3s ease-in forwards' : 'quizSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          maxHeight: '90vh',
+          maxHeight: 'min(90vh, 90dvh)',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         {isLoading ? (
@@ -213,8 +215,8 @@ function QuestionView({
   const options = question.options
 
   return (
-    <>
-      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0">
         <div className="flex items-center gap-2">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-400 to-blue-400 flex items-center justify-center shadow-md">
             <Brain size={18} className="text-white" />
@@ -229,7 +231,7 @@ function QuestionView({
         </button>
       </div>
 
-      <div className="px-5 pb-2">
+      <div className="px-5 pb-2 flex-shrink-0">
         <div className="w-full h-1.5 bg-white/50 rounded-full overflow-hidden">
           <div
             className="h-full rounded-full transition-all duration-500 ease-out"
@@ -241,7 +243,7 @@ function QuestionView({
         </div>
       </div>
 
-      <div className="px-5 py-4">
+      <div className="px-5 py-4 flex-1 min-h-0 overflow-y-auto">
         <div
           className="rounded-2xl p-4 mb-4 shadow-sm"
           style={{ background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(10px)' }}
@@ -309,7 +311,7 @@ function QuestionView({
       </div>
 
       {isAnswered && (
-        <div className="px-5 pb-5" style={{ animation: 'quizPop 0.3s ease' }}>
+        <div className="px-5 pb-5 flex-shrink-0" style={{ animation: 'quizPop 0.3s ease' }}>
           <div
             className="rounded-xl p-3 mb-4 flex items-center gap-3"
             style={{
@@ -340,7 +342,7 @@ function QuestionView({
           </button>
         </div>
       )}
-    </>
+    </div>
   )
 }
 
@@ -350,7 +352,7 @@ function SummaryView({ score, total, onClose, onRestart }: { score: number; tota
   const isGood = score >= total / 2
 
   return (
-    <div className="px-6 py-8 text-center">
+    <div className="px-6 py-8 text-center flex-1 min-h-0 overflow-y-auto">
       <div
         className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center shadow-lg"
         style={{
