@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Page, PageHeader, PageTitle, PageDescription, PageBody, Card, Badge, Button, Input } from '@blinkdotnew/ui'
 import {
   Shield, Activity, Users, AlertTriangle, Clock, Search, Download,
@@ -116,10 +116,12 @@ export function AdminAuditPage() {
   const [totalLogs, setTotalLogs] = useState(0)
   const [sessions, setSessions] = useState<UserSessionEntry[]>([])
   const [auditResult, setAuditResult] = useState<AuditAnalysisEntry[]>([])
+  const [auditError, setAuditError] = useState<string | null>(null)
   const [actions, setActions] = useState<string[]>([])
   const [modules, setModules] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingAudit, setLoadingAudit] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const pageSize = 50
 
@@ -137,7 +139,7 @@ export function AdminAuditPage() {
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { from, to } = getDateRange(period, customFrom, customTo)
+  const { from, to } = useMemo(() => getDateRange(period, customFrom, customTo), [period, customFrom, customTo])
 
   const loadStats = useCallback(async () => {
     const s = await getAuditStatsData()
@@ -175,8 +177,16 @@ export function AdminAuditPage() {
   useEffect(() => {
     const load = async () => {
       setLoading(true)
-      await Promise.all([loadStats(), loadLogs(), loadSessions(), loadFilters()])
-      setLoading(false)
+      setError(null)
+      try {
+        await Promise.all([loadStats(), loadLogs(), loadSessions(), loadFilters()])
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Error al cargar datos de auditoria'
+        setError(message)
+        console.error('Error loading audit data:', err)
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [loadStats, loadLogs, loadSessions, loadFilters])
@@ -198,12 +208,15 @@ export function AdminAuditPage() {
 
   const handleRunAudit = async () => {
     setLoadingAudit(true)
+    setAuditError(null)
     try {
       const result = await runAuditAnalysis()
       setAuditResult(result)
       setActiveTab('audit')
-    } catch {
-      console.error('Error running audit')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error al ejecutar analisis de auditoria'
+      setAuditError(message)
+      console.error('Error running audit:', err)
     } finally {
       setLoadingAudit(false)
     }
@@ -303,8 +316,37 @@ export function AdminAuditPage() {
       <PageBody className="p-4 md:p-8 space-y-6">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-4" />
+              <p className="text-sm text-muted-foreground">Cargando datos de auditoria...</p>
+            </div>
           </div>
+        ) : error ? (
+          <Card className="p-8">
+            <div className="text-center">
+              <AlertTriangle size={48} className="mx-auto text-red-500 mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Error al cargar datos</h3>
+              <p className="text-sm text-muted-foreground mb-4">{error}</p>
+              <Button onClick={() => {
+                setLoading(true)
+                setError(null)
+                const load = async () => {
+                  try {
+                    await Promise.all([loadStats(), loadLogs(), loadSessions(), loadFilters()])
+                  } catch (err: unknown) {
+                    const message = err instanceof Error ? err.message : 'Error al cargar datos de auditoria'
+                    setError(message)
+                  } finally {
+                    setLoading(false)
+                  }
+                }
+                load()
+              }} variant="outline" className="gap-2">
+                <RefreshCw size={16} />
+                Reintentar
+              </Button>
+            </div>
+          </Card>
         ) : (
           <>
             {/* Summary Cards */}
@@ -690,6 +732,21 @@ export function AdminAuditPage() {
             {/* Manual Audit Tab */}
             {activeTab === 'audit' && (
               <div className="space-y-4">
+                {auditError && (
+                  <Card className="p-6 border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle size={20} className="text-red-500 mt-0.5 shrink-0" />
+                      <div>
+                        <h4 className="text-sm font-semibold text-red-700 dark:text-red-400">Error en el analisis</h4>
+                        <p className="text-sm text-red-600 dark:text-red-300 mt-1">{auditError}</p>
+                        <Button onClick={handleRunAudit} disabled={loadingAudit} variant="outline" size="sm" className="mt-3 gap-2">
+                          <RefreshCw size={14} />
+                          Reintentar
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                )}
                 {auditResult.length === 0 ? (
                   <Card className="p-12 text-center">
                     <Search size={48} className="mx-auto text-muted-foreground mb-4" />

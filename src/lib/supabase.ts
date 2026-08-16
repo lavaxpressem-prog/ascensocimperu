@@ -663,7 +663,7 @@ export interface AuditLogEntry {
 export async function getAuditLogs(limit = 50): Promise<AuditLogEntry[]> {
   const { data, error } = await supabase
     .rpc('get_recent_activity', { p_limit: limit })
-  if (error) return []
+  if (error) throw new Error(error.message || 'Error al cargar registros de actividad')
   return (data || []) as AuditLogEntry[]
 }
 
@@ -1125,13 +1125,13 @@ export async function getAuditLogsFiltered(params: {
     p_status: params.status ?? null,
     p_search: params.search ?? null,
   })
-  if (error) return []
+  if (error) throw new Error(error.message || 'Error al cargar registros de auditoria')
   return (data || []) as AuditLogEntryExtended[]
 }
 
 export async function getAuditStatsData(): Promise<AuditStats | null> {
   const { data, error } = await supabase.rpc('get_audit_stats')
-  if (error) return null
+  if (error) throw new Error(error.message || 'Error al cargar estadisticas de auditoria')
   return (data?.[0] ?? null) as AuditStats | null
 }
 
@@ -1145,24 +1145,24 @@ export async function getUserSessionsData(params: {
     p_from: params.from ?? null,
     p_to: params.to ?? null,
   })
-  if (error) return []
+  if (error) throw new Error(error.message || 'Error al cargar sesiones de usuario')
   return (data || []) as UserSessionEntry[]
 }
 
 export async function runAuditAnalysis(): Promise<AuditAnalysisEntry[]> {
   const { data, error } = await supabase.rpc('run_audit_analysis')
-  if (error) return []
+  if (error) throw new Error(error.message || 'Error al ejecutar analisis de auditoria')
   return (data || []) as AuditAnalysisEntry[]
 }
 
 export async function getAuditActions(): Promise<string[]> {
   const { data, error } = await supabase.rpc('get_audit_actions')
-  if (error) return []
+  if (error) throw new Error(error.message || 'Error al cargar acciones de auditoria')
   return (data || []).map((r: { action: string }) => r.action)
 }
 
 export async function getAuditModules(): Promise<string[]> {
   const { data, error } = await supabase.rpc('get_audit_modules')
-  if (error) return []
+  if (error) throw new Error(error.message || 'Error al cargar modulos de auditoria')
   return (data || []).map((r: { module: string }) => r.module)
 }
