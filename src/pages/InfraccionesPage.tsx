@@ -202,11 +202,13 @@ export function InfraccionesPage() {
                 {errorTransito}
               </div>
             ) : (
-              <DataTable 
-                columns={columnsTransito} 
-                data={filteredTransito} 
-                searchable={false}
-              />
+              <div style={{ overflowX: 'auto', width: '100%' }}>
+                <DataTable 
+                  columns={columnsTransito} 
+                  data={filteredTransito} 
+                  searchable={false}
+                />
+              </div>
             )}
           </TabsContent>
           
@@ -236,11 +238,13 @@ export function InfraccionesPage() {
                 {errorDisciplina}
               </div>
             ) : (
-              <DataTable 
-                columns={columnsDisciplina} 
-                data={filteredDisciplina} 
-                searchable={false}
-              />
+              <div style={{ overflowX: 'auto', width: '100%' }}>
+                <DataTable 
+                  columns={columnsDisciplina} 
+                  data={filteredDisciplina} 
+                  searchable={false}
+                />
+              </div>
             )}
           </TabsContent>
         </Tabs>

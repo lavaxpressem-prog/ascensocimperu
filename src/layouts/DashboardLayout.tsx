@@ -8,10 +8,10 @@ import {
   LogOut, 
   Newspaper, 
   MessageSquare, 
-  AlertTriangle, 
+  TriangleAlert, 
   Phone, 
   Map, 
-  HelpCircle,
+  CircleHelp,
   Volume2,
   Moon,
   Sun,
@@ -103,7 +103,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               active={location.pathname === '/ia'} 
             />
             <SidebarItem 
-              icon={<AlertTriangle size={20} />} 
+              icon={<TriangleAlert size={20} />} 
               label="Tabla Infracciones" 
               href="/infracciones" 
               active={location.pathname === '/infracciones'} 
@@ -138,7 +138,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           
           <div className="shrink-0 border-t border-sidebar-border p-4 space-y-2">
             <SidebarItem 
-              icon={<HelpCircle size={20} />} 
+              icon={<CircleHelp size={20} />} 
               label="Ayuda" 
               href="/ayuda" 
               active={location.pathname === '/ayuda'} 
