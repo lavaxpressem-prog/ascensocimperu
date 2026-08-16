@@ -1,6 +1,6 @@
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
 import type { User } from '@supabase/supabase-js'
-import { supabase, signIn, signUp, signOut, sendPasswordReset, getProfile } from './supabase'
+import { supabase, signIn, signUp, signOut, sendPasswordReset, getProfile, logAuditEvent, createUserSession, endUserSession } from './supabase'
 import type { Profile, AuthUser } from './types'
 
 interface AuthContextValue {
@@ -23,6 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const currentSessionId = useRef<string | null>(null)
 
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -62,9 +63,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await signIn(email, password)
       if (data.user) {
         await fetchProfile(data.user.id)
+        const sessionId = await createUserSession({ ipAddress: undefined })
+        currentSessionId.current = sessionId
+        logAuditEvent({
+          action: 'login',
+          module: 'auth',
+          details: { email: data.user.email },
+          status: 'success',
+        }).catch(() => {})
       }
     } catch (err: any) {
       setError(err.message)
+      logAuditEvent({
+        action: 'login_failed',
+        module: 'auth',
+        details: { email, error: err.message },
+        status: 'failed',
+      }).catch(() => {})
       throw err
     }
   }, [fetchProfile])
@@ -82,6 +97,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     setError(null)
     try {
+      logAuditEvent({
+        action: 'logout',
+        module: 'auth',
+        details: { email: user?.email },
+        status: 'success',
+      }).catch(() => {})
+      if (currentSessionId.current) {
+        endUserSession(currentSessionId.current).catch(() => {})
+        currentSessionId.current = null
+      }
       await signOut()
       setUser(null)
       setProfile(null)
@@ -89,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(err.message)
       throw err
     }
-  }, [])
+  }, [user])
 
   const resetPassword = useCallback(async (email: string) => {
     setError(null)

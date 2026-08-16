@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { Page, PageHeader, PageTitle, PageDescription, PageBody, Card } from '@blinkdotnew/ui'
-import { Shield, Activity, Clock } from 'lucide-react'
+import { Page, PageHeader, PageTitle, PageDescription, PageBody, Card, Button } from '@blinkdotnew/ui'
+import { Shield, Activity, Clock, ArrowRight } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 import { getAuditLogs, type AuditLogEntry } from '../../lib/supabase'
 
 export function AdminSecurityPage() {
@@ -59,6 +60,21 @@ export function AdminSecurityPage() {
         </div>
       </PageHeader>
       <PageBody className="p-4 md:p-8 space-y-6">
+        <Card className="p-4">
+          <Link to="/admin/security/audit" className="flex items-center justify-between gap-4 group">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Shield size={20} className="text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold group-hover:text-primary transition-colors">Sistema de Auditoria Completo</h3>
+                <p className="text-sm text-muted-foreground">Registro de actividades, sesiones de usuarios, analisis de seguridad y exportacion de reportes</p>
+              </div>
+            </div>
+            <ArrowRight size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
+          </Link>
+        </Card>
+
         {loading ? (
           <div className="flex items-center justify-center py-20"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" /></div>
         ) : (

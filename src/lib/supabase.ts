@@ -989,3 +989,180 @@ export function getCurrentSession() {
 export function onAuthStateChange(callback: (event: string, session: unknown) => void) {
   return supabase.auth.onAuthStateChange(callback)
 }
+
+// ── Enhanced Audit System ──
+
+export interface AuditLogEntryExtended {
+  id: string
+  user_id: string
+  user_email: string
+  user_name: string
+  user_role: string
+  action: string
+  module: string | null
+  details: Record<string, unknown> | null
+  ip_address: string | null
+  user_agent: string | null
+  status: string
+  admin_id: string | null
+  admin_email: string | null
+  admin_name: string | null
+  created_at: string
+  total_count: number
+}
+
+export interface AuditStats {
+  active_users: number
+  logins_24h: number
+  total_actions: number
+  failed_attempts: number
+  active_sessions: number
+  security_events: number
+}
+
+export interface UserSessionEntry {
+  id: string
+  user_id: string
+  user_email: string
+  user_name: string
+  user_role: string
+  login_at: string
+  logout_at: string | null
+  ip_address: string | null
+  user_agent: string | null
+  duration_seconds: number | null
+  is_active: boolean
+  total_logins: number
+  total_duration: number
+}
+
+export interface AuditAnalysisEntry {
+  category: string
+  severity: string
+  title: string
+  description: string
+  count: number
+  details: Record<string, unknown> | null
+}
+
+export async function logAuditEvent(params: {
+  action: string
+  module?: string
+  details?: Record<string, unknown>
+  status?: string
+  adminId?: string
+}) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  const insertData: Record<string, unknown> = {
+    user_id: user.id,
+    action: params.action,
+    module: params.module ?? null,
+    details: params.details ?? null,
+    status: params.status ?? 'success',
+    admin_id: params.adminId ?? null,
+    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+  }
+
+  await supabase.from('activity_logs').insert(insertData)
+}
+
+export async function createUserSession(params: {
+  ipAddress?: string
+}) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data, error } = await supabase.from('user_sessions').insert({
+    user_id: user.id,
+    ip_address: params.ipAddress ?? null,
+    user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+    is_active: true,
+  }).select('id').single()
+
+  if (error) return null
+  return data?.id ?? null
+}
+
+export async function endUserSession(sessionId: string) {
+  const { data: existing } = await supabase
+    .from('user_sessions')
+    .select('login_at')
+    .eq('id', sessionId)
+    .single()
+
+  if (!existing) return
+
+  const duration = Math.floor((Date.now() - new Date(existing.login_at).getTime()) / 1000)
+
+  await supabase.from('user_sessions').update({
+    logout_at: new Date().toISOString(),
+    duration_seconds: duration,
+    is_active: false,
+  }).eq('id', sessionId)
+}
+
+export async function getAuditLogsFiltered(params: {
+  limit?: number
+  offset?: number
+  from?: string
+  to?: string
+  userId?: string
+  action?: string
+  module?: string
+  status?: string
+  search?: string
+}): Promise<AuditLogEntryExtended[]> {
+  const { data, error } = await supabase.rpc('get_audit_logs', {
+    p_limit: params.limit ?? 100,
+    p_offset: params.offset ?? 0,
+    p_from: params.from ?? null,
+    p_to: params.to ?? null,
+    p_user_id: params.userId ?? null,
+    p_action: params.action ?? null,
+    p_module: params.module ?? null,
+    p_status: params.status ?? null,
+    p_search: params.search ?? null,
+  })
+  if (error) return []
+  return (data || []) as AuditLogEntryExtended[]
+}
+
+export async function getAuditStatsData(): Promise<AuditStats | null> {
+  const { data, error } = await supabase.rpc('get_audit_stats')
+  if (error) return null
+  return (data?.[0] ?? null) as AuditStats | null
+}
+
+export async function getUserSessionsData(params: {
+  limit?: number
+  from?: string
+  to?: string
+}): Promise<UserSessionEntry[]> {
+  const { data, error } = await supabase.rpc('get_user_sessions', {
+    p_limit: params.limit ?? 50,
+    p_from: params.from ?? null,
+    p_to: params.to ?? null,
+  })
+  if (error) return []
+  return (data || []) as UserSessionEntry[]
+}
+
+export async function runAuditAnalysis(): Promise<AuditAnalysisEntry[]> {
+  const { data, error } = await supabase.rpc('run_audit_analysis')
+  if (error) return []
+  return (data || []) as AuditAnalysisEntry[]
+}
+
+export async function getAuditActions(): Promise<string[]> {
+  const { data, error } = await supabase.rpc('get_audit_actions')
+  if (error) return []
+  return (data || []).map((r: { action: string }) => r.action)
+}
+
+export async function getAuditModules(): Promise<string[]> {
+  const { data, error } = await supabase.rpc('get_audit_modules')
+  if (error) return []
+  return (data || []).map((r: { module: string }) => r.module)
+}

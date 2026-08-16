@@ -30,6 +30,7 @@ const AdminModulesPage = lazy(() => import('./pages/admin/AdminModulesPage').the
 const AdminFilesPage = lazy(() => import('./pages/admin/AdminFilesPage').then(m => ({ default: m.AdminFilesPage })))
 const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage').then(m => ({ default: m.AdminSettingsPage })))
 const AdminSecurityPage = lazy(() => import('./pages/admin/AdminSecurityPage').then(m => ({ default: m.AdminSecurityPage })))
+const AdminAuditPage = lazy(() => import('./pages/admin/AdminAuditPage').then(m => ({ default: m.AdminAuditPage })))
 const AdminStatsPage = lazy(() => import('./pages/admin/AdminStatsPage').then(m => ({ default: m.AdminStatsPage })))
 
 function PageLoader() {
@@ -222,6 +223,12 @@ const adminSecurityRoute = createRoute({
   component: () => <Suspense fallback={<PageLoader />}><AdminSecurityPage /></Suspense>
 })
 
+const adminAuditRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/security/audit',
+  component: () => <Suspense fallback={<PageLoader />}><AdminAuditPage /></Suspense>
+})
+
 const adminStatsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/admin/stats',
@@ -251,6 +258,7 @@ const routeTree = rootRoute.addChildren([
   adminFilesRoute,
   adminSettingsRoute,
   adminSecurityRoute,
+  adminAuditRoute,
   adminStatsRoute,
 ])
 const router = createRouter({ routeTree })
