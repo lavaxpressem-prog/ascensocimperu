@@ -239,9 +239,9 @@ export function AudioPage() {
           <PageTitle className="font-serif">Audio Preguntas</PageTitle>
           <PageDescription>Escucha y aprende automáticamente</PageDescription>
         </PageHeader>
-        <PageBody className="max-w-3xl mx-auto space-y-8 py-8">
+        <PageBody className="max-w-3xl mx-auto space-y-6 sm:space-y-8 py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-6">
           <Card>
-            <CardContent className="p-8 flex items-center justify-center">
+            <CardContent className="p-6 sm:p-8 flex items-center justify-center">
               <p className="text-muted-foreground">
                 {loading ? 'Cargando preguntas...' : 'No hay preguntas disponibles'}
               </p>
@@ -259,16 +259,16 @@ export function AudioPage() {
         <PageDescription>Escucha y aprende automáticamente</PageDescription>
       </PageHeader>
 
-      <PageBody className="max-w-3xl mx-auto space-y-8 py-8">
+      <PageBody className="max-w-3xl mx-auto space-y-6 sm:space-y-8 py-4 sm:py-6 md:py-8 px-3 sm:px-4 md:px-6">
         <Card>
-          <CardContent className="p-8 space-y-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-2 flex-1">
-                <Badge variant="outline">{currentQuestion.topic}</Badge>
-                <p className="text-sm text-muted-foreground">
+          <CardContent className="p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6">
+            <div className="flex items-start justify-between gap-3 sm:gap-4">
+              <div className="space-y-1.5 sm:space-y-2 flex-1 min-w-0">
+                <Badge variant="outline" className="text-xs">{currentQuestion.topic}</Badge>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   Pregunta {currentIndex + 1} de {questions.length}
                 </p>
-                <h3 className="text-lg font-medium leading-relaxed">
+                <h3 className="text-base sm:text-lg font-medium leading-relaxed break-words">
                   {currentQuestion.text}
                 </h3>
                 {currentQuestion.ubicacion && (
@@ -279,22 +279,22 @@ export function AudioPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-4 bg-primary/5 p-6 rounded-xl border border-primary/20">
+            <div className="flex items-center gap-3 sm:gap-4 bg-primary/5 p-4 sm:p-5 md:p-6 rounded-xl border border-primary/20">
               <Button
                 size="lg"
-                className="rounded-full h-14 w-14 flex-shrink-0"
+                className="rounded-full h-16 w-16 sm:h-14 sm:w-14 md:h-14 md:w-14 flex-shrink-0 shadow-lg active:scale-95 transition-transform duration-150"
                 onClick={() => speakQuestion()}
               >
-                {isPlaying && !isPaused ? <Pause size={24} /> : <Play size={24} className="ml-1" />}
+                {isPlaying && !isPaused ? <Pause size={28} /> : <Play size={28} className="ml-1" />}
               </Button>
-              <div className="flex-1">
-                <p className="font-semibold text-primary">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-primary text-sm sm:text-base">
                   {isPlaying && !isPaused ? '🔊 Reproduciendo...' : '🎧 Haz clic para escuchar'}
                 </p>
-                <p className="text-sm text-muted-foreground">Sintetización de audio en español</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">Sintetización de audio en español</p>
               </div>
               {isPaused && (
-                <Button variant="outline" size="sm" onClick={handleResume}>
+                <Button variant="outline" size="sm" onClick={handleResume} className="h-9 sm:h-8">
                   Reanudar
                 </Button>
               )}
@@ -304,64 +304,68 @@ export function AudioPage() {
                 onClick={handleRestart}
                 disabled={!currentQuestion}
                 title="Reiniciar audio"
+                className="h-10 w-10 sm:h-9 sm:w-9 flex-shrink-0"
               >
                 <RotateCcw size={18} />
               </Button>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex gap-2">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handlePrevious}
                   disabled={currentIndex === 0}
+                  className="h-9 sm:h-8 text-sm"
                 >
-                  <SkipBack size={16} className="mr-2" />
+                  <SkipBack size={16} className="mr-1.5" />
                   Anterior
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleNext}
+                  className="h-9 sm:h-8 text-sm"
                 >
                   Siguiente
-                  <SkipForward size={16} className="ml-2" />
+                  <SkipForward size={16} className="ml-1.5" />
                 </Button>
                 <Button
                   variant={loopMode ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setLoopMode(!loopMode)}
+                  className="h-9 sm:h-8 text-sm"
                 >
                   Loop: {loopMode ? 'ON' : 'OFF'}
                 </Button>
               </div>
 
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm">
+              <div className="space-y-2.5 sm:space-y-2">
+                <label className="flex items-center gap-2.5 text-sm cursor-pointer">
                   <input
                     type="checkbox"
                     checked={readAnswers}
                     onChange={(e) => setReadAnswers(e.target.checked)}
-                    className="w-4 h-4"
+                    className="w-5 h-5 sm:w-4 sm:h-4 rounded"
                   />
                   Leer respuesta correcta
                 </label>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2.5 text-sm cursor-pointer">
                   <input
                     type="checkbox"
                     checked={autoPlay}
                     onChange={(e) => setAutoPlay(e.target.checked)}
-                    className="w-4 h-4"
+                    className="w-5 h-5 sm:w-4 sm:h-4 rounded"
                   />
                   Reproducción automática
                 </label>
-                <label className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2.5 text-sm">
                   Velocidad:
                   <select
                     value={speed}
                     onChange={(e) => setSpeed(parseFloat(e.target.value))}
-                    className="px-2 py-1 rounded border border-input text-xs"
+                    className="px-2 py-1.5 sm:py-1 rounded border border-input text-xs bg-background"
                   >
                     <option value={0.5}>0.5x</option>
                     <option value={0.75}>0.75x</option>
@@ -374,27 +378,27 @@ export function AudioPage() {
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               <p className="font-semibold text-sm">Selecciona la respuesta:</p>
-              <div className="grid gap-3">
+              <div className="grid gap-2.5 sm:gap-3">
                 {currentQuestion.options.map((option) => {
                   const isSelected = selectedOption === option.id
                   return (
                     <button
                       key={option.id}
                       className={`
-                        flex items-center gap-4 p-4 rounded-lg text-left transition-all border-2
+                        flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg text-left transition-all border-2
                         ${isSelected 
                           ? isCorrect
                             ? 'border-green-500 bg-green-50 dark:bg-green-950/30'
                             : 'border-destructive bg-destructive/5'
-                          : 'border-transparent bg-secondary hover:border-primary/20'
+                          : 'border-transparent bg-secondary hover:border-primary/20 active:bg-secondary/80'
                         }
                       `}
                       onClick={() => setSelectedOption(option.id)}
                     >
                       <div className={`
-                        h-8 w-8 rounded-lg flex items-center justify-center font-bold flex-shrink-0
+                        h-9 w-9 sm:h-8 sm:w-8 rounded-lg flex items-center justify-center font-bold flex-shrink-0 text-sm
                         ${isSelected 
                           ? isCorrect
                             ? 'bg-green-500 text-white'
@@ -404,7 +408,7 @@ export function AudioPage() {
                       `}>
                         {option.id.toUpperCase()}
                       </div>
-                      <span className="font-medium">{option.text}</span>
+                      <span className="font-medium text-sm sm:text-base break-words">{option.text}</span>
                     </button>
                   )
                 })}
@@ -412,7 +416,7 @@ export function AudioPage() {
             </div>
 
             {selectedOption && (
-              <div className={`p-4 rounded-lg border-l-4 ${
+              <div className={`p-3 sm:p-4 rounded-lg border-l-4 ${
                 isCorrect 
                   ? 'bg-green-50 dark:bg-green-950/30 border-green-500'
                   : 'bg-destructive/5 border-destructive'
@@ -426,8 +430,8 @@ export function AudioPage() {
         </Card>
 
         <Card className="bg-secondary/50">
-          <CardContent className="p-6 flex items-start gap-4">
-            <BookOpen size={24} className="text-primary flex-shrink-0 mt-1" />
+          <CardContent className="p-4 sm:p-5 md:p-6 flex items-start gap-3 sm:gap-4">
+            <BookOpen size={22} className="text-primary flex-shrink-0 mt-0.5 sm:mt-1" />
             <div>
               <p className="font-semibold mb-1">Nota importante</p>
               <p className="text-sm text-muted-foreground">

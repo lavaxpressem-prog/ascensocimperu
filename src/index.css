@@ -100,3 +100,22 @@
   --sidebar-border: 217.2 32.6% 17.5%;
   --sidebar-ring: 142 76% 30%;
 }
+
+/* ── Mobile responsive utilities ──────────────────────────────────────── */
+@media (max-width: 639px) {
+  /* Prevent horizontal scroll on mobile */
+  html, body {
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure touch targets are at least 44px */
+  button, a, input[type="checkbox"], select {
+    touch-action: manipulation;
+  }
+
+  /* Better tap feedback on mobile */
+  button:active, a:active {
+    opacity: 0.85;
+  }
+}
