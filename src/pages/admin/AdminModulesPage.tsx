@@ -30,7 +30,7 @@ export function AdminModulesPage() {
     'Banco de Preguntas': 'Preguntas para examenes y simulacros',
     'Audio Preguntas': 'Audio de preguntas para estudio',
     'Practica por Temas': 'Practica por temas especificos',
-    'Inteligencia Artificial': 'Asistente de IA para resolver dudas',
+    'Permutantes': 'Publicación y búsqueda de permutas entre unidades',
     'Tabla Infracciones': 'Tabla de infracciones PNP',
     'Directorio Telefonico': 'Directorio de contactos',
     'Mapa Jurisdiccional': 'Mapa de jurisdicciones',

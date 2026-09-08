@@ -7,7 +7,7 @@ import {
   Settings, 
   LogOut, 
   Newspaper, 
-  MessageSquare, 
+  ArrowRightLeft, 
   TriangleAlert, 
   Phone, 
   Map, 
@@ -97,10 +97,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             </div>
             
             <SidebarItem 
-              icon={<MessageSquare size={20} />} 
-              label="Inteligencia Artificial" 
-              href="/ia" 
-              active={location.pathname === '/ia'} 
+              icon={<ArrowRightLeft size={20} />} 
+              label="Permutantes" 
+              href="/permutantes" 
+              active={location.pathname === '/permutantes'} 
             />
             <SidebarItem 
               icon={<TriangleAlert size={20} />} 

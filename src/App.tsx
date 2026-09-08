@@ -10,7 +10,7 @@ import { FloatingQuiz } from './components/FloatingQuiz'
 
 const HomePage = lazy(() => import('./pages/HomePage').then(m => ({ default: m.HomePage })))
 const ExamPage = lazy(() => import('./pages/ExamPage').then(m => ({ default: m.ExamPage })))
-const IAPage = lazy(() => import('./pages/IAPage').then(m => ({ default: m.IAPage })))
+const PermutantesPage = lazy(() => import('./pages/PermutantesPage').then(m => ({ default: m.PermutantesPage })))
 const InfraccionesPage = lazy(() => import('./pages/InfraccionesPage').then(m => ({ default: m.InfraccionesPage })))
 const DirectorioPage = lazy(() => import('./pages/DirectorioPage').then(m => ({ default: m.DirectorioPage })))
 const TemariosPage = lazy(() => import('./pages/TemariosPage').then(m => ({ default: m.TemariosPage })))
@@ -101,10 +101,10 @@ const examRoute = createRoute({
   component: () => <Suspense fallback={<PageLoader />}><ExamPage /></Suspense>
 })
 
-const iaRoute = createRoute({
+const permutantesRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/ia',
-  component: () => <Suspense fallback={<PageLoader />}><IAPage /></Suspense>
+  path: '/permutantes',
+  component: () => <Suspense fallback={<PageLoader />}><PermutantesPage /></Suspense>
 })
 
 const infraccionesRoute = createRoute({
@@ -238,7 +238,7 @@ const adminStatsRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   examRoute,
-  iaRoute,
+  permutantesRoute,
   infraccionesRoute,
   directorioRoute,
   temariosRoute,

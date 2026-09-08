@@ -1166,3 +1166,95 @@ export async function getAuditModules(): Promise<string[]> {
   if (error) throw new Error(error.message || 'Error al cargar modulos de auditoria')
   return (data || []).map((r: { module: string }) => r.module)
 }
+
+// ── Permutantes helpers ──
+
+export interface Permuta {
+  id: string
+  user_id: string
+  unidad_origen: string
+  unidad_destino: string
+  telefono: string
+  estado: 'DISPONIBLE' | 'NO_DISPONIBLE'
+  created_at: string
+  updated_at: string
+  user_name?: string
+  user_email?: string
+}
+
+export async function getPermutasDisponibles(): Promise<Permuta[]> {
+  const { data, error } = await supabase.rpc('get_permutas_disponibles')
+  if (error) return []
+  return (data || []) as Permuta[]
+}
+
+export async function getMyPermutas(): Promise<Permuta[]> {
+  const { data, error } = await supabase.rpc('get_my_permutas')
+  if (error) return []
+  return (data || []) as Permuta[]
+}
+
+export async function createPermuta(permuta: {
+  unidad_origen: string
+  unidad_destino: string
+  telefono: string
+}) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Usuario no autenticado')
+
+  // Verificar si ya tiene una permuta DISPONIBLE
+  const { data: existing } = await supabase
+    .from('permutantes')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('estado', 'DISPONIBLE')
+    .maybeSingle()
+
+  if (existing) {
+    throw new Error('Ya tienes una permuta activa. Edita la existente o bórrala primero.')
+  }
+
+  const { error } = await supabase
+    .from('permutantes')
+    .insert({
+      user_id: user.id,
+      ...permuta,
+      estado: 'DISPONIBLE'
+    })
+  if (error) throw error
+}
+
+export async function updatePermuta(id: string, updates: {
+  unidad_origen?: string
+  unidad_destino?: string
+  telefono?: string
+  estado?: 'DISPONIBLE' | 'NO_DISPONIBLE'
+}) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Usuario no autenticado')
+
+  const { error } = await supabase
+    .from('permutantes')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', user.id)
+  if (error) throw error
+}
+
+export async function deletePermuta(id: string) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Usuario no autenticado')
+
+  const { error } = await supabase
+    .from('permutantes')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', user.id)
+  if (error) throw error
+}
+
+export async function togglePermutaEstado(id: string, currentEstado: 'DISPONIBLE' | 'NO_DISPONIBLE') {
+  const newEstado = currentEstado === 'DISPONIBLE' ? 'NO_DISPONIBLE' : 'DISPONIBLE'
+  await updatePermuta(id, { estado: newEstado })
+  return newEstado
+}
