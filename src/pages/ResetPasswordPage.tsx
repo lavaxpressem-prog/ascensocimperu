@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
   Page,
@@ -11,6 +11,7 @@ import {
   toast
 } from '@blinkdotnew/ui'
 import { supabase, updatePassword } from '../lib/supabase'
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 export function ResetPasswordPage() {
   const navigate = useNavigate()
@@ -23,41 +24,56 @@ export function ResetPasswordPage() {
   const [tokenValid, setTokenValid] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const handledEvent = useRef(false)
 
   useEffect(() => {
-    const handleRecovery = async () => {
-      // Supabase handles the token via the URL hash fragment
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      const accessToken = hashParams.get('access_token')
-      const type = hashParams.get('type')
+    let mounted = true
 
-      if (type === 'recovery' && accessToken) {
-        // Set the session from the recovery token
-        const { error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: hashParams.get('refresh_token') || '',
-        })
-        if (error) {
-          setError('Token inválido o expirado')
-          setTokenValid(false)
-        } else {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent, session: Session | null) => {
+        if (!mounted || handledEvent.current) return
+
+        if (event === 'PASSWORD_RECOVERY') {
+          handledEvent.current = true
           setTokenValid(true)
           setError(null)
+          setIsVerifying(false)
+          return
         }
-      } else {
-        // Check if there's a hash with type=recovery (Supabase sends it this way)
-        if (window.location.hash.includes('type=recovery')) {
+
+        if (event === 'SIGNED_IN' && session) {
+          if (handledEvent.current) return
+          handledEvent.current = true
           setTokenValid(true)
           setError(null)
-        } else {
-          setError('Token no proporcionado o inválido')
-          setTokenValid(false)
+          setIsVerifying(false)
         }
       }
-      setIsVerifying(false)
-    }
+    )
 
-    handleRecovery()
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return
+
+      if (session) {
+        if (!handledEvent.current) {
+          handledEvent.current = true
+          setTokenValid(true)
+          setError(null)
+          setIsVerifying(false)
+        }
+      } else {
+        if (!handledEvent.current) {
+          setError('Enlace de recuperación no válido o expirado. Solicita uno nuevo.')
+          setTokenValid(false)
+          setIsVerifying(false)
+        }
+      }
+    })
+
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -115,7 +131,7 @@ export function ResetPasswordPage() {
     return (
       <Page>
         <PageHeader>
-          <PageTitle>Token Inválido</PageTitle>
+          <PageTitle>Enlace no válido</PageTitle>
         </PageHeader>
         <PageBody>
           <Card className="max-w-md mx-auto">

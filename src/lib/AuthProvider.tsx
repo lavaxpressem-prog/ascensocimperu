@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback, useRef, type ReactNode } from 'react'
-import type { User } from '@supabase/supabase-js'
+import type { User, AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { supabase, signIn, signUp, signOut, sendPasswordReset, getProfile, logAuditEvent, createUserSession, endUserSession } from './supabase'
 import type { Profile, AuthUser } from './types'
 
@@ -44,15 +44,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const u = session?.user ?? null
-      setUser(u)
-      if (u) {
-        fetchProfile(u.id)
-      } else {
-        setProfile(null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent, session: Session | null) => {
+        const u = session?.user ?? null
+        setUser(u)
+        if (u) {
+          fetchProfile(u.id)
+        } else {
+          setProfile(null)
+        }
       }
-    })
+    )
 
     return () => subscription.unsubscribe()
   }, [fetchProfile])
