@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   ChevronLeft,
+  ArrowRightLeft,
 } from 'lucide-react'
 import { useAuth } from '../lib/AuthProvider'
 import { useTheme } from '../lib/hooks/useTheme'
@@ -26,6 +27,7 @@ const ADMIN_NAV = [
   { href: '/admin/register', label: 'Registro', icon: UserPlus },
   { href: '/admin/questions', label: 'Banco de Preguntas', icon: FileText },
   { href: '/admin/news', label: 'Noticias', icon: Newspaper },
+  { href: '/admin/permutas', label: 'Permutas', icon: ArrowRightLeft },
   { href: '/admin/modules', label: 'Modulos', icon: Puzzle },
   { href: '/admin/files', label: 'Archivos', icon: FolderOpen },
   { href: '/admin/stats', label: 'Estadisticas', icon: BarChart3 },

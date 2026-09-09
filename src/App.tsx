@@ -32,6 +32,7 @@ const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage').t
 const AdminSecurityPage = lazy(() => import('./pages/admin/AdminSecurityPage').then(m => ({ default: m.AdminSecurityPage })))
 const AdminAuditPage = lazy(() => import('./pages/admin/AdminAuditPage').then(m => ({ default: m.AdminAuditPage })))
 const AdminStatsPage = lazy(() => import('./pages/admin/AdminStatsPage').then(m => ({ default: m.AdminStatsPage })))
+const AdminPermutasPage = lazy(() => import('./pages/admin/AdminPermutasPage').then(m => ({ default: m.AdminPermutasPage })))
 
 function PageLoader() {
   return (
@@ -235,6 +236,12 @@ const adminStatsRoute = createRoute({
   component: () => <Suspense fallback={<PageLoader />}><AdminStatsPage /></Suspense>
 })
 
+const adminPermutasRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin/permutas',
+  component: () => <Suspense fallback={<PageLoader />}><AdminPermutasPage /></Suspense>
+})
+
 const routeTree = rootRoute.addChildren([
   indexRoute,
   examRoute,
@@ -260,6 +267,7 @@ const routeTree = rootRoute.addChildren([
   adminSecurityRoute,
   adminAuditRoute,
   adminStatsRoute,
+  adminPermutasRoute,
 ])
 const router = createRouter({ routeTree })
 

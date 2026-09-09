@@ -1258,3 +1258,74 @@ export async function togglePermutaEstado(id: string, currentEstado: 'DISPONIBLE
   await updatePermuta(id, { estado: newEstado })
   return newEstado
 }
+
+// ── Permutantes Admin helpers ──
+
+export async function getAllPermutasForAdmin(params?: {
+  limit?: number
+  offset?: number
+  estado?: string
+  search?: string
+}): Promise<{ data: Permuta[]; count: number }> {
+  const limit = params?.limit ?? 20
+  const offset = params?.offset ?? 0
+
+  let query = supabase
+    .from('permutantes')
+    .select('*, profiles!inner(name, email)', { count: 'exact' })
+    .order('created_at', { ascending: false })
+
+  if (params?.estado && params.estado !== 'all') {
+    query = query.eq('estado', params.estado)
+  }
+
+  if (params?.search) {
+    const searchLower = params.search.toLowerCase()
+    query = query.or(`unidad_origen.ilike.%${searchLower}%,unidad_destino.ilike.%${searchLower}%,telefono.ilike.%${searchLower}%`)
+  }
+
+  query = query.range(offset, offset + limit - 1)
+
+  const { data, error, count } = await query
+  if (error) return { data: [], count: 0 }
+  return { data: (data || []) as unknown as Permuta[], count: count ?? 0 }
+}
+
+export async function getPermutasAdminStats(): Promise<{
+  total: number
+  disponibles: number
+  no_disponibles: number
+  recientes_7d: number
+} | null> {
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+
+  const [totalResult, disponiblesResult, noDisponiblesResult, recientesResult] = await Promise.all([
+    supabase.from('permutantes').select('id', { count: 'exact', head: true }),
+    supabase.from('permutantes').select('id', { count: 'exact', head: true }).eq('estado', 'DISPONIBLE'),
+    supabase.from('permutantes').select('id', { count: 'exact', head: true }).eq('estado', 'NO_DISPONIBLE'),
+    supabase.from('permutantes').select('id', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo),
+  ])
+
+  return {
+    total: totalResult.count ?? 0,
+    disponibles: disponiblesResult.count ?? 0,
+    no_disponibles: noDisponiblesResult.count ?? 0,
+    recientes_7d: recientesResult.count ?? 0,
+  }
+}
+
+export async function adminUpdatePermutaEstado(id: string, estado: 'DISPONIBLE' | 'NO_DISPONIBLE') {
+  const { error } = await supabase
+    .from('permutantes')
+    .update({ estado })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function adminDeletePermuta(id: string) {
+  const { error } = await supabase
+    .from('permutantes')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
+}
