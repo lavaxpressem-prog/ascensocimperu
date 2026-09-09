@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import {
   Page,
@@ -11,7 +11,6 @@ import {
   toast
 } from '@blinkdotnew/ui'
 import { supabase, updatePassword } from '../lib/supabase'
-import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 
 export function ResetPasswordPage() {
   const navigate = useNavigate()
@@ -24,55 +23,61 @@ export function ResetPasswordPage() {
   const [tokenValid, setTokenValid] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const handledEvent = useRef(false)
 
   useEffect(() => {
     let mounted = true
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event: AuthChangeEvent, session: Session | null) => {
-        if (!mounted || handledEvent.current) return
+    async function handleRecovery() {
+      try {
+        const urlParams = new URLSearchParams(window.location.search)
+        const code = urlParams.get('code')
 
-        if (event === 'PASSWORD_RECOVERY') {
-          handledEvent.current = true
-          setTokenValid(true)
-          setError(null)
-          setIsVerifying(false)
-          return
+        if (code) {
+          const { error: exchangeError } =
+            await supabase.auth.exchangeCodeForSession(code)
+
+          if (exchangeError) {
+            console.warn(
+              '[ResetPassword] exchangeCodeForSession error:',
+              exchangeError.message
+            )
+          } else {
+            window.history.replaceState({}, '', window.location.pathname)
+          }
         }
 
-        if (event === 'SIGNED_IN' && session) {
-          if (handledEvent.current) return
-          handledEvent.current = true
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (!mounted) return
+
+        if (session) {
           setTokenValid(true)
           setError(null)
-          setIsVerifying(false)
-        }
-      }
-    )
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return
-
-      if (session) {
-        if (!handledEvent.current) {
-          handledEvent.current = true
-          setTokenValid(true)
-          setError(null)
-          setIsVerifying(false)
-        }
-      } else {
-        if (!handledEvent.current) {
-          setError('Enlace de recuperación no válido o expirado. Solicita uno nuevo.')
+        } else {
+          setError(
+            'El enlace de recuperación no es válido o ha expirado. Solicita uno nuevo.'
+          )
           setTokenValid(false)
-          setIsVerifying(false)
         }
+      } catch (err) {
+        console.error('[ResetPassword] Unexpected error:', err)
+        if (mounted) {
+          setError(
+            'El enlace de recuperación no es válido o ha expirado. Solicita uno nuevo.'
+          )
+          setTokenValid(false)
+        }
+      } finally {
+        if (mounted) setIsVerifying(false)
       }
-    })
+    }
+
+    handleRecovery()
 
     return () => {
       mounted = false
-      subscription.unsubscribe()
     }
   }, [])
 
@@ -120,7 +125,7 @@ export function ResetPasswordPage() {
         </PageHeader>
         <PageBody>
           <Card className="max-w-md mx-auto">
-            <p className="text-center">Verificando token de recuperación...</p>
+            <p className="text-center">Verificando enlace de recuperación...</p>
           </Card>
         </PageBody>
       </Page>
@@ -163,7 +168,9 @@ export function ResetPasswordPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-2">Nueva Contraseña</label>
+              <label className="block text-sm font-medium mb-2">
+                Nueva Contraseña
+              </label>
               <div className="relative">
                 <input
                   type={showNewPassword ? 'text' : 'password'}
@@ -189,7 +196,9 @@ export function ResetPasswordPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Confirmar Contraseña</label>
+              <label className="block text-sm font-medium mb-2">
+                Confirmar Contraseña
+              </label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
