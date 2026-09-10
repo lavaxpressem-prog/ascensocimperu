@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { 
   Page, 
   PageHeader, 
@@ -22,7 +22,8 @@ import {
   Volume2,
   ChevronRight,
   ChevronLeft,
-  Target
+  Target,
+  RefreshCw
 } from 'lucide-react'
 import { getRandomQuestionsBatch, shuffleArray, recordStudySession, updateStudySession, recordExamResult, recordQuestionResponse, type Question } from '../lib/supabase'
 
@@ -30,6 +31,7 @@ export function ExamPage() {
   const [mockQuestions, setMockQuestions] = useState<Question[]>([])
   const [examQuestions, setExamQuestions] = useState<Question[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [isExamStarted, setIsExamStarted] = useState(false)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({})
@@ -40,14 +42,38 @@ export function ExamPage() {
   const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null)
   const [wrongQuestions, setWrongQuestions] = useState<Question[]>([])
   const [isReviewMode, setIsReviewMode] = useState(false)
+  const mountedRef = useRef(true)
 
-  useEffect(() => {
-    console.log('[ExamPage] Loading 100 random questions from Supabase...')
-    getRandomQuestionsBatch(100).then(qs => {
-      console.log('[ExamPage] Random questions loaded:', qs.length)
+  const loadQuestions = async () => {
+    setLoading(true)
+    setLoadError(null)
+    console.log('[ExamPage] Mounting - loading 100 random questions...')
+
+    try {
+      const qs = await getRandomQuestionsBatch(100)
+      if (!mountedRef.current) return
+
+      if (qs.length === 0) {
+        setLoadError('No se pudieron cargar las preguntas. Verifica tu conexion e intenta de nuevo.')
+        setLoading(false)
+        return
+      }
+
+      console.log(`[ExamPage] Loaded ${qs.length} unique questions (IDs: ${qs.map(q => q.id).join(', ')})`)
       setMockQuestions(qs)
       setLoading(false)
-    })
+    } catch (err) {
+      if (!mountedRef.current) return
+      console.error('[ExamPage] Error loading questions:', err)
+      setLoadError('Error al cargar las preguntas. Intenta de nuevo.')
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    mountedRef.current = true
+    loadQuestions()
+    return () => { mountedRef.current = false }
   }, [])
 
   useEffect(() => {
@@ -189,9 +215,19 @@ export function ExamPage() {
         </PageHeader>
         <PageBody className="flex flex-col items-center justify-center py-12">
           <Card className="max-w-md w-full text-center p-8 space-y-6">
-            <p className="text-muted-foreground">
-              {loading ? 'Cargando preguntas...' : 'No hay preguntas disponibles'}
-            </p>
+            {loadError ? (
+              <>
+                <p className="text-destructive font-medium">{loadError}</p>
+                <Button onClick={loadQuestions} variant="outline">
+                  <RefreshCw size={16} className="mr-2" /> Reintentar
+                </Button>
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-3">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                <p className="text-muted-foreground">Cargando 100 preguntas aleatorias...</p>
+              </div>
+            )}
           </Card>
         </PageBody>
       </Page>
@@ -228,6 +264,9 @@ export function ExamPage() {
             </div>
             <Button size="lg" className="w-full" onClick={handleStart}>
               Comenzar Examen
+            </Button>
+            <Button size="sm" variant="ghost" className="w-full" onClick={loadQuestions}>
+              <RefreshCw size={14} className="mr-2" /> Obtener otras 100 preguntas
             </Button>
           </Card>
         </PageBody>
@@ -295,7 +334,7 @@ export function ExamPage() {
             </Card>
 
             <div className="flex gap-4">
-              <Button variant="outline" className="flex-1" onClick={() => setIsExamStarted(false)}>
+              <Button variant="outline" className="flex-1" onClick={() => { setIsExamStarted(false); loadQuestions() }}>
                 Volver al Inicio
               </Button>
               <Button className="flex-1" onClick={handleStart}>

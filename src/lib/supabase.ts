@@ -467,18 +467,63 @@ export async function getRandomQuestions(count: number): Promise<Question[]> {
 }
 
 // ── Random questions via RPC (efficient server-side selection) ──
+// Selecciona N preguntas aleatorias directamente en PostgreSQL.
+// Si la RPC falla (funcion no existe, error de permisos, etc.),
+// usa un fallback client-side que carga todas las preguntas y
+// selecciona N aleatoriamente con Fisher-Yates.
 
 export async function getRandomQuestionsBatch(count: number = 100): Promise<Question[]> {
-  const { data, error } = await supabase.rpc('get_random_questions', { count })
-  if (error) {
-    console.error('[getRandomQuestionsBatch] RPC error:', JSON.stringify(error, null, 2))
+  try {
+    const { data, error } = await supabase.rpc('get_random_questions', { count })
+
+    if (error) {
+      console.warn('[getRandomQuestionsBatch] RPC error, using fallback:', error.message || JSON.stringify(error))
+      return await fallbackRandomQuestions(count)
+    }
+
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      console.warn('[getRandomQuestionsBatch] RPC returned empty, using fallback')
+      return await fallbackRandomQuestions(count)
+    }
+
+    // Validar unicidad de IDs
+    const ids = data.map((r: QuestionRow) => r.id)
+    const uniqueIds = new Set(ids)
+    if (uniqueIds.size !== ids.length) {
+      console.warn(`[getRandomQuestionsBatch] Duplicate IDs detected (${ids.length} total, ${uniqueIds.size} unique). Retrying...`)
+      return await getRandomQuestionsBatch(count)
+    }
+
+    console.log(`[getRandomQuestionsBatch] RPC success: ${data.length} unique questions`)
+    return (data as QuestionRow[]).map(rowToQuestion)
+  } catch (err) {
+    console.warn('[getRandomQuestionsBatch] Unexpected error, using fallback:', err)
+    return await fallbackRandomQuestions(count)
+  }
+}
+
+// Fallback: si la RPC no existe o falla, descarga todas las preguntas
+// y selecciona N aleatoriamente en el cliente. Menos eficiente pero
+// garantiza que el usuario siempre reciba preguntas.
+async function fallbackRandomQuestions(count: number): Promise<Question[]> {
+  console.log('[fallbackRandomQuestions] Loading all questions for client-side selection...')
+  const allRows = await fetchAllPreguntas()
+
+  if (allRows.length === 0) {
+    console.error('[fallbackRandomQuestions] No questions found in database')
     return []
   }
-  if (!data || data.length === 0) {
-    console.warn('[getRandomQuestionsBatch] No data returned from RPC')
-    return []
+
+  // Fisher-Yates shuffle para seleccion real
+  const shuffled = [...allRows]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
   }
-  return (data as QuestionRow[]).map(rowToQuestion)
+
+  const selected = shuffled.slice(0, Math.min(count, shuffled.length))
+  console.log(`[fallbackRandomQuestions] Selected ${selected.length} questions from ${allRows.length} total`)
+  return selected.map(rowToQuestion)
 }
 
 // ── Fisher-Yates shuffle ──
