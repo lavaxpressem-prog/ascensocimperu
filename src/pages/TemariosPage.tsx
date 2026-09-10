@@ -16,6 +16,15 @@ interface Noticia {
   estado: string | null
   fecha_publicacion: string
   pdf_url: string | null
+  google_drive_file_id: string | null
+  google_drive_view_url: string | null
+  google_drive_download_url: string | null
+  pdf_name: string | null
+  pdf_size: number | null
+  is_pdf_public: boolean
+  status: string
+  published_at: string | null
+  summary: string | null
 }
 
 const CATEGORIAS = ['Todas', 'Leyes', 'Resoluciones', 'Decretos', 'Directivas', 'Comunicados', 'Ascensos', 'MININTER', 'PNP']
@@ -132,7 +141,13 @@ export function TemariosPage() {
       .select('*')
       .order('fecha_publicacion', { ascending: false })
       .then(({ data, error }) => {
-        if (!error && data) setNoticias(data)
+        if (!error && data) {
+          // Filter published: use status if available, fallback to is_published
+          const published = data.filter((n: any) =>
+            n.status === 'published' || (n.status === undefined && n.is_published !== false)
+          )
+          setNoticias(published)
+        }
         setLoading(false)
       })
   }, [])
@@ -165,8 +180,9 @@ export function TemariosPage() {
   }, [])
 
   const handleLeer = useCallback((noticia: Noticia) => {
-    if (noticia.pdf_url) {
-      setPdfViewerUrl(noticia.pdf_url)
+    const pdfUrl = noticia.google_drive_view_url || noticia.pdf_url
+    if (pdfUrl && noticia.is_pdf_public) {
+      setPdfViewerUrl(pdfUrl)
       setPdfViewerTitle(noticia.titulo)
     } else {
       setSelectedNoticia(noticia)
@@ -183,21 +199,22 @@ export function TemariosPage() {
   }, [])
 
   const handleDownloadPdf = useCallback(async (noticia: Noticia) => {
-    if (!noticia.pdf_url) return
+    const downloadUrl = noticia.google_drive_download_url || noticia.pdf_url
+    if (!downloadUrl) return
     try {
-      const response = await fetch(noticia.pdf_url)
+      const response = await fetch(downloadUrl)
       if (!response.ok) throw new Error('Error al descargar')
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${noticia.titulo.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
+      a.download = noticia.pdf_name || `${noticia.titulo.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch {
-      window.open(noticia.pdf_url, '_blank')
+      window.open(downloadUrl, '_blank')
     }
   }, [])
 
@@ -381,11 +398,12 @@ export function TemariosPage() {
                     </div>
                     <div className="p-5 space-y-3">
                       <h3 className="font-bold text-white text-[15px] leading-snug line-clamp-2">{noticia.titulo}</h3>
-                      <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">{noticia.descripcion}</p>
+                      {noticia.summary && <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">{noticia.summary}</p>}
+                      {noticia.descripcion && <p className="text-gray-400 text-sm leading-relaxed line-clamp-2">{noticia.descripcion}</p>}
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-xs text-gray-500">
                           <Calendar size={13} />
-                          {formatDate(noticia.fecha_publicacion)}
+                          {formatDate(noticia.published_at || noticia.fecha_publicacion)}
                         </div>
                         {estColor && (
                           <span className={`${estColor} text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full`}>
@@ -402,9 +420,17 @@ export function TemariosPage() {
                           <BookOpen size={14} />
                           Leer
                         </button>
-                        {noticia.pdf_url ? (
+                        {(noticia.google_drive_view_url || noticia.pdf_url) ? (
                           <button
-                            onClick={() => handleDownloadPdf(noticia)}
+                            onClick={() => {
+                              const url = noticia.google_drive_view_url || noticia.pdf_url
+                              if (url && noticia.is_pdf_public) {
+                                setPdfViewerUrl(url)
+                                setPdfViewerTitle(noticia.titulo)
+                              } else if (url) {
+                                window.open(url, '_blank')
+                              }
+                            }}
                             className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-yellow-400 transition-colors"
                           >
                             <Download size={14} />
@@ -687,7 +713,7 @@ export function TemariosPage() {
             <div className="overflow-y-auto p-5 space-y-4 flex-1">
               <div className="flex items-center gap-3 text-sm text-gray-400">
                 <Calendar size={14} />
-                <span>{formatDate(selectedNoticia.fecha_publicacion)}</span>
+                <span>{formatDate(selectedNoticia.published_at || selectedNoticia.fecha_publicacion)}</span>
                 {selectedNoticia.estado && (
                   <span className={`${estadoColorMap[selectedNoticia.estado] || 'bg-gray-500'} text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full`}>
                     {selectedNoticia.estado}
@@ -695,9 +721,26 @@ export function TemariosPage() {
                 )}
               </div>
               <p className="text-xs text-gray-500">Fuente: {selectedNoticia.fuente}</p>
-              <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{selectedNoticia.descripcion}</p>
+              {selectedNoticia.summary && (
+                <p className="text-gray-300 text-sm leading-relaxed font-medium">{selectedNoticia.summary}</p>
+              )}
+              {selectedNoticia.descripcion && (
+                <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{selectedNoticia.descripcion}</p>
+              )}
             </div>
             <div className="flex items-center gap-3 p-5 border-t border-gray-700/30">
+              {(selectedNoticia.google_drive_view_url || selectedNoticia.pdf_url) && (
+                <button
+                  onClick={() => {
+                    const url = selectedNoticia.google_drive_view_url || selectedNoticia.pdf_url
+                    if (url) window.open(url, '_blank')
+                  }}
+                  className="flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-black font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+                >
+                  <FileText size={14} />
+                  Ver PDF
+                </button>
+              )}
               <button
                 onClick={() => handleShare(selectedNoticia)}
                 className="flex items-center gap-2 border border-white/30 hover:border-white/50 text-white px-4 py-2 rounded-lg text-sm transition-colors"

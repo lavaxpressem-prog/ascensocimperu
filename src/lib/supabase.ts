@@ -620,7 +620,7 @@ export async function getAdminStats(): Promise<AdminStats | null> {
 
     const [questionsResult, noticiasResult, filesResult, activityResult] = await Promise.all([
       supabase.from('preguntas').select('*', { count: 'exact', head: true }),
-      supabase.from('noticias').select('is_published'),
+      supabase.from('noticias').select('status, is_published'),
       supabase.from('uploaded_files').select('*', { count: 'exact', head: true }),
       supabase.from('activity_logs').select('*', { count: 'exact', head: true })
         .gt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
@@ -629,7 +629,7 @@ export async function getAdminStats(): Promise<AdminStats | null> {
     const total_questions = questionsResult.count ?? 0
     const all_noticias = noticiasResult.data ?? []
     const total_noticias = all_noticias.length
-    const published_noticias = all_noticias.filter(n => n.is_published).length
+    const published_noticias = all_noticias.filter(n => n.status === 'published' || (n.status === undefined && n.is_published)).length
     const total_files = filesResult.count ?? 0
     const recent_activity = activityResult.count ?? 0
 
@@ -809,6 +809,51 @@ export interface Noticia {
   is_published: boolean
   autor: string | null
   created_at: string
+  google_drive_file_id: string | null
+  google_drive_view_url: string | null
+  google_drive_download_url: string | null
+  pdf_name: string | null
+  pdf_mime_type: string | null
+  pdf_size: number | null
+  uploaded_by: string | null
+  sort_order: number
+  status: string
+  is_pdf_public: boolean
+  published_at: string | null
+  updated_at: string | null
+  summary: string | null
+}
+
+export interface NewsCreatePayload {
+  titulo: string
+  descripcion: string
+  categoria: string
+  fuente: string
+  estado?: string
+  fecha_publicacion?: string
+  pdf_url?: string
+  imagen_url?: string
+  is_published?: boolean
+  autor?: string
+  summary?: string
+}
+
+export interface NewsUpdatePayload {
+  titulo?: string
+  descripcion?: string
+  categoria?: string
+  fuente?: string
+  estado?: string
+  fecha_publicacion?: string
+  pdf_url?: string
+  imagen_url?: string
+  is_published?: boolean
+  autor?: string
+  summary?: string
+  status?: string
+  is_pdf_public?: boolean
+  sort_order?: number
+  published_at?: string
 }
 
 export async function getNoticias(): Promise<Noticia[]> {
@@ -820,25 +865,60 @@ export async function getNoticias(): Promise<Noticia[]> {
   return data as Noticia[]
 }
 
-export async function createNoticia(noticia: {
-  titulo: string
-  descripcion: string
-  categoria: string
-  fuente: string
-  estado?: string
-  fecha_publicacion?: string
-  pdf_url?: string
-  imagen_url?: string
-  is_published?: boolean
-  autor?: string
-}) {
+export async function getPublishedNoticias(): Promise<Noticia[]> {
+  const { data, error } = await supabase
+    .from('noticias')
+    .select('*')
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+  if (error) return []
+  return data as Noticia[]
+}
+
+export async function getNoticiasAdmin(params?: {
+  limit?: number
+  offset?: number
+  status?: string
+  category?: string
+  search?: string
+}): Promise<{ data: Noticia[]; count: number }> {
+  const limit = params?.limit ?? 20
+  const offset = params?.offset ?? 0
+
+  let query = supabase
+    .from('noticias')
+    .select('*', { count: 'exact' })
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (params?.status && params.status !== 'all') {
+    query = query.eq('status', params.status)
+  }
+
+  if (params?.category && params.category !== 'all') {
+    query = query.eq('categoria', params.category)
+  }
+
+  if (params?.search) {
+    const s = params.search.toLowerCase()
+    query = query.or(`titulo.ilike.%${s}%,descripcion.ilike.%${s}%,summary.ilike.%${s}%`)
+  }
+
+  query = query.range(offset, offset + limit - 1)
+
+  const { data, error, count } = await query
+  if (error) return { data: [], count: 0 }
+  return { data: (data || []) as Noticia[], count: count ?? 0 }
+}
+
+export async function createNoticia(noticia: NewsCreatePayload) {
   const { error } = await supabase
     .from('noticias')
     .insert(noticia)
   if (error) throw error
 }
 
-export async function updateNoticia(id: string, updates: Record<string, unknown>) {
+export async function updateNoticia(id: string, updates: NewsUpdatePayload) {
   const { error } = await supabase
     .from('noticias')
     .update(updates)
@@ -852,6 +932,16 @@ export async function deleteNoticia(id: string) {
     .delete()
     .eq('id', id)
   if (error) throw error
+}
+
+export async function getNoticiaById(id: string): Promise<Noticia | null> {
+  const { data, error } = await supabase
+    .from('noticias')
+    .select('*')
+    .eq('id', id)
+    .single()
+  if (error) return null
+  return data as Noticia
 }
 
 // ── Noticias Guardadas helpers ──
