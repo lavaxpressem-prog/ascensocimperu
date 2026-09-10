@@ -466,6 +466,21 @@ export async function getRandomQuestions(count: number): Promise<Question[]> {
   return shuffled.slice(0, count).map(rowToQuestion)
 }
 
+// ── Random questions via RPC (efficient server-side selection) ──
+
+export async function getRandomQuestionsBatch(count: number = 100): Promise<Question[]> {
+  const { data, error } = await supabase.rpc('get_random_questions', { count })
+  if (error) {
+    console.error('[getRandomQuestionsBatch] RPC error:', JSON.stringify(error, null, 2))
+    return []
+  }
+  if (!data || data.length === 0) {
+    console.warn('[getRandomQuestionsBatch] No data returned from RPC')
+    return []
+  }
+  return (data as QuestionRow[]).map(rowToQuestion)
+}
+
 // ── Fisher-Yates shuffle ──
 
 export function shuffleArray<T>(array: T[]): T[] {

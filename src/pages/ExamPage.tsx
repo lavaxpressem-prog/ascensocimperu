@@ -24,7 +24,7 @@ import {
   ChevronLeft,
   Target
 } from 'lucide-react'
-import { getQuestionsBatch, shuffleArray, recordStudySession, updateStudySession, recordExamResult, recordQuestionResponse, type Question } from '../lib/supabase'
+import { getRandomQuestionsBatch, shuffleArray, recordStudySession, updateStudySession, recordExamResult, recordQuestionResponse, type Question } from '../lib/supabase'
 
 export function ExamPage() {
   const [mockQuestions, setMockQuestions] = useState<Question[]>([])
@@ -42,9 +42,9 @@ export function ExamPage() {
   const [isReviewMode, setIsReviewMode] = useState(false)
 
   useEffect(() => {
-    console.log('[ExamPage] Loading questions from Supabase...')
-    getQuestionsBatch().then(qs => {
-      console.log('[ExamPage] Questions loaded:', qs.length)
+    console.log('[ExamPage] Loading 100 random questions from Supabase...')
+    getRandomQuestionsBatch(100).then(qs => {
+      console.log('[ExamPage] Random questions loaded:', qs.length)
       setMockQuestions(qs)
       setLoading(false)
     })
@@ -213,13 +213,13 @@ export function ExamPage() {
             <div className="space-y-2">
               <h3 className="text-2xl font-bold">¿Listo para el simulacro?</h3>
               <p className="text-muted-foreground">
-                Este simulacro consta de {mockQuestions.length} preguntas y tienes 60 minutos para completarlo.
+                Este simulacro consta de 100 preguntas seleccionadas aleatoriamente y tienes 60 minutos para completarlo.
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="p-3 bg-secondary rounded-lg">
                 <div className="text-muted-foreground">Preguntas</div>
-                <div className="font-bold text-lg">{mockQuestions.length}</div>
+                <div className="font-bold text-lg">100</div>
               </div>
               <div className="p-3 bg-secondary rounded-lg">
                 <div className="text-muted-foreground">Tiempo</div>
