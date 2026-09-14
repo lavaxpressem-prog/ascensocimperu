@@ -4,34 +4,15 @@ import {
   ChevronDown, Clock, Send, TrendingUp, RefreshCw, ChevronLeft, ChevronRight,
   Newspaper, ArrowRight, Eye, FileText, X, Check
 } from 'lucide-react'
-import { supabase, getSavedNoticiaIds, toggleSaveNoticia } from '../lib/supabase'
+import { supabase, getSavedNoticiaIds, toggleSaveNoticia, type Noticia } from '../lib/supabase'
 import { PdfViewerModal } from '../components/PdfViewerModal'
-
-interface Noticia {
-  id: string
-  titulo: string
-  descripcion: string
-  categoria: string
-  fuente: string
-  estado: string | null
-  fecha_publicacion: string
-  pdf_url: string | null
-  google_drive_file_id: string | null
-  google_drive_view_url: string | null
-  google_drive_download_url: string | null
-  pdf_name: string | null
-  pdf_size: number | null
-  is_pdf_public: boolean
-  status: string
-  published_at: string | null
-  summary: string | null
-}
 
 const CATEGORIAS = ['Todas', 'Leyes', 'Resoluciones', 'Decretos', 'Directivas', 'Comunicados', 'Ascensos', 'MININTER', 'PNP']
 
 const categoriaColorMap: Record<string, string> = {
   'Ley': 'bg-blue-500',
   'Resolución': 'bg-emerald-500',
+  'Resolucion': 'bg-emerald-500',
   'Decreto': 'bg-orange-500',
   'Directiva': 'bg-purple-500',
   'Comunicado': 'bg-cyan-500',
@@ -47,6 +28,7 @@ const estadoColorMap: Record<string, string> = {
 const categoriaToImagenMap: Record<string, string> = {
   'Ley': 'ley',
   'Resolución': 'resolucion',
+  'Resolucion': 'resolucion',
   'Decreto': 'decreto',
   'Directiva': 'directiva',
 }
@@ -142,9 +124,8 @@ export function TemariosPage() {
       .order('fecha_publicacion', { ascending: false })
       .then(({ data, error }) => {
         if (!error && data) {
-          // Filter published: use status if available, fallback to is_published
-          const published = data.filter((n: any) =>
-            n.status === 'published' || (n.status === undefined && n.is_published !== false)
+          const published = data.filter((n: Noticia) =>
+            n.status === 'published' || (!n.status && n.is_published !== false)
           )
           setNoticias(published)
         }
@@ -259,9 +240,12 @@ export function TemariosPage() {
   }, [userId, showNotification])
 
   const filteredNoticias = noticias.filter((n) => {
+    const targetCat = categoriaFilterMap[categoriaActiva] ?? categoriaActiva
+    const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
     const matchCat =
       categoriaActiva === 'Todas' ||
-      n.categoria === (categoriaFilterMap[categoriaActiva] ?? categoriaActiva) ||
+      n.categoria === targetCat ||
+      normalize(n.categoria) === normalize(targetCat) ||
       n.fuente === categoriaActiva
     const matchSearch =
       !busqueda ||

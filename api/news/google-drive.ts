@@ -93,32 +93,6 @@ export async function replacePdfOnDrive(
   return result
 }
 
-export function validatePdfFile(file: File | null | undefined): { valid: boolean; error?: string } {
-  if (!file) {
-    return { valid: false, error: 'No se ha proporcionado un archivo' }
-  }
-
-  if (file.type !== 'application/pdf') {
-    return { valid: false, error: 'El archivo debe ser un PDF' }
-  }
-
-  if (!file.name.toLowerCase().endsWith('.pdf')) {
-    return { valid: false, error: 'La extensión del archivo debe ser .pdf' }
-  }
-
-  const maxSize = getMaxPdfSizeBytes()
-  if (file.size > maxSize) {
-    const maxSizeMb = MAX_NEWS_PDF_SIZE_MB
-    return { valid: false, error: `El archivo PDF supera el tamaño máximo permitido de ${maxSizeMb}MB` }
-  }
-
-  if (file.size === 0) {
-    return { valid: false, error: 'El archivo está vacío' }
-  }
-
-  return { valid: true }
-}
-
 export function generatePdfFileName(originalName: string): string {
   const timestamp = new Date().toISOString().split('T')[0]
   const uuid = crypto.randomUUID().split('-')[0]

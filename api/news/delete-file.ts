@@ -56,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === 'archive') {
       const { error: updateError } = await serviceClient
         .from('noticias')
-        .update({ status: 'archived', is_published: false })
+        .update({ status: 'archived', is_published: false, updated_at: new Date().toISOString() })
         .eq('id', newsId)
 
       if (updateError) {
@@ -69,7 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === 'unarchive') {
       const { error: updateError } = await serviceClient
         .from('noticias')
-        .update({ status: 'draft' })
+        .update({ status: 'draft', updated_at: new Date().toISOString() })
         .eq('id', newsId)
 
       if (updateError) {
@@ -102,6 +102,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .update({
           status: 'draft',
           is_published: false,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', newsId)
 
@@ -130,6 +131,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           pdf_name: null,
           pdf_mime_type: null,
           pdf_size: null,
+          updated_at: new Date().toISOString(),
         })
         .eq('id', newsId)
 

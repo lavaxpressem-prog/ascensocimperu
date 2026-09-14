@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAdmin, getServiceClient } from './auth'
-import { uploadPdfToDrive, generatePdfFileName, getMaxPdfSizeBytes } from './google-drive'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

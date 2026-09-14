@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Page, PageHeader, PageTitle, PageDescription, PageBody, Card, Button, toast } from '@blinkdotnew/ui'
-import { Newspaper, Plus, Trash2, Edit, Eye, EyeOff, Upload, Loader2, Archive, ArchiveRestore, Search, Filter, FileText, ExternalLink, Download, X, ChevronLeft, ChevronRight, ArrowUpDown, Globe, Lock } from 'lucide-react'
-import { supabase, getNoticiasAdmin, updateNoticia, deleteNoticia, logAdminAction, type Noticia } from '../../lib/supabase'
+import { Newspaper, Plus, Trash2, Edit, Eye, EyeOff, Upload, Loader2, Archive, ArchiveRestore, Search, FileText, ExternalLink, Download, X, ChevronLeft, ChevronRight, Globe, Lock } from 'lucide-react'
+import { supabase, getNoticiasAdmin, logAdminAction, type Noticia } from '../../lib/supabase'
 
 type NewsStatus = 'all' | 'draft' | 'published' | 'archived'
 type NewsCategory = 'all' | 'Ley' | 'Resolucion' | 'Decreto' | 'Directiva' | 'Noticia'
 
 const CATEGORIES: NewsCategory[] = ['all', 'Ley', 'Resolucion', 'Decreto', 'Directiva', 'Noticia']
 const STATUS_LABELS: Record<NewsStatus, string> = { all: 'Todos', draft: 'Borrador', published: 'Publicada', archived: 'Archivada' }
+const MAX_PDF_SIZE_MB = 20
+const MAX_PDF_SIZE_BYTES = MAX_PDF_SIZE_MB * 1024 * 1024
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B'
@@ -33,6 +35,7 @@ interface FormData {
   categoria: string
   autor: string
   is_pdf_public: boolean
+  status: 'draft' | 'published'
 }
 
 const defaultForm: FormData = {
@@ -42,6 +45,7 @@ const defaultForm: FormData = {
   categoria: 'Ley',
   autor: '',
   is_pdf_public: false,
+  status: 'draft',
 }
 
 export function AdminNewsPage() {
@@ -111,6 +115,7 @@ export function AdminNewsPage() {
           content: form.descripcion,
           category: form.categoria,
           is_pdf_public: form.is_pdf_public,
+          status: form.status,
         }
 
         const res = await fetch('/api/news/update', {
@@ -136,7 +141,7 @@ export function AdminNewsPage() {
         }
       }
       resetForm()
-      fetchNoticias()
+      await fetchNoticias()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al guardar'
       toast.error(message)
@@ -157,7 +162,7 @@ export function AdminNewsPage() {
     formData.append('summary', form.summary)
     formData.append('content', form.descripcion)
     formData.append('category', form.categoria)
-    formData.append('status', 'draft')
+    formData.append('status', form.status)
     formData.append('is_pdf_public', String(form.is_pdf_public))
 
     const fakeProgress = setInterval(() => {
@@ -193,7 +198,7 @@ export function AdminNewsPage() {
         summary: form.summary,
         content: form.descripcion,
         category: form.categoria,
-        status: 'draft',
+        status: form.status,
         is_pdf_public: form.is_pdf_public,
       }),
     })
@@ -268,6 +273,7 @@ export function AdminNewsPage() {
       categoria: n.categoria,
       autor: n.autor || '',
       is_pdf_public: n.is_pdf_public || false,
+      status: (n.status as 'draft' | 'published') || 'draft',
     })
     setPdfFile(null)
     setShowForm(true)
@@ -371,7 +377,7 @@ export function AdminNewsPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-muted-foreground mb-1">Categoria</label>
                       <select
@@ -384,6 +390,17 @@ export function AdminNewsPage() {
                         <option>Decreto</option>
                         <option>Directiva</option>
                         <option>Noticia</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-1">Estado</label>
+                      <select
+                        value={form.status}
+                        onChange={e => setForm({ ...form, status: e.target.value as 'draft' | 'published' })}
+                        className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground"
+                      >
+                        <option value="draft">Borrador</option>
+                        <option value="published">Publicada</option>
                       </select>
                     </div>
                     <div>
@@ -437,9 +454,8 @@ export function AdminNewsPage() {
                                 toast.error('El archivo debe ser un PDF')
                                 return
                               }
-                              const maxSize = 20 * 1024 * 1024
-                              if (file.size > maxSize) {
-                                toast.error('El archivo PDF supera el tamaño máximo permitido de 20MB')
+                              if (file.size > MAX_PDF_SIZE_BYTES) {
+                                toast.error(`El archivo PDF supera el tamaño máximo permitido de ${MAX_PDF_SIZE_MB}MB`)
                                 return
                               }
                               setPdfFile(file)

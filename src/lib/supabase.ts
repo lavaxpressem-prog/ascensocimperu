@@ -956,7 +956,7 @@ export async function getNoticiasAdmin(params?: {
   }
 
   if (params?.category && params.category !== 'all') {
-    query = query.eq('categoria', params.category)
+    query = query.ilike('categoria', params.category)
   }
 
   if (params?.search) {

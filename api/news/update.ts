@@ -26,11 +26,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (is_pdf_public !== undefined) updates.is_pdf_public = is_pdf_public
     if (sort_order !== undefined) updates.sort_order = sort_order
 
+    updates.updated_at = new Date().toISOString()
+
     if (status !== undefined) {
       updates.status = status
       updates.is_published = status === 'published'
       if (status === 'published') {
-        updates.published_at = new Date().toISOString()
+        const { data: existing } = await serviceClient
+          .from('noticias')
+          .select('published_at')
+          .eq('id', newsId)
+          .single()
+        if (!existing?.published_at) {
+          updates.published_at = new Date().toISOString()
+        }
       }
     }
 

@@ -84,6 +84,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         pdf_name: pdfFile.originalFilename || 'noticia.pdf',
         pdf_mime_type: mimeType,
         pdf_size: pdfFile.size,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', newsId)
 
