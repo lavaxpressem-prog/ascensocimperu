@@ -77,7 +77,8 @@ export function AdminNewsPage() {
       })
       setNoticias(result.data)
       setTotalCount(result.count)
-    } catch {
+    } catch (err: unknown) {
+      console.error('[AdminNews] Error cargando noticias:', err)
       toast.error('Error al cargar noticias')
     } finally {
       setLoading(false)
@@ -92,7 +93,6 @@ export function AdminNewsPage() {
     setForm(defaultForm)
     setPdfFile(null)
     setEditId(null)
-    setShowForm(false)
   }
 
   const handleSubmit = async () => {
@@ -141,6 +141,7 @@ export function AdminNewsPage() {
         }
       }
       resetForm()
+      setShowForm(false)
       await fetchNoticias()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Error al guardar'
@@ -302,7 +303,15 @@ export function AdminNewsPage() {
           <>
             {/* Toolbar */}
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-              <Button className="bg-primary hover:bg-primary/90 text-white" onClick={() => { setShowForm(!showForm); setEditId(null); resetForm() }}>
+              <Button className="bg-primary hover:bg-primary/90 text-white" onClick={() => {
+                if (showForm) {
+                  resetForm()
+                  setShowForm(false)
+                } else {
+                  resetForm()
+                  setShowForm(true)
+                }
+              }}>
                 <Plus size={16} className="mr-2" />
                 {showForm ? 'Cancelar' : 'Nueva Noticia'}
               </Button>
@@ -499,7 +508,7 @@ export function AdminNewsPage() {
                       {uploading ? <Loader2 size={16} className="mr-2 animate-spin" /> : null}
                       {editId ? 'Actualizar' : 'Crear Noticia'}
                     </Button>
-                    <Button className="bg-secondary hover:bg-secondary/80" onClick={resetForm}>
+                    <Button className="bg-secondary hover:bg-secondary/80" onClick={() => { resetForm(); setShowForm(false) }}>
                       Cancelar
                     </Button>
                   </div>

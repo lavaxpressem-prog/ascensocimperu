@@ -948,7 +948,6 @@ export async function getNoticiasAdmin(params?: {
   let query = supabase
     .from('noticias')
     .select('*', { count: 'exact' })
-    .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false })
 
   if (params?.status && params.status !== 'all') {
@@ -961,13 +960,21 @@ export async function getNoticiasAdmin(params?: {
 
   if (params?.search) {
     const s = params.search.toLowerCase()
-    query = query.or(`titulo.ilike.%${s}%,descripcion.ilike.%${s}%,summary.ilike.%${s}%`)
+    query = query.or(`titulo.ilike.%${s}%,descripcion.ilike.%${s}%`)
   }
 
   query = query.range(offset, offset + limit - 1)
 
   const { data, error, count } = await query
-  if (error) return { data: [], count: 0 }
+  if (error) {
+    console.error('[AdminNews] Error cargando noticias:', {
+      code: error?.code,
+      message: error?.message,
+      details: error?.details,
+      hint: error?.hint
+    })
+    return { data: [], count: 0 }
+  }
   return { data: (data || []) as Noticia[], count: count ?? 0 }
 }
 
