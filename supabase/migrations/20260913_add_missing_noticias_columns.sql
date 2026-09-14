@@ -1,144 +1,217 @@
 -- ============================================================
--- Migration: Add missing columns to noticias table
--- Required by the admin panel CRUD and Google Drive integration
+-- MIGRATION: COMPLETAR TABLA noticias
+-- Admin CRUD + Google Drive
 -- ============================================================
 
--- summary (resumen de la noticia)
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS summary TEXT;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
--- status (draft, published, archived)
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft';
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
--- published_at (fecha/hora de publicacion)
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
--- updated_at (ultima actualizacion)
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
--- is_pdf_public (si el PDF es accesible publicamente)
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS is_pdf_public BOOLEAN DEFAULT false;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
--- sort_order (orden de visualizacion)
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
--- uploaded_by (UUID del admin que subio la noticia)
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS uploaded_by UUID;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
--- Google Drive integration columns
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS google_drive_file_id TEXT;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS google_drive_view_url TEXT;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS google_drive_download_url TEXT;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS pdf_name TEXT;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS pdf_mime_type TEXT;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
-DO $$ BEGIN
-  ALTER TABLE public.noticias ADD COLUMN IF NOT EXISTS pdf_size BIGINT;
-EXCEPTION WHEN duplicate_column THEN NULL;
-END $$;
-
--- Set default status for existing rows that have NULL status
-UPDATE public.noticias SET status = 'draft' WHERE status IS NULL;
-
--- Ensure is_published is consistent with status
-UPDATE public.noticias SET is_published = true WHERE status = 'published';
-UPDATE public.noticias SET is_published = false WHERE status != 'published' OR is_published IS NULL;
+BEGIN;
 
 -- ============================================================
--- RLS Policies: Only admins can modify noticias
+-- 1. COLUMNAS DEL ADMIN
 -- ============================================================
 
--- Drop overly permissive policies
-DROP POLICY IF EXISTS "Allow authenticated insert noticias" ON public.noticias;
-DROP POLICY IF EXISTS "Allow authenticated update noticias" ON public.noticias;
-DROP POLICY IF EXISTS "Allow authenticated delete noticias" ON public.noticias;
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS summary TEXT;
 
--- Admin-only policies using a helper function
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft';
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS published_at TIMESTAMPTZ;
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS is_pdf_public BOOLEAN DEFAULT false;
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS uploaded_by UUID;
+
+-- ============================================================
+-- 2. GOOGLE DRIVE
+-- ============================================================
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS google_drive_file_id TEXT;
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS google_drive_view_url TEXT;
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS google_drive_download_url TEXT;
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS pdf_name TEXT;
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS pdf_mime_type TEXT;
+
+ALTER TABLE public.noticias
+ADD COLUMN IF NOT EXISTS pdf_size BIGINT;
+
+-- ============================================================
+-- 3. VALORES POR DEFECTO
+-- ============================================================
+
+UPDATE public.noticias
+SET status = 'draft'
+WHERE status IS NULL;
+
+UPDATE public.noticias
+SET is_pdf_public = false
+WHERE is_pdf_public IS NULL;
+
+UPDATE public.noticias
+SET sort_order = 0
+WHERE sort_order IS NULL;
+
+-- ============================================================
+-- 4. VALIDAR STATUS
+-- ============================================================
+
+ALTER TABLE public.noticias
+DROP CONSTRAINT IF EXISTS noticias_status_check;
+
+ALTER TABLE public.noticias
+ADD CONSTRAINT noticias_status_check
+CHECK (
+    status IN ('draft', 'published', 'archived')
+);
+
+-- ============================================================
+-- 5. FECHA DE PUBLICACIÓN
+-- ============================================================
+
+UPDATE public.noticias
+SET published_at = COALESCE(published_at, fecha_publicacion)
+WHERE status = 'published'
+AND published_at IS NULL;
+
+-- ============================================================
+-- 6. FUNCIÓN PARA SABER SI EL USUARIO ES ADMIN
+-- ============================================================
+
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
 LANGUAGE sql
 SECURITY DEFINER
 STABLE
+SET search_path = public
 AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.profiles
-    WHERE id = auth.uid() AND role = 'admin'
-  );
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.profiles
+        WHERE id = auth.uid()
+        AND role = 'admin'
+    );
 $$;
 
--- Anyone can read (public page)
+-- ============================================================
+-- 7. PERMISOS DE LA FUNCIÓN
+-- ============================================================
+
+GRANT EXECUTE ON FUNCTION public.is_admin()
+TO authenticated;
+
+-- ============================================================
+-- 8. RLS
+-- ============================================================
+
+ALTER TABLE public.noticias ENABLE ROW LEVEL SECURITY;
+
+-- Eliminar políticas anteriores que pueden interferir
+DROP POLICY IF EXISTS "Allow authenticated insert noticias"
+ON public.noticias;
+
+DROP POLICY IF EXISTS "Allow authenticated update noticias"
+ON public.noticias;
+
+DROP POLICY IF EXISTS "Allow authenticated delete noticias"
+ON public.noticias;
+
+DROP POLICY IF EXISTS "Allow public read noticias"
+ON public.noticias;
+
+DROP POLICY IF EXISTS "Admin insert noticias"
+ON public.noticias;
+
+DROP POLICY IF EXISTS "Admin update noticias"
+ON public.noticias;
+
+DROP POLICY IF EXISTS "Admin delete noticias"
+ON public.noticias;
+
+-- ============================================================
+-- 9. LECTURA PÚBLICA
+-- ============================================================
+
 CREATE POLICY "Allow public read noticias"
-  ON public.noticias FOR SELECT USING (true);
+ON public.noticias
+FOR SELECT
+USING (true);
 
--- Only admins can insert
+-- ============================================================
+-- 10. INSERTAR SOLO ADMIN
+-- ============================================================
+
 CREATE POLICY "Admin insert noticias"
-  ON public.noticias FOR INSERT
-  WITH CHECK (public.is_admin());
+ON public.noticias
+FOR INSERT
+TO authenticated
+WITH CHECK (
+    public.is_admin()
+);
 
--- Only admins can update
+-- ============================================================
+-- 11. ACTUALIZAR SOLO ADMIN
+-- ============================================================
+
 CREATE POLICY "Admin update noticias"
-  ON public.noticias FOR UPDATE
-  USING (public.is_admin());
+ON public.noticias
+FOR UPDATE
+TO authenticated
+USING (
+    public.is_admin()
+)
+WITH CHECK (
+    public.is_admin()
+);
 
--- Only admins can delete
+-- ============================================================
+-- 12. ELIMINAR SOLO ADMIN
+-- ============================================================
+
 CREATE POLICY "Admin delete noticias"
-  ON public.noticias FOR DELETE
-  USING (public.is_admin());
+ON public.noticias
+FOR DELETE
+TO authenticated
+USING (
+    public.is_admin()
+);
 
 -- ============================================================
--- Updated_at trigger
+-- 13. UPDATED_AT AUTOMÁTICO
 -- ============================================================
+
 CREATE OR REPLACE FUNCTION public.update_noticias_updated_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
+    NEW.updated_at = NOW();
+    RETURN NEW;
 END;
 $$;
 
-DROP TRIGGER IF EXISTS trigger_noticias_updated_at ON public.noticias;
+DROP TRIGGER IF EXISTS trigger_noticias_updated_at
+ON public.noticias;
+
 CREATE TRIGGER trigger_noticias_updated_at
-  BEFORE UPDATE ON public.noticias
-  FOR EACH ROW
-  EXECUTE FUNCTION public.update_noticias_updated_at();
+BEFORE UPDATE ON public.noticias
+FOR EACH ROW
+EXECUTE FUNCTION public.update_noticias_updated_at();
+
+COMMIT;
