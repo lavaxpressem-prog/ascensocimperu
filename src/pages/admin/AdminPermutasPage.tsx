@@ -23,15 +23,19 @@ import {
   Calendar,
   X,
   Loader2,
+  Plus,
 } from 'lucide-react'
 import {
   getAllPermutasForAdmin,
   getPermutasAdminStats,
   adminUpdatePermutaEstado,
   adminDeletePermuta,
+  adminCreatePermuta,
+  getAllUsers,
   logAdminAction,
 } from '../../lib/supabase'
 import type { Permuta } from '../../lib/supabase'
+import type { Profile } from '../../lib/types'
 
 const PAGE_SIZE = 20
 
@@ -47,6 +51,16 @@ export function AdminPermutasPage() {
   const [stats, setStats] = useState<{ total: number; disponibles: number; no_disponibles: number; recientes_7d: number } | null>(null)
   const [selectedPermuta, setSelectedPermuta] = useState<Permuta | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
+
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [users, setUsers] = useState<Profile[]>([])
+  const [createForm, setCreateForm] = useState({
+    userId: '',
+    unidad_origen: '',
+    unidad_destino: '',
+    telefono: '',
+  })
+  const [createSubmitting, setCreateSubmitting] = useState(false)
 
   const fetchPermutas = useCallback(async () => {
     setLoading(true)
@@ -91,6 +105,73 @@ export function AdminPermutasPage() {
   useEffect(() => {
     fetchStats()
   }, [fetchStats])
+
+  const fetchUsers = useCallback(async () => {
+    try {
+      const data = await getAllUsers()
+      setUsers(data.filter(u => u.status === 'approved'))
+    } catch {
+      // Silenciar error
+    }
+  }, [])
+
+  useEffect(() => {
+    if (showCreateForm && users.length === 0) {
+      fetchUsers()
+    }
+  }, [showCreateForm, users.length, fetchUsers])
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!createForm.userId) {
+      toast.error('Seleccione un usuario')
+      return
+    }
+    if (!createForm.unidad_origen.trim()) {
+      toast.error('Ingrese la unidad de origen')
+      return
+    }
+    if (!createForm.unidad_destino.trim()) {
+      toast.error('Ingrese la unidad de destino')
+      return
+    }
+    if (createForm.unidad_origen.trim().toUpperCase() === createForm.unidad_destino.trim().toUpperCase()) {
+      toast.error('La unidad de origen y destino no pueden ser iguales')
+      return
+    }
+    if (!createForm.telefono.trim()) {
+      toast.error('Ingrese un número de teléfono')
+      return
+    }
+    if (!/^\d{7,15}$/.test(createForm.telefono.replace(/\D/g, ''))) {
+      toast.error('Ingrese un número de teléfono válido (7-15 dígitos)')
+      return
+    }
+
+    setCreateSubmitting(true)
+    try {
+      await adminCreatePermuta(createForm.userId, {
+        unidad_origen: createForm.unidad_origen.trim(),
+        unidad_destino: createForm.unidad_destino.trim(),
+        telefono: createForm.telefono.trim(),
+      })
+      await logAdminAction('create_permuta', 'permuta', undefined, {
+        target_user_id: createForm.userId,
+        unidad_origen: createForm.unidad_origen.trim(),
+        unidad_destino: createForm.unidad_destino.trim(),
+      })
+      toast.success('Permuta creada correctamente')
+      setCreateForm({ userId: '', unidad_origen: '', unidad_destino: '', telefono: '' })
+      setShowCreateForm(false)
+      fetchPermutas()
+      fetchStats()
+    } catch (err: any) {
+      toast.error(err?.message || 'Error al crear la permuta')
+    } finally {
+      setCreateSubmitting(false)
+    }
+  }
 
   const handleToggleEstado = async (permuta: Permuta) => {
     const newEstado = permuta.estado === 'DISPONIBLE' ? 'NO_DISPONIBLE' : 'DISPONIBLE'
@@ -214,8 +295,84 @@ export function AdminPermutasPage() {
                   onChange={e => { setFilterDestino(e.target.value); setPage(0) }}
                   className="px-4 py-2.5 rounded-lg border border-border bg-background text-foreground outline-none focus:border-primary w-full md:w-48"
                 />
+                <Button
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => { setShowCreateForm(!showCreateForm); if (!showCreateForm) fetchUsers() }}
+                >
+                  {showCreateForm ? <X size={16} /> : <Plus size={16} />}
+                  {showCreateForm ? 'Cancelar' : 'Nueva Permuta'}
+                </Button>
               </div>
             </Card>
+
+            {/* Create Form */}
+            {showCreateForm && (
+              <Card className="p-4 md:p-6">
+                <h3 className="font-semibold mb-4">Crear Permuta para Usuario</h3>
+                <form onSubmit={handleCreate} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Usuario *</label>
+                      <select
+                        value={createForm.userId}
+                        onChange={e => setCreateForm(prev => ({ ...prev, userId: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        required
+                      >
+                        <option value="">Seleccionar usuario...</option>
+                        {users.map(u => (
+                          <option key={u.id} value={u.id}>
+                            {u.name || u.email} ({u.email})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Telefono *</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: 987654321"
+                        value={createForm.telefono}
+                        onChange={e => setCreateForm(prev => ({ ...prev, telefono: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Unidad de Origen *</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: COMISARIA SAN MIGUEL"
+                        value={createForm.unidad_origen}
+                        onChange={e => setCreateForm(prev => ({ ...prev, unidad_origen: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1 block">Unidad de Destino *</label>
+                      <input
+                        type="text"
+                        placeholder="Ej: COMISARIA MIRAFLORES"
+                        value={createForm.unidad_destino}
+                        onChange={e => setCreateForm(prev => ({ ...prev, unidad_destino: e.target.value }))}
+                        className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <Button type="submit" disabled={createSubmitting} className="gap-2">
+                      {createSubmitting ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                      {createSubmitting ? 'Creando...' : 'Crear Permuta'}
+                    </Button>
+                  </div>
+                </form>
+              </Card>
+            )}
 
             {/* Table */}
             <Card className="overflow-hidden">

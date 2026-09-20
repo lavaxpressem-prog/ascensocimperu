@@ -21,7 +21,7 @@ import {
   XCircle,
   RotateCcw
 } from 'lucide-react'
-import { getTopicsWithCount, getQuestionsByMateria, shuffleArray, recordStudySession, updateStudySession, recordQuestionResponse, type TopicWithCount, type Question } from '../lib/supabase'
+import { getTopicsWithCount, getQuestionsByMateria, shuffleArray, recordStudySession, updateStudySession, recordQuestionResponses, type TopicWithCount, type Question } from '../lib/supabase'
 
 export function PracticaPage() {
   const [topics, setTopics] = useState<TopicWithCount[]>([])
@@ -118,6 +118,7 @@ export function PracticaPage() {
   const handleFinishPractice = async () => {
     let correct = 0
     const wrong: Question[] = []
+    const responses: Array<{ question_identifier: string; selected_option: string; is_correct: boolean }> = []
     
     for (const q of topicQuestions) {
       const isCorrect = selectedOptions[q.id] === q.correctOption && !!q.correctOption
@@ -128,13 +129,15 @@ export function PracticaPage() {
       }
 
       if (selectedOptions[q.id]) {
-        await recordQuestionResponse({
+        responses.push({
           question_identifier: String(q.id),
           selected_option: selectedOptions[q.id],
           is_correct: isCorrect,
         })
       }
     }
+
+    await recordQuestionResponses(responses)
 
     const percentage = topicQuestions.length > 0 
       ? Math.round((correct / topicQuestions.length) * 100) 

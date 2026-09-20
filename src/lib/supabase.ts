@@ -282,6 +282,19 @@ export async function recordQuestionResponse(response: {
   if (error) throw error
 }
 
+export async function recordQuestionResponses(responses: Array<{
+  question_identifier?: string
+  selected_option: string
+  is_correct: boolean
+}>) {
+  if (responses.length === 0) return
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  const rows = responses.map(r => ({ user_id: user.id, ...r }))
+  const { error } = await supabase.from('user_question_responses').insert(rows)
+  if (error) throw error
+}
+
 // ── Directorio Telefónico ──
 
 export interface Comisaria {
@@ -472,7 +485,8 @@ export async function getRandomQuestions(count: number): Promise<Question[]> {
 // usa un fallback client-side que carga todas las preguntas y
 // selecciona N aleatoriamente con Fisher-Yates.
 
-export async function getRandomQuestionsBatch(count: number = 100): Promise<Question[]> {
+export async function getRandomQuestionsBatch(count: number = 100, _attempt: number = 0): Promise<Question[]> {
+  const MAX_ATTEMPTS = 3
   try {
     const { data, error } = await supabase.rpc('get_random_questions', { count })
 
@@ -490,8 +504,12 @@ export async function getRandomQuestionsBatch(count: number = 100): Promise<Ques
     const ids = data.map((r: QuestionRow) => r.id)
     const uniqueIds = new Set(ids)
     if (uniqueIds.size !== ids.length) {
-      console.warn(`[getRandomQuestionsBatch] Duplicate IDs detected (${ids.length} total, ${uniqueIds.size} unique). Retrying...`)
-      return await getRandomQuestionsBatch(count)
+      if (_attempt < MAX_ATTEMPTS) {
+        console.warn(`[getRandomQuestionsBatch] Duplicate IDs detected (${ids.length} total, ${uniqueIds.size} unique). Retry ${_attempt + 1}/${MAX_ATTEMPTS}...`)
+        return await getRandomQuestionsBatch(count, _attempt + 1)
+      }
+      console.warn(`[getRandomQuestionsBatch] Duplicates persist after ${MAX_ATTEMPTS} attempts, using fallback`)
+      return await fallbackRandomQuestions(count)
     }
 
     console.log(`[getRandomQuestionsBatch] RPC success: ${data.length} unique questions`)
@@ -1484,5 +1502,23 @@ export async function adminDeletePermuta(id: string) {
     .from('permutantes')
     .delete()
     .eq('id', id)
+  if (error) throw error
+}
+
+export async function adminCreatePermuta(userId: string, permuta: {
+  unidad_origen: string
+  unidad_destino: string
+  telefono: string
+}) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Usuario no autenticado')
+
+  const { error } = await supabase
+    .from('permutantes')
+    .insert({
+      user_id: userId,
+      ...permuta,
+      estado: 'DISPONIBLE'
+    })
   if (error) throw error
 }

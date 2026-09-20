@@ -36,10 +36,57 @@ export function AdminFilesPage() {
     e.target.value = ''
   }
 
-  const handleDelete = async (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string, filePath: string) => {
     if (!confirm(`Eliminar archivo ${name}?`)) return
-    try { await deleteUploadedFile(id); await logAdminAction('delete_file', 'file', id); toast.success('Eliminado'); fetchFiles() }
-    catch (err: any) { toast.error(err?.message || 'Error') }
+    try {
+      // ── PASO 1: Determinar path de Storage desde la URL pública ──
+      const bucket = 'noticias-pdf'
+      let storagePath: string | null = null
+      try {
+        const url = new URL(filePath)
+        const marker = `/${bucket}/`
+        const idx = url.pathname.indexOf(marker)
+        if (idx !== -1) {
+          storagePath = url.pathname.slice(idx + marker.length)
+        }
+      } catch {
+        console.error('[AdminFiles] Could not parse file_path as URL:', filePath)
+        toast.error('No se pudo determinar la ruta del archivo en Storage')
+        return
+      }
+
+      if (!storagePath) {
+        toast.error('Ruta de Storage no válida')
+        return
+      }
+
+      // ── PASO 2: Eliminar archivo físico de Storage ──
+      const { error: storageError } = await supabase.storage.from(bucket).remove([storagePath])
+
+      if (storageError) {
+        // Storage falla → BD permanece intacta
+        console.error('[AdminFiles] Storage deletion failed:', storageError)
+        toast.error(`Error al eliminar archivo de Storage: ${storageError.message}. El registro en base de datos se mantiene.`)
+        return
+      }
+
+      // ── PASO 3: Storage OK → eliminar registro de BD ──
+      try {
+        await deleteUploadedFile(id)
+        await logAdminAction('delete_file', 'file', id)
+        toast.success('Archivo eliminado correctamente')
+        fetchFiles()
+      } catch (bdError: any) {
+        // Storage eliminado pero BD falla → inconsistencia recuperable
+        console.error('[AdminFiles] INCONSISTENCY: Storage file removed but BD delete failed:', {
+          storagePath,
+          dbRecordId: id,
+          error: bdError,
+        })
+        toast.error(`Archivo eliminado de Storage pero no se pudo eliminar el registro de base de datos. Contacte al administrador. Registro: ${id}`)
+        fetchFiles()
+      }
+    } catch (err: any) { toast.error(err?.message || 'Error') }
   }
 
   const folders = [...new Set(files.map(f => f.folder))]
@@ -98,7 +145,7 @@ export function AdminFilesPage() {
                       <td className="py-3 px-2 text-xs text-muted-foreground">{new Date(f.created_at).toLocaleDateString('es-PE')}</td>
                       <td className="py-3 px-2"><div className="flex gap-1 justify-end">
                         <a href={f.file_path} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600"><FileText size={14} /></a>
-                        <button onClick={() => handleDelete(f.id, f.file_name)} className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600"><Trash2 size={14} /></button>
+                        <button onClick={() => handleDelete(f.id, f.file_name, f.file_path)} className="p-1.5 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600"><Trash2 size={14} /></button>
                       </div></td>
                     </tr>
                   ))}

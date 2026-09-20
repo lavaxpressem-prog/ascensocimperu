@@ -84,10 +84,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (profileError) {
     console.error('Profile insert error:', profileError)
-    return res.status(200).json({
-      message: 'Usuario creado pero hubo un error al crear el perfil',
-      user: { id: newUser.user.id, email }
-    })
+    try {
+      await serviceClient.auth.admin.deleteUser(newUser.user.id)
+    } catch (rollbackErr) {
+      console.error('Rollback failed - orphaned auth user:', newUser.user.id, rollbackErr)
+    }
+    return res.status(500).json({ error: 'Error al crear el perfil del usuario' })
   }
 
   return res.status(200).json({

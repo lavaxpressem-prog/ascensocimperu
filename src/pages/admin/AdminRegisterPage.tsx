@@ -50,6 +50,7 @@ export function AdminRegisterPage() {
 
       if (!token) {
         toast.error('Sesion no valida')
+        setSubmitting(false)
         return
       }
 

@@ -25,7 +25,7 @@ import {
   Target,
   RefreshCw
 } from 'lucide-react'
-import { getRandomQuestionsBatch, shuffleArray, recordStudySession, updateStudySession, recordExamResult, recordQuestionResponse, type Question } from '../lib/supabase'
+import { getRandomQuestionsBatch, shuffleArray, recordStudySession, updateStudySession, recordExamResult, recordQuestionResponses, type Question } from '../lib/supabase'
 
 export function ExamPage() {
   const [mockQuestions, setMockQuestions] = useState<Question[]>([])
@@ -43,6 +43,7 @@ export function ExamPage() {
   const [wrongQuestions, setWrongQuestions] = useState<Question[]>([])
   const [isReviewMode, setIsReviewMode] = useState(false)
   const mountedRef = useRef(true)
+  const finishingRef = useRef(false)
 
   const loadQuestions = async () => {
     setLoading(true)
@@ -100,6 +101,7 @@ export function ExamPage() {
     setSelectedOptions({})
     setTimeLeft(3600)
     setIsFinished(false)
+    finishingRef.current = false
     setStudySessionId(null)
     setSessionStartedAt(null)
     setWrongQuestions([])
@@ -147,6 +149,8 @@ export function ExamPage() {
   }
 
   const handleFinish = async () => {
+    if (finishingRef.current) return
+    finishingRef.current = true
     setIsFinished(true)
 
     const wrong: Question[] = []
@@ -169,15 +173,14 @@ export function ExamPage() {
       time_spent_seconds: sessionStartedAt ? Math.floor((Date.now() - sessionStartedAt.getTime()) / 1000) : 0,
     })
 
-    for (const q of examQuestions) {
-      if (selectedOptions[q.id]) {
-        await recordQuestionResponse({
-          question_identifier: String(q.id),
-          selected_option: selectedOptions[q.id],
-          is_correct: selectedOptions[q.id] === q.correctOption,
-        })
-      }
-    }
+    const responses = examQuestions
+      .filter(q => selectedOptions[q.id])
+      .map(q => ({
+        question_identifier: String(q.id),
+        selected_option: selectedOptions[q.id],
+        is_correct: selectedOptions[q.id] === q.correctOption,
+      }))
+    await recordQuestionResponses(responses)
 
     if (studySessionId && sessionStartedAt) {
       const durationSeconds = Math.floor((Date.now() - sessionStartedAt.getTime()) / 1000)

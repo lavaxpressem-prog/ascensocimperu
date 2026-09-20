@@ -158,8 +158,10 @@ export function AdminAuditPage() {
       search: search || undefined,
     })
     setLogs(result)
-    if (result.length > 0) {
+    if (result.length > 0 && result[0].total_count != null) {
       setTotalLogs(result[0].total_count)
+    } else {
+      setTotalLogs(0)
     }
   }, [page, from, to, filterAction, filterModule, filterStatus, search])
 

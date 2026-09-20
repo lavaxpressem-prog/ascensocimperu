@@ -92,9 +92,8 @@ export function PracticaPreguntasPage() {
     } else {
       setIsFinished(true)
 
-      const correct = selectedOption === currentQuestion.correctOption ? score : score
       const total = practiceQuestions.length
-      const percentage = total > 0 ? Math.round((correct / total) * 100) : 0
+      const percentage = total > 0 ? Math.round((score / total) * 100) : 0
 
       if (studySessionId && sessionStartedAt) {
         const durationSeconds = Math.floor((Date.now() - sessionStartedAt.getTime()) / 1000)
@@ -102,7 +101,7 @@ export function PracticaPreguntasPage() {
           ended_at: new Date().toISOString(),
           duration_seconds: durationSeconds,
           questions_attempted: total,
-          questions_correct: correct,
+          questions_correct: score,
         })
       }
 
