@@ -30,7 +30,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       fuente: 'Admin',
       estado: 'Vigente',
       fecha_publicacion: new Date().toISOString().split('T')[0],
-      autor: user.email,
       uploaded_by: user.id,
       is_published: status === 'published',
       status: status || 'draft',
@@ -46,7 +45,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single()
 
     if (newsError) {
-      console.error('[upload-pdf] News insert error:', newsError)
+      console.error('[news/create] News insert error:', newsError)
       return res.status(500).json({ error: 'Error al crear la noticia' })
     }
 

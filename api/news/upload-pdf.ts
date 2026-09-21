@@ -75,7 +75,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       fuente: 'Admin',
       estado: 'Vigente',
       fecha_publicacion: new Date().toISOString().split('T')[0],
-      autor: user.email,
       uploaded_by: user.id,
       is_published: status === 'published',
       status: status || 'draft',
