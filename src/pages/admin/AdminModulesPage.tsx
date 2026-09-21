@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Page, PageHeader, PageTitle, PageDescription, PageBody, Card, Button, toast } from '@blinkdotnew/ui'
 import { Puzzle, ToggleLeft, ToggleRight } from 'lucide-react'
-import { getModulesForAdmin, toggleModuleActive, logAdminAction } from '../../lib/supabase'
+import { getModulesForAdmin, toggleModuleActive, supabase } from '../../lib/supabase'
 
 export function AdminModulesPage() {
   const [modules, setModules] = useState<any[]>([])
@@ -25,7 +25,21 @@ export function AdminModulesPage() {
     setTogglingId(id)
     try {
       await toggleModuleActive(id, newActive)
-      await logAdminAction('toggle_module', 'module', id, { is_active: newActive })
+      const mod = modules.find(m => m.id === id)
+      try {
+        await supabase.rpc('log_audit_event', {
+          p_action: newActive ? 'ACTIVAR_MODULO' : 'BLOQUEAR_MODULO',
+          p_module: 'Módulos',
+          p_description: `Modulo "${mod?.name ?? id}" ${newActive ? 'activado' : 'bloqueado'}`,
+          p_resource_type: 'module',
+          p_resource_id: id,
+          p_metadata: { is_active: newActive },
+          p_success: true,
+          p_severity: 'INFO',
+        })
+      } catch (auditErr) {
+        console.error('Error logging audit event:', auditErr)
+      }
       toast.success(newActive ? 'Modulo activado' : 'Modulo bloqueado')
       setModules(prev => prev.map(m => m.id === id ? { ...m, is_active: newActive } : m))
     } catch (err: any) {
