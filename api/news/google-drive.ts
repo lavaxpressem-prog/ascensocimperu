@@ -1,5 +1,5 @@
 import { google } from 'googleapis'
-import type { GoogleAuth, drive_v3 } from 'googleapis'
+import type { drive_v3 } from 'googleapis'
 
 const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL
 const GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n')
@@ -15,7 +15,7 @@ export function getDriveService(): drive_v3.Drive {
     throw new Error('Google Drive credentials not configured')
   }
 
-  const auth = new GoogleAuth({
+  const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: GOOGLE_SERVICE_ACCOUNT_EMAIL,
       private_key: GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY,
