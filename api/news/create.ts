@@ -45,8 +45,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single()
 
     if (newsError) {
-      console.error('[news/create] News insert error:', newsError)
-      return res.status(500).json({ error: 'Error al crear la noticia' })
+      console.error('[news/create] News insert error:', newsError.message, newsError.code, newsError.details)
+      return res.status(500).json({ error: 'Error al crear la noticia', detail: newsError.message })
     }
 
     return res.status(200).json({
@@ -55,7 +55,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Error interno del servidor'
-    console.error('[upload-pdf] Unexpected error:', message)
-    return res.status(500).json({ error: 'Error interno del servidor' })
+    console.error('[news/create] Unexpected error:', message, err instanceof Error ? err.stack : '')
+    return res.status(500).json({ error: 'Error interno del servidor', detail: message })
   }
 }
