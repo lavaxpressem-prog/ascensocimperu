@@ -23,6 +23,7 @@ export interface Module {
   name: string
   slug: string
   description: string | null
+  is_active: boolean
   created_at: string
 }
 
@@ -30,6 +31,7 @@ export interface ModuleWithAccess extends Module {
   blocked: boolean
   blocked_reason: string | null
   can_access: boolean
+  is_active: boolean
 }
 
 export interface Permission {
