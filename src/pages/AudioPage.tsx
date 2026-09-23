@@ -14,6 +14,7 @@ import {
   Play, Pause, RotateCcw, BookOpen, SkipForward, SkipBack, Volume2
 } from 'lucide-react'
 import { getQuestionsBatch, type Question } from '../lib/supabase'
+import { getSpeechSynth, createUtterance, type AnyUtterance } from '../lib/speechFallback'
 
 const ABBREVIATION_MAP: Record<string, string> = {
   'ART': 'Artículo',
@@ -69,8 +70,8 @@ export function AudioPage() {
   const [loopMode, setLoopMode] = useState(true)
   const [autoPlay, setAutoPlay] = useState(true)
 
-  const synth = typeof window !== 'undefined' ? window.speechSynthesis : null
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const synth = getSpeechSynth()
+  const utteranceRef = useRef<AnyUtterance | null>(null)
 
   useEffect(() => {
     console.log('[AudioPage] Loading questions from Supabase...')
@@ -124,7 +125,7 @@ export function AudioPage() {
 
   const speakText = (text: string, onEnd?: () => void) => {
     if (!synth) return
-    const utterance = new SpeechSynthesisUtterance(text)
+    const utterance = createUtterance(text)
     utterance.lang = 'es-ES'
     utterance.rate = speed
     utterance.pitch = 1
@@ -203,7 +204,7 @@ export function AudioPage() {
     console.log('CLEAN first 80 chars:', fullText.substring(0, 80).split('').map(c => `${c}[${c.charCodeAt(0)}]`).join(' '))
     console.groupEnd()
 
-    const warmUp = new SpeechSynthesisUtterance('.')
+    const warmUp = createUtterance('.')
     warmUp.lang = 'es-ES'
     warmUp.rate = speed
     warmUp.volume = 0.01
