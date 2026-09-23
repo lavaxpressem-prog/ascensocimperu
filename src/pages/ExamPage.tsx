@@ -22,10 +22,12 @@ import {
   Volume2,
   ChevronRight,
   ChevronLeft,
-  Target,
-  RefreshCw
+  RefreshCw,
+  ArrowLeft
 } from 'lucide-react'
 import { getRandomQuestionsBatch, shuffleArray, recordStudySession, updateStudySession, recordExamResult, recordQuestionResponses, type Question } from '../lib/supabase'
+
+type ResultsView = 'summary' | 'correct' | 'incorrect'
 
 export function ExamPage() {
   const [mockQuestions, setMockQuestions] = useState<Question[]>([])
@@ -41,7 +43,9 @@ export function ExamPage() {
   const [studySessionId, setStudySessionId] = useState<string | null>(null)
   const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null)
   const [wrongQuestions, setWrongQuestions] = useState<Question[]>([])
+  const [correctQuestions, setCorrectQuestions] = useState<Question[]>([])
   const [isReviewMode, setIsReviewMode] = useState(false)
+  const [resultsView, setResultsView] = useState<ResultsView>('summary')
   const mountedRef = useRef(true)
   const finishingRef = useRef(false)
 
@@ -106,6 +110,7 @@ export function ExamPage() {
     setSessionStartedAt(null)
     setWrongQuestions([])
     setIsReviewMode(false)
+    setResultsView('summary')
     setExamQuestions(shuffleArray(mockQuestions))
 
     const now = new Date()
@@ -154,12 +159,16 @@ export function ExamPage() {
     setIsFinished(true)
 
     const wrong: Question[] = []
+    const correctQs: Question[] = []
     examQuestions.forEach(q => {
       if (selectedOptions[q.id] !== q.correctOption) {
         wrong.push(q)
+      } else {
+        correctQs.push(q)
       }
     })
     setWrongQuestions(wrong)
+    setCorrectQuestions(correctQs)
 
     const correct = examQuestions.filter(q => selectedOptions[q.id] === q.correctOption).length
     const total = examQuestions.length
@@ -312,38 +321,199 @@ export function ExamPage() {
       <PageBody className="max-w-3xl mx-auto space-y-8 py-8">
         {isFinished ? (
           <div className="space-y-6">
-            <Card className="text-center p-8 space-y-6">
-              <div className="space-y-2">
-                <h3 className="text-3xl font-bold font-serif">Resultados del Examen</h3>
-                <p className="text-muted-foreground">Resumen de tu desempeño</p>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-6 bg-secondary rounded-xl space-y-1">
-                  <div className="text-green-600 flex justify-center"><CheckCircle2 size={32} /></div>
-                  <div className="text-2xl font-bold">{stats.correct}</div>
-                  <div className="text-xs uppercase text-muted-foreground">Correctas</div>
-                </div>
-                <div className="p-6 bg-secondary rounded-xl space-y-1">
-                  <div className="text-destructive flex justify-center"><XCircle size={32} /></div>
-                  <div className="text-2xl font-bold">{stats.total - stats.correct}</div>
-                  <div className="text-xs uppercase text-muted-foreground">Incorrectas</div>
-                </div>
-                <div className="p-6 bg-primary text-white rounded-xl space-y-1">
-                  <div className="flex justify-center"><Target size={32} /></div>
-                  <div className="text-2xl font-bold">{stats.percentage}%</div>
-                  <div className="text-xs uppercase text-white/70">Puntaje</div>
-                </div>
-              </div>
-            </Card>
+            {/* Results summary view */}
+            {resultsView === 'summary' && (
+              <>
+                <Card className="text-center p-8 space-y-6">
+                  <div className="space-y-2">
+                    <h3 className="text-3xl font-bold font-serif">Resultado del Examen</h3>
+                    <p className="text-muted-foreground">Resumen de tu desempeño</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-2 py-4">
+                    <div className="text-5xl font-bold font-serif text-primary">{stats.correct}</div>
+                    <div className="text-lg text-muted-foreground">de {stats.total} preguntas</div>
+                    <div className="text-4xl font-bold text-primary">{stats.percentage}%</div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      onClick={() => setResultsView('correct')}
+                      className="p-6 bg-green-50 dark:bg-green-950/50 rounded-xl space-y-2 border-2 border-transparent hover:border-green-300 dark:hover:border-green-700 transition-all cursor-pointer text-left"
+                    >
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle2 size={24} />
+                        <span className="text-sm font-semibold uppercase">Correctas</span>
+                      </div>
+                      <div className="text-3xl font-bold text-green-700 dark:text-green-400">{stats.correct}</div>
+                    </button>
+                    <button
+                      onClick={() => setResultsView('incorrect')}
+                      className="p-6 bg-red-50 dark:bg-red-950/50 rounded-xl space-y-2 border-2 border-transparent hover:border-red-300 dark:hover:border-red-700 transition-all cursor-pointer text-left"
+                    >
+                      <div className="flex items-center gap-2 text-red-600">
+                        <XCircle size={24} />
+                        <span className="text-sm font-semibold uppercase">Incorrectas</span>
+                      </div>
+                      <div className="text-3xl font-bold text-red-700 dark:text-red-400">{stats.total - stats.correct}</div>
+                    </button>
+                  </div>
+                </Card>
 
-            <div className="flex gap-4">
-              <Button variant="outline" className="flex-1" onClick={() => { setIsExamStarted(false); loadQuestions() }}>
-                Volver al Inicio
-              </Button>
-              <Button className="flex-1" onClick={handleStart}>
-                <RotateCcw size={18} className="mr-2" /> Reintentar
-              </Button>
-            </div>
+                <div className="flex gap-4">
+                  <Button variant="outline" className="flex-1" onClick={() => { setIsExamStarted(false); setResultsView('summary'); loadQuestions() }}>
+                    Volver al Inicio
+                  </Button>
+                  <Button className="flex-1" onClick={handleStart}>
+                    <RotateCcw size={18} className="mr-2" /> Reintentar
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* Questions detail view */}
+            {(resultsView === 'correct' || resultsView === 'incorrect') && (
+              <>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setResultsView('summary')}
+                  >
+                    <ArrowLeft size={18} />
+                  </Button>
+                  <div className="flex-1">
+                    <h3 className="text-2xl font-bold font-serif">
+                      {resultsView === 'correct' ? 'Preguntas Correctas' : 'Preguntas Incorrectas'}
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {resultsView === 'correct'
+                        ? `${correctQuestions.length} pregunta(s) respondida(s) correctamente`
+                        : `${wrongQuestions.length} pregunta(s) respondida(s) incorrectamente`}
+                    </p>
+                  </div>
+                </div>
+
+                {(resultsView === 'correct' ? correctQuestions : wrongQuestions).length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <div className="space-y-3">
+                      {resultsView === 'correct' ? (
+                        <CheckCircle2 size={48} className="mx-auto text-green-500" />
+                      ) : (
+                        <XCircle size={48} className="mx-auto text-red-500" />
+                      )}
+                      <p className="text-lg text-muted-foreground">
+                        {resultsView === 'correct'
+                          ? 'No respondiste ninguna pregunta correctamente.'
+                          : '¡Excelente! No tuviste preguntas incorrectas.'}
+                      </p>
+                    </div>
+                  </Card>
+                ) : (
+                  <div className="space-y-6">
+                    {(resultsView === 'correct' ? correctQuestions : wrongQuestions).map((q) => {
+                      const userOption = selectedOptions[q.id]
+                      const isCorrect = userOption === q.correctOption
+                      const qIndex = examQuestions.findIndex(eq => eq.id === q.id)
+
+                      return (
+                        <Card
+                          key={q.id}
+                          className={
+                            isCorrect
+                              ? 'border-green-200 dark:border-green-800'
+                              : 'border-red-200 dark:border-red-800'
+                          }
+                        >
+                          <CardContent className="pt-6 space-y-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <h4 className="font-semibold text-lg">
+                                Pregunta {qIndex + 1}
+                              </h4>
+                              {isCorrect ? (
+                                <Badge className="bg-green-600 flex-shrink-0">Correcta</Badge>
+                              ) : (
+                                <Badge variant="destructive" className="flex-shrink-0">Incorrecta</Badge>
+                              )}
+                            </div>
+
+                            <p className="text-base leading-relaxed">{q.text}</p>
+
+                            <div className="grid gap-2">
+                              {q.options.map((opt) => {
+                                const isUserSelected = userOption === opt.id
+                                const isThisCorrect = q.correctOption === opt.id
+                                let borderClass = 'border-transparent bg-secondary'
+                                let letterBg = 'bg-card text-primary border border-border dark:bg-secondary dark:text-primary'
+
+                                if (isThisCorrect) {
+                                  borderClass = 'border-green-400 dark:border-green-600 bg-green-50 dark:bg-green-950/50'
+                                  letterBg = 'bg-green-600 text-white'
+                                } else if (isUserSelected && !isThisCorrect) {
+                                  borderClass = 'border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-950/50'
+                                  letterBg = 'bg-red-600 text-white'
+                                }
+
+                                return (
+                                  <div
+                                    key={opt.id}
+                                    className={`flex items-center gap-4 p-4 rounded-xl border-2 ${borderClass}`}
+                                  >
+                                    <div className={`h-8 w-8 rounded-lg flex items-center justify-center font-bold ${letterBg}`}>
+                                      {opt.id.toUpperCase()}
+                                    </div>
+                                    <span className="flex-1 font-medium">{opt.text}</span>
+                                    {isThisCorrect && (
+                                      <CheckCircle2 size={20} className="text-green-600 flex-shrink-0" />
+                                    )}
+                                    {isUserSelected && !isThisCorrect && (
+                                      <XCircle size={20} className="text-red-600 flex-shrink-0" />
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+
+                            <div className="pt-2 border-t space-y-1 text-sm">
+                              <p>
+                                <span className="font-semibold text-green-700 dark:text-green-400">Respuesta correcta: </span>
+                                <span className="font-medium">{q.correctOption.toUpperCase()}. {q.options.find(o => o.id === q.correctOption)?.text}</span>
+                              </p>
+                              <p>
+                                <span className={`font-semibold ${isCorrect ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                                  Tu respuesta:{' '}
+                                </span>
+                                <span className="font-medium">
+                                  {userOption ? `${userOption.toUpperCase()}. ${q.options.find(o => o.id === userOption)?.text}` : 'Sin respuesta'}
+                                </span>
+                              </p>
+                              {isCorrect ? (
+                                <p className="font-semibold text-green-600 dark:text-green-400 flex items-center gap-1 pt-1">
+                                  <CheckCircle2 size={14} /> Correcta
+                                </p>
+                              ) : (
+                                <p className="font-semibold text-red-600 dark:text-red-400 flex items-center gap-1 pt-1">
+                                  <XCircle size={14} /> Incorrecta
+                                </p>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )
+                    })}
+                  </div>
+                )}
+
+                <div className="flex gap-4 pt-2">
+                  <Button variant="outline" className="flex-1" onClick={() => setResultsView('summary')}>
+                    <ArrowLeft size={18} className="mr-2" /> Volver al Resultado
+                  </Button>
+                  {wrongQuestions.length > 0 && (
+                    <Button className="flex-1" onClick={handleStart}>
+                      <RotateCcw size={18} className="mr-2" /> Reintentar
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <>
